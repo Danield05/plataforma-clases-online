@@ -7,9 +7,10 @@
     <link rel="stylesheet" href="/plataforma-clases-online/public/css/style.css">
 </head>
 <body>
-    <?php include 'nav.php'; ?>
+    <?php include __DIR__ . '/../nav.php'; ?>
     <div class="container">
         <h1>Bienvenido, <?php echo $_SESSION['user_name']; ?> (Estudiante)</h1>
+        <a href="/plataforma-clases-online/auth/logout" class="logout-btn">Cerrar Sesión</a>
 
         <div class="dashboard-section">
             <h2>Mis Reservas</h2>
