@@ -81,13 +81,6 @@ Este script verificará:
 #### Con Apache Manual:
 Asegurarse de que `mod_rewrite` esté habilitado y configurar el DocumentRoot apuntando a la carpeta del proyecto.
 
-### 4. Usuarios de Prueba
-
-El sistema incluye usuarios de prueba pre-configurados:
-
-- **Administrador**: admin@plataforma.com / admin123
-- **Profesor**: profesor@plataforma.com / prof123
-- **Estudiante**: estudiante@plataforma.com / estu123
 
 ## 📁 Estructura del Proyecto
 
