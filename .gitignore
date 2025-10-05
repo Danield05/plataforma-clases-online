@@ -1,8 +1,12 @@
 # Archivos sensibles y vulnerables
-config/
+config/database.php
 logs/
 temp/
 cache/
+
+# Permitir archivos de configuración seguros
+!config/database.example.php
+!config/.htaccess
 
 # Archivos de entorno
 .env
@@ -12,6 +16,7 @@ cache/
 # Archivos del sistema
 .DS_Store
 Thumbs.db
+plataforma_clases.sql
 
 # Archivos de IDE
 .vscode/

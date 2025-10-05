@@ -1,0 +1,64 @@
+# Requerimientos para Plataforma de Clases Online
+
+## Software Requerido
+
+### Servidor Web
+- Apache 2.4+ con mod_rewrite habilitado
+- O Nginx con configuración equivalente
+
+### PHP
+- Versión: 7.4 o superior
+- Extensiones requeridas:
+  - pdo
+  - pdo_mysql
+  - session
+  - mbstring
+  - json
+
+### Base de Datos
+- MySQL 5.7+ o MariaDB 10.0+
+- O PostgreSQL 9.6+ (requiere ajustes en código)
+
+### Entorno de Desarrollo Recomendado
+- XAMPP 7.4+ (Windows)
+- LAMP stack (Linux)
+- MAMP (macOS)
+
+## Verificación de Requerimientos
+
+Crear un archivo `phpinfo.php` en la raíz del proyecto:
+
+```php
+<?php phpinfo(); ?>
+```
+
+Acceder a `http://localhost/plataforma-clases-online/phpinfo.php` y verificar:
+- Versión de PHP ≥ 7.4
+- Extensiones PDO y MySQL habilitadas
+- Sessions habilitadas
+
+Eliminar el archivo después de verificar.
+
+## Instalación Paso a Paso
+
+1. Instalar XAMPP desde https://www.apachefriends.org/
+2. Iniciar Apache y MySQL desde el panel de control
+3. Clonar el proyecto en `C:\xampp\htdocs\plataforma-clases-online`
+4. Crear base de datos y configurar credenciales
+5. Acceder a `http://localhost/plataforma-clases-online`
+
+## Solución de Problemas
+
+### Error de conexión a BD
+- Verificar que MySQL esté ejecutándose
+- Comprobar credenciales en `config/database.php`
+- Asegurar que la BD `plataforma_clases` existe
+
+### Error 500 Internal Server Error
+- Verificar permisos de archivos (755 para carpetas, 644 para archivos)
+- Comprobar sintaxis PHP: `php -l archivo.php`
+- Revisar logs de Apache en `xampp/apache/logs/error.log`
+
+### Problemas con URLs
+- Asegurar que `mod_rewrite` esté habilitado
+- Verificar que `.htaccess` existe en la raíz del proyecto

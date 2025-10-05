@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 // Punto de entrada del proyecto MVC en PHP
 
 // Incluir configuración de base de datos
