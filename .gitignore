@@ -1,0 +1,28 @@
+# Archivos sensibles y vulnerables
+config/
+logs/
+temp/
+cache/
+
+# Archivos de entorno
+.env
+.env.local
+.env.production
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de IDE
+.vscode/
+.idea/
+
+# Archivos de logs y errores
+*.log
+error_log
+
+# Archivos temporales
+*.tmp
+*.swp
+*.bak
+
