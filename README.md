@@ -48,6 +48,22 @@ Este script verificará:
 - ✅ Estructura de tablas
 - ✅ Permisos de archivos
 
+#### Nota sobre PHP en Windows
+
+Si al ejecutar `php setup.php` obtienes el error "php: The term 'php' is not recognized", significa que PHP no está en la variable PATH. Para solucionarlo:
+
+- **Opción 1 (Recomendada)**: Agregar PHP al PATH del sistema:
+  1. Busca "Variables de entorno" en el menú Inicio.
+  2. Haz clic en "Variables de entorno".
+  3. En "Variables del sistema", selecciona "Path" y haz clic en "Editar".
+  4. Agrega una nueva entrada: `C:\xampp\php`
+  5. Reinicia la terminal.
+
+- **Opción 2**: Usar la ruta completa:
+  ```bash
+  C:\xampp\php\php.exe setup.php
+  ```
+
 ### 3. Instalación Manual
 
 #### Base de Datos
