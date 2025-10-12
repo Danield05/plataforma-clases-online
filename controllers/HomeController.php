@@ -1,5 +1,6 @@
 <?php
 require_once 'controllers/AuthController.php';
+
 class HomeController {
     public function index() {
         // Verificar si el usuario está logueado
