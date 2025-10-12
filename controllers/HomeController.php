@@ -44,13 +44,16 @@ class HomeController {
         // Dashboard específico para profesores
         require_once 'models/ReservaModel.php';
         require_once 'models/DisponibilidadModel.php';
+        require_once 'models/PagoModel.php';
 
         $reservaModel = new ReservaModel();
         $disponibilidadModel = new DisponibilidadModel();
+        $pagoModel = new PagoModel();
 
         // Obtener reservas del profesor (asumiendo que hay una forma de filtrar por profesor)
         $reservas = $reservaModel->getReservas(); // TODO: filtrar por profesor logueado
         $disponibilidades = $disponibilidadModel->getDisponibilidades(); // TODO: filtrar por profesor
+        $pagos = $pagoModel->getPagos(); // TODO: filtrar por profesor logueado
 
         require_once 'views/views_profesor/profesor_dashboard.php';
     }

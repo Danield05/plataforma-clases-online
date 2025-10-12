@@ -73,3 +73,40 @@ footer {
     color: var(--color-white);
     margin-top: 2rem;
 }
+
+/* Estilos para dashboards */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.dashboard-section {
+    background-color: var(--color-white);
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.dashboard-section h2 {
+    color: var(--color-blue-400);
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.logout-btn {
+    display: inline-block;
+    background-color: var(--color-red-400, #dc3545);
+    color: white;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    border-radius: 4px;
+    margin-bottom: 2rem;
+}
+
+.logout-btn:hover {
+    background-color: var(--color-red-500, #c82333);
+    color: white;
+    text-decoration: none;
+}
