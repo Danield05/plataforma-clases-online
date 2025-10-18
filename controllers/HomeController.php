@@ -1,7 +1,9 @@
 <?php
 require_once 'controllers/AuthController.php';
-class HomeController {
-    public function index() {
+class HomeController
+{
+    public function index()
+    {
         // Verificar si el usuario está logueado
         if (!isset($_SESSION['user_id'])) {
             header('Location: /plataforma-clases-online/auth/login');
@@ -40,7 +42,8 @@ class HomeController {
         }
     }
 
-    public function profesor_dashboard() {
+    public function profesor_dashboard()
+    {
         // Dashboard específico para profesores
         require_once 'models/ReservaModel.php';
         require_once 'models/DisponibilidadModel.php';
@@ -58,7 +61,8 @@ class HomeController {
         require_once 'views/views_profesor/profesor_dashboard.php';
     }
 
-    public function estudiante_dashboard() {
+    public function estudiante_dashboard()
+    {
         // Dashboard específico para estudiantes
         require_once 'models/ReservaModel.php';
         require_once 'models/PagoModel.php';
@@ -73,7 +77,8 @@ class HomeController {
         require_once 'views/views_estudiante/estudiante_dashboard.php';
     }
 
-    public function profesores() {
+    public function profesores()
+    {
         AuthController::checkAuth();
         AuthController::checkRole(['administrador']);
 
@@ -83,7 +88,8 @@ class HomeController {
         require_once 'views/profesores.php';
     }
 
-    public function estudiantes() {
+    public function estudiantes()
+    {
         AuthController::checkAuth();
         AuthController::checkRole(['administrador']);
 
@@ -93,7 +99,8 @@ class HomeController {
         require_once 'views/estudiantes.php';
     }
 
-    public function reservas() {
+    public function reservas()
+    {
         AuthController::checkAuth();
         AuthController::checkRole(['administrador', 'profesor', 'estudiante']);
 
@@ -103,7 +110,8 @@ class HomeController {
         require_once 'views/reservas.php';
     }
 
-    public function disponibilidad() {
+    public function disponibilidad()
+    {
         AuthController::checkAuth();
         AuthController::checkRole(['administrador', 'profesor']);
 
@@ -113,17 +121,44 @@ class HomeController {
         require_once 'views/disponibilidad.php';
     }
 
-    public function pagos() {
+    public function pagos()
+    {
         AuthController::checkAuth();
         AuthController::checkRole(['administrador', 'estudiante']);
 
         require_once 'models/PagoModel.php';
         $pagoModel = new PagoModel();
         $pagos = $pagoModel->getPagos();
+        $totales = $pagoModel->getTotales();
+
+        extract($totales);
         require_once 'views/pagos.php';
     }
+    public function verPago()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['administrador', 'estudiante']);
 
-    public function reviews() {
+        if (!isset($_GET['id'])) {
+            header('Location: /plataforma-clases-online/home/pagos');
+            exit;
+        }
+
+        $id = $_GET['id'];
+        require_once 'models/PagoModel.php';
+        $pagoModel = new PagoModel();
+        $pago = $pagoModel->getPagoById($id);
+
+        if (!$pago) {
+            echo "<p>Pago no encontrado.</p>";
+            return;
+        }
+
+        require_once 'views/ver_pago.php'; // Nueva vista para detalle
+    }
+
+    public function reviews()
+    {
         AuthController::checkAuth();
         AuthController::checkRole(['administrador']);
 
@@ -133,8 +168,8 @@ class HomeController {
         require_once 'views/reviews.php';
     }
 
-    public function about() {
+    public function about()
+    {
         require_once 'views/about.php';
     }
 }
-?>

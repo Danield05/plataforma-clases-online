@@ -4,45 +4,134 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pagos - Plataforma de Clases Online</title>
-    <link rel="stylesheet" href="/plataforma-clases-online/public/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/plataforma-clases-online/public/css/style.css?v=<?= time(); ?>">
 </head>
 <body>
-    <header>
-        <h1>Pagos</h1>
-        <?php include 'nav.php'; ?>
+    <?php 
+    // Definir la página actual para el header
+    $currentPage = 'pagos';
+    ?>
+    <header class="modern-header">
+        <div class="header-content">
+            <h1 class="header-title">💰 Gestión de Pagos</h1>
+            <?php include 'nav.php'; ?>
+        </div>
     </header>
-    <main>
-        <h2>Historial de Pagos</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID Pago</th>
-                    <th>ID Reserva</th>
-                    <th>Monto</th>
-                    <th>Método de Pago</th>
-                    <th>Fecha</th>
-                    <th>Estado</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach($pagos as $pago): ?>
-                    <tr>
-                        <td><?php echo $pago['payment_id']; ?></td>
-                        <td><?php echo $pago['reservation_id']; ?></td>
-                        <td>$<?php echo number_format($pago['amount'], 2); ?></td>
-                        <td><?php echo $pago['payment_method']; ?></td>
-                        <td><?php echo $pago['payment_date']; ?></td>
-                        <td><?php echo $pago['payment_status']; ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+
+    <main class="container my-5">
+        <!-- Contenedor principal con estilo del reporte -->
+        <div class="pagos-container">
+            <!-- Título y botones exportar -->
+            <div class="pagos-header">
+                <h2 class="pagos-title">📊 Historial de Pagos</h2>
+                <div class="export-buttons">
+                    <a href="/plataforma-clases-online/reportes/exportarPagos" 
+                       class="btn btn-export-csv">
+                       📄 Exportar CSV
+                    </a>
+                    <a href="/plataforma-clases-online/reportes/exportarPagosPDF" 
+                       class="btn btn-export-pdf" target="_blank">
+                       📋 Ver Reporte
+                    </a>
+                </div>
+            </div>
+
+            <!-- Resumen de totales con nuevo diseño -->
+            <div class="totales-pagos">
+                <div class="total-card-pagos success">
+                    <div class="card-icon">💵</div>
+                    <h4>Total Recaudado</h4>
+                    <div class="amount">$<?= number_format($totalRecaudado ?? 0, 2); ?></div>
+                </div>
+                <div class="total-card-pagos warning">
+                    <div class="card-icon">⏳</div>
+                    <h4>Pagos Pendientes</h4>
+                    <div class="amount"><?= $totalPendientes ?? 0; ?></div>
+                </div>
+                <div class="total-card-pagos info">
+                    <div class="card-icon">✅</div>
+                    <h4>Pagos Completados</h4>
+                    <div class="amount"><?= $totalPagados ?? 0; ?></div>
+                </div>
+                <div class="total-card-pagos danger">
+                    <div class="card-icon">❌</div>
+                    <h4>Pagos Cancelados</h4>
+                    <div class="amount"><?= $totalCancelados ?? 0; ?></div>
+                </div>
+            </div>
+
+            <!-- Tabla de pagos con nuevo diseño -->
+            <div class="table-container-pagos">
+                <table class="tabla-pagos-nueva">
+                    <thead>
+                        <tr>
+                            <th>🆔 ID Pago</th>
+                            <th>📋 ID Reserva</th>
+                            <th>💰 Monto</th>
+                            <th>💳 Método</th>
+                            <th>📅 Fecha</th>
+                            <th>📊 Estado</th>
+                            <th>⚙️ Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($pagos as $pago): ?>
+                            <?php
+                                $estado = strtolower($pago['payment_status']);
+                                $statusClass = match($estado) {
+                                    'pendiente' => 'status-pendiente',
+                                    'pagado' => 'status-pagado',
+                                    'cancelado' => 'status-cancelado',
+                                    default => 'status-pendiente'
+                                };
+                            ?>
+                            <tr>
+                                <td><?= htmlspecialchars($pago['payment_id']); ?></td>
+                                <td><?= htmlspecialchars($pago['reservation_id']); ?></td>
+                                <td><strong>$<?= number_format($pago['amount'], 2); ?></strong></td>
+                                <td><?= htmlspecialchars($pago['payment_method']); ?></td>
+                                <td><?= htmlspecialchars($pago['payment_date']); ?></td>
+                                <td>
+                                    <span class="status-badge-pagos <?= $statusClass; ?>">
+                                        <?= ucfirst($pago['payment_status']); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="/plataforma-clases-online/home/verPago?id=<?= $pago['payment_id']; ?>" 
+                                       class="btn-detalle">
+                                        👁️ Ver Detalle
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </main>
-    <footer>
-        <p>&copy; 2025 Plataforma de Clases Online</p>
+
+    <footer class="modern-footer">
+        <div class="footer-content">
+            <div class="footer-info">
+                <div class="footer-brand">
+                    <span>💎</span>
+                    <span>Plataforma Clases Online</span>
+                </div>
+                <div class="footer-links">
+                    <a href="#privacidad">Privacidad</a>
+                    <a href="#terminos">Términos</a>
+                    <a href="#soporte">Soporte</a>
+                    <a href="#contacto">Contacto</a>
+                </div>
+            </div>
+            <div class="footer-copy">
+                © <?php echo date('Y'); ?> Plataforma Clases Online. Todos los derechos reservados.
+            </div>
+        </div>
     </footer>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/plataforma-clases-online/public/js/script.js"></script>
 </body>
 </html>
+
