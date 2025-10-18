@@ -2,6 +2,27 @@
 @import "variables-generales.css";
 
 
+/* Estilos para el login*/
+.login {
+  min-height: 100vh;
+}
+
+.bg-image {
+  background-image: url('https://static.wixstatic.com/media/04ba0b2450a4460bad90b90bc9908adf.jpg/v1/fill/w_839,h_559,al_c,q_85,usm_0.66_1.00_0.01,enc_auto/04ba0b2450a4460bad90b90bc9908adf.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+.login-heading {
+  font-weight: 300;
+}
+
+.btn-login {
+  font-size: 0.9rem;
+  letter-spacing: 0.05rem;
+  padding: 0.75rem 1rem;
+}
+
 /* Estilos básicos para el proyecto MVC */
 body {
     font-family: var(--font-stack-text);
@@ -110,3 +131,4 @@ footer {
     color: white;
     text-decoration: none;
 }
+
