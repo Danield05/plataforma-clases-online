@@ -60,6 +60,10 @@ function isActive($page, $currentUrl, $currentPage = '') {
                 <span class="nav-icon">👨‍🎓</span>
                 <span class="nav-text">Mis Estudiantes</span>
             </a>
+            <a href="/plataforma-clases-online/home/perfil_edit" class="nav-link <?= isActive('perfil_edit', $currentUrl, $currentPage); ?>">
+                <span class="nav-icon">👤</span>
+                <span class="nav-text">Mi Perfil</span>
+            </a>
         <?php elseif (isset($_SESSION['role']) && $_SESSION['role'] === 'estudiante'): ?>
             <a href="/plataforma-clases-online/home/reservas" class="nav-link <?= isActive('reservas', $currentUrl, $currentPage); ?>">
                 <span class="nav-icon">📅</span>
@@ -69,9 +73,13 @@ function isActive($page, $currentUrl, $currentPage = '') {
                 <span class="nav-icon">💰</span>
                 <span class="nav-text">Mis Pagos</span>
             </a>
-            <a href="/plataforma-clases-online/home/profesores" class="nav-link <?= isActive('profesores', $currentUrl, $currentPage); ?>">
+            <a href="/plataforma-clases-online/home/explorar_profesores" class="nav-link <?= isActive('explorar_profesores', $currentUrl, $currentPage); ?>">
                 <span class="nav-icon">🔍</span>
                 <span class="nav-text">Buscar Profesores</span>
+            </a>
+            <a href="/plataforma-clases-online/home/perfil_edit" class="nav-link <?= isActive('perfil_edit', $currentUrl, $currentPage); ?>">
+                <span class="nav-icon">👤</span>
+                <span class="nav-text">Mi Perfil</span>
             </a>
         <?php endif; ?>
 

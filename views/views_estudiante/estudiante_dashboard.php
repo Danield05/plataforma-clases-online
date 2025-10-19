@@ -28,6 +28,9 @@
                     <p class="welcome-subtitle">Bienvenido a tu espacio de aprendizaje personalizado</p>
                 </div>
                 <div class="col-lg-4 text-end">
+                    <a href="/plataforma-clases-online/home/perfil_edit" class="btn btn-outline-primary me-2">
+                        👤 Editar Perfil
+                    </a>
                     <a href="/plataforma-clases-online/auth/logout" class="btn btn-outline-danger">
                         🚪 Cerrar Sesión
                     </a>
@@ -39,22 +42,22 @@
         <div class="modern-stats-grid mb-5">
             <div class="modern-stat-card">
                 <div class="stat-icon">📚</div>
-                <div class="stat-value text-primary">0</div>
+                <div class="stat-value text-primary"><?php echo $stats['clasesReservadas']; ?></div>
                 <p class="stat-label">Clases Reservadas</p>
             </div>
             <div class="modern-stat-card">
                 <div class="stat-icon">✅</div>
-                <div class="stat-value text-success">0</div>
+                <div class="stat-value text-success"><?php echo $stats['clasesCompletadas']; ?></div>
                 <p class="stat-label">Clases Completadas</p>
             </div>
             <div class="modern-stat-card">
                 <div class="stat-icon">👨‍🏫</div>
-                <div class="stat-value text-info">0</div>
+                <div class="stat-value text-info"><?php echo $stats['profesoresActivos']; ?></div>
                 <p class="stat-label">Profesores Activos</p>
             </div>
             <div class="modern-stat-card">
                 <div class="stat-icon">💰</div>
-                <div class="stat-value text-warning">$0.00</div>
+                <div class="stat-value text-warning">$<?php echo number_format($stats['totalInvertido'], 2); ?></div>
                 <p class="stat-label">Total Invertido</p>
             </div>
         </div>
@@ -69,11 +72,27 @@
                         <span class="badge bg-primary">Próximas Clases</span>
                     </div>
                     <div class="card-body">
+                        <?php if (empty($reservas)): ?>
                         <div class="empty-state">
                             <div class="empty-icon">📚</div>
                             <p>No tienes clases reservadas aún</p>
-                            <a href="#" class="btn btn-primary btn-sm">Explorar Profesores</a>
+                            <a href="/plataforma-clases-online/home/explorar_profesores" class="btn btn-primary btn-sm">Explorar Profesores</a>
                         </div>
+                        <?php else: ?>
+                        <div class="list-group">
+                            <?php foreach ($reservas as $reserva): ?>
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1"><?php echo htmlspecialchars($reserva['profesor_name']); ?></h6>
+                                        <small class="text-muted"><?php echo htmlspecialchars($reserva['reservation_status']); ?> - <?php echo htmlspecialchars($reserva['class_date']); ?></small>
+                                    </div>
+                                    <span class="badge bg-<?php echo $reserva['reservation_status'] === 'confirmada' ? 'success' : 'secondary'; ?>"><?php echo htmlspecialchars($reserva['reservation_status']); ?></span>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -86,11 +105,28 @@
                         <span class="badge bg-success">Historial</span>
                     </div>
                     <div class="card-body">
+                        <?php if (empty($pagos)): ?>
                         <div class="empty-state">
                             <div class="empty-icon">💰</div>
                             <p>No hay pagos registrados</p>
-                            <a href="#" class="btn btn-success btn-sm">Ver Historial Completo</a>
+                            <a href="/plataforma-clases-online/home/pagos" class="btn btn-success btn-sm">Ver Historial Completo</a>
                         </div>
+                        <?php else: ?>
+                        <div class="list-group">
+                            <?php foreach (array_slice($pagos, 0, 3) as $pago): ?>
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <small class="text-muted">Reserva #<?php echo htmlspecialchars($pago['reservation_id']); ?></small>
+                                        <p class="mb-0">$<?php echo number_format($pago['amount'], 2); ?> - <?php echo htmlspecialchars($pago['payment_method']); ?></p>
+                                    </div>
+                                    <span class="badge bg-<?php echo $pago['payment_status'] === 'pagado' ? 'success' : 'warning'; ?>"><?php echo htmlspecialchars($pago['payment_status']); ?></span>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <a href="/plataforma-clases-online/home/pagos" class="btn btn-success btn-sm mt-2">Ver Historial Completo</a>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -109,7 +145,7 @@
                                     <div class="action-icon">🔍</div>
                                     <h4>Buscar Profesores</h4>
                                     <p>Encuentra el profesor perfecto para ti</p>
-                                    <a href="#" class="btn btn-outline-primary btn-sm">Buscar</a>
+                                    <a href="/plataforma-clases-online/home/explorar_profesores" class="btn btn-outline-primary btn-sm">Buscar</a>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -117,7 +153,7 @@
                                     <div class="action-icon">⭐</div>
                                     <h4>Mejor Valorados</h4>
                                     <p>Profesores con mejores calificaciones</p>
-                                    <a href="#" class="btn btn-outline-warning btn-sm">Ver Top</a>
+                                    <a href="/plataforma-clases-online/home/explorar_profesores" class="btn btn-outline-warning btn-sm">Ver Top</a>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -125,7 +161,7 @@
                                     <div class="action-icon">💡</div>
                                     <h4>Recomendados</h4>
                                     <p>Sugerencias personalizadas para ti</p>
-                                    <a href="#" class="btn btn-outline-info btn-sm">Explorar</a>
+                                    <a href="/plataforma-clases-online/home/explorar_profesores" class="btn btn-outline-info btn-sm">Explorar</a>
                                 </div>
                             </div>
                         </div>

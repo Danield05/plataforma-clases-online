@@ -20,27 +20,83 @@
     </header>
     
     <main>
-        <h2>Lista de Estudiantes</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Email</th>
-                    <th>Descripción Personal</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach($estudiantes as $estudiante): ?>
+            <?php
+            // Inicializaciones defensivas para evitar warnings si la variable no viene definida
+            $estudiantes = isset($estudiantes) ? $estudiantes : [];
+            $showForm = isset($showForm) ? $showForm : false;
+            $estudiante = isset($estudiante) ? $estudiante : null;
+            $user = isset($user) ? $user : null;
+            ?>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>Estudiantes</h2>
+                <div>
+                    <a href="/plataforma-clases-online/home/estudiantes_create" class="btn btn-primary">Crear estudiante</a>
+                </div>
+            </div>
+
+            <?php if ($showForm): ?>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title"><?= $estudiante ? 'Editar estudiante' : 'Nuevo estudiante' ?></h5>
+                        <form method="post" action="<?= $estudiante ? '/plataforma-clases-online/home/estudiantes_update' : '/plataforma-clases-online/home/estudiantes_store' ?>">
+                            <?php if ($estudiante): ?>
+                                <input type="hidden" name="user_id" value="<?= $estudiante['user_id'] ?>">
+                            <?php endif; ?>
+                            <div class="mb-3">
+                                <label class="form-label">Nombre</label>
+                                <input type="text" name="first_name" class="form-control" value="<?= $user ? htmlspecialchars($user['first_name']) : '' ?>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Apellido</label>
+                                <input type="text" name="last_name" class="form-control" value="<?= $user ? htmlspecialchars($user['last_name']) : '' ?>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control" value="<?= $user ? htmlspecialchars($user['email']) : '' ?>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Contraseña<?= $estudiante ? ' (opcional)' : '' ?></label>
+                                <input type="password" name="password" class="form-control"<?= !$estudiante ? ' required' : '' ?>>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Descripción personal</label>
+                                <textarea name="personal_description" class="form-control"><?= $estudiante ? htmlspecialchars($estudiante['personal_description']) : '' ?></textarea>
+                            </div>
+                            <button class="btn btn-success" type="submit">Guardar</button>
+                            <a href="/plataforma-clases-online/home/estudiantes" class="btn btn-secondary">Cancelar</a>
+                        </form>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <table class="table table-striped">
+                <thead>
                     <tr>
-                        <td><?php echo $estudiante['user_id']; ?></td>
-                        <td><?php echo $estudiante['first_name'] . ' ' . $estudiante['last_name']; ?></td>
-                        <td><?php echo $estudiante['email']; ?></td>
-                        <td><?php echo $estudiante['personal_description'] ?? 'N/A'; ?></td>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Email</th>
+                        <th>Descripción</th>
+                        <th>Acciones</th>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php foreach ((array)$estudiantes as $e): ?>
+                        <tr>
+                            <td><?= $e['user_id'] ?></td>
+                            <td><?= htmlspecialchars($e['first_name']) ?></td>
+                            <td><?= htmlspecialchars($e['last_name']) ?></td>
+                            <td><?= htmlspecialchars($e['email']) ?></td>
+                            <td><?= htmlspecialchars($e['personal_description'] ?? '') ?></td>
+                            <td>
+                                <a href="/plataforma-clases-online/home/estudiantes_edit?id=<?= $e['user_id'] ?>" class="btn btn-sm btn-primary">Editar</a>
+                                <a href="/plataforma-clases-online/home/estudiantes_delete?id=<?= $e['user_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar estudiante?');">Eliminar</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
     </main>
     
     <footer class="modern-footer">
