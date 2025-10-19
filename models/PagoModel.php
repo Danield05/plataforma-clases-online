@@ -32,5 +32,46 @@ class PagoModel {
         $stmt = $this->db->prepare("UPDATE Pagos SET payment_status_id = ? WHERE payment_id = ?");
         return $stmt->execute([$statusId, $id]);
     }
+    /* NUEVOS MÉTODOS PARA LOS TOTALES */
+    public function getTotales() {
+        $totales = [
+            'totalRecaudado' => 0,
+            'totalPendientes' => 0,
+            'totalPagados' => 0,
+            'totalCancelados' => 0
+        ];
+
+        // Total recaudado (solo pagados)
+        $stmt = $this->db->query("
+            SELECT SUM(amount) as total
+            FROM Pagos
+            WHERE payment_status_id = 3
+        ");
+        $totales['totalRecaudado'] = $stmt->fetchColumn() ?? 0;
+
+        // Contar cada estado
+        $stmt = $this->db->query("
+            SELECT ep.status, COUNT(*) as cantidad
+            FROM Pagos p
+            JOIN Estados_Pago ep ON p.payment_status_id = ep.payment_status_id
+            GROUP BY ep.status
+        ");
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $estado = strtolower($row['status']);
+            switch ($estado) {
+                case 'pendiente':
+                    $totales['totalPendientes'] = $row['cantidad'];
+                    break;
+                case 'pagado':
+                    $totales['totalPagados'] = $row['cantidad'];
+                    break;
+                case 'cancelado':
+                    $totales['totalCancelados'] = $row['cantidad'];
+                    break;
+            }
+        }
+
+        return $totales;
+    }
 }
 ?>
