@@ -45,5 +45,11 @@ class DisponibilidadModel {
             $id
         ]);
     }
+
+    // Borrar disponibilidad
+    public function deleteDisponibilidad($id) {
+        $stmt = $this->db->prepare("DELETE FROM Disponibilidad_Profesores WHERE availability_id = ?");
+        return $stmt->execute([$id]);
+    }
 }
 ?>

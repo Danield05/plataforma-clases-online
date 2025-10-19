@@ -33,6 +33,18 @@ class PagoModel {
         return $stmt->execute([$statusId, $id]);
     }
     /* NUEVOS MÉTODOS PARA LOS TOTALES */
+    public function getPagosByEstudiante($studentUserId) {
+        $stmt = $this->db->prepare("SELECT p.*, r.reservation_id, ep.status as payment_status FROM Pagos p JOIN Reservas r ON p.reservation_id = r.reservation_id JOIN Estados_Pago ep ON p.payment_status_id = ep.payment_status_id WHERE r.student_user_id = ?");
+        $stmt->execute([$studentUserId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getPagosByProfesor($profesorUserId) {
+        $stmt = $this->db->prepare("SELECT p.*, r.reservation_id, ep.status as payment_status FROM Pagos p JOIN Reservas r ON p.reservation_id = r.reservation_id JOIN Estados_Pago ep ON p.payment_status_id = ep.payment_status_id WHERE r.user_id = ?");
+        $stmt->execute([$profesorUserId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function getTotales() {
         $totales = [
             'totalRecaudado' => 0,
