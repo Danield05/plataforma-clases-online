@@ -64,14 +64,17 @@
 
         <!-- Secciones del Dashboard -->
         <div class="row g-4">
-            <!-- Mis Reservas -->
+            <!-- Calendario de Reservas -->
             <div class="col-lg-6">
                 <div class="dashboard-card">
                     <div class="card-header">
-                        <h3>📅 Mis Reservas</h3>
+                        <h3>📅 Mi Calendario de Clases</h3>
                         <span class="badge bg-primary">Próximas Clases</span>
                     </div>
                     <div class="card-body">
+                        <div id="calendarioReservas" class="mb-3" style="overflow-x: auto;">
+                            <!-- Calendario se cargará aquí -->
+                        </div>
                         <?php if (empty($reservas)): ?>
                         <div class="empty-state">
                             <div class="empty-icon">📚</div>
@@ -80,17 +83,32 @@
                         </div>
                         <?php else: ?>
                         <div class="list-group">
-                            <?php foreach ($reservas as $reserva): ?>
+                            <?php
+                            // Ordenar reservas por fecha
+                            usort($reservas, function($a, $b) {
+                                return strtotime($a['class_date']) - strtotime($b['class_date']);
+                            });
+                            $proximasReservas = array_slice($reservas, 0, 3);
+                            ?>
+                            <?php foreach ($proximasReservas as $reserva): ?>
                             <div class="list-group-item">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h6 class="mb-1"><?php echo htmlspecialchars($reserva['profesor_name']); ?></h6>
-                                        <small class="text-muted"><?php echo htmlspecialchars($reserva['reservation_status']); ?> - <?php echo htmlspecialchars($reserva['class_date']); ?></small>
+                                        <small class="text-muted">
+                                            📅 <?php echo date('d/m/Y', strtotime($reserva['class_date'])); ?> -
+                                            <?php echo htmlspecialchars($reserva['reservation_status']); ?>
+                                        </small>
                                     </div>
-                                    <span class="badge bg-<?php echo $reserva['reservation_status'] === 'confirmada' ? 'success' : 'secondary'; ?>"><?php echo htmlspecialchars($reserva['reservation_status']); ?></span>
+                                    <span class="badge bg-<?php echo $reserva['reservation_status'] === 'confirmada' ? 'success' : ($reserva['reservation_status'] === 'pendiente' ? 'warning' : 'secondary'); ?>">
+                                        <?php echo htmlspecialchars($reserva['reservation_status']); ?>
+                                    </span>
                                 </div>
                             </div>
                             <?php endforeach; ?>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="/plataforma-clases-online/home/reservas" class="btn btn-outline-primary btn-sm">Ver Todas las Reservas</a>
                         </div>
                         <?php endif; ?>
                     </div>
@@ -193,5 +211,105 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/plataforma-clases-online/public/js/script.js"></script>
+    <script>
+        // Función para inicializar el calendario de reservas
+        function inicializarCalendarioReservas() {
+            const calendarioContainer = document.getElementById('calendarioReservas');
+            const hoy = new Date();
+            const mesActual = hoy.getMonth();
+            const anioActual = hoy.getFullYear();
+
+            // Crear calendario simple
+            const calendarioHTML = generarCalendario(mesActual, anioActual);
+            calendarioContainer.innerHTML = calendarioHTML;
+        }
+
+        function generarCalendario(mes, anio) {
+            const nombresMeses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+            const primerDia = new Date(anio, mes, 1);
+            const ultimoDia = new Date(anio, mes + 1, 0);
+            const diasEnMes = ultimoDia.getDate();
+            const diaSemanaInicio = primerDia.getDay();
+
+            let html = `
+                <div class="text-center mb-3">
+                    <h5>${nombresMeses[mes]} ${anio}</h5>
+                </div>
+                <table class="table table-bordered table-sm" style="min-width: 100%; font-size: 0.875rem;">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Dom</th>
+                            <th class="text-center">Lun</th>
+                            <th class="text-center">Mar</th>
+                            <th class="text-center">Mié</th>
+                            <th class="text-center">Jue</th>
+                            <th class="text-center">Vie</th>
+                            <th class="text-center">Sáb</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            let diaActual = 1;
+            for (let semana = 0; semana < 6; semana++) {
+                html += '<tr>';
+                for (let diaSemana = 0; diaSemana < 7; diaSemana++) {
+                    if ((semana === 0 && diaSemana < diaSemanaInicio) || diaActual > diasEnMes) {
+                        html += '<td></td>';
+                    } else {
+                        const fechaActual = `${anio}-${String(mes + 1).padStart(2, '0')}-${String(diaActual).padStart(2, '0')}`;
+                        const tieneReserva = verificarReservaEnFecha(fechaActual);
+                        const claseDia = tieneReserva ? 'table-primary' : '';
+                        const hoyClass = fechaActual === new Date().toISOString().split('T')[0] ? 'fw-bold' : '';
+
+                        html += `<td class="text-center ${claseDia} ${hoyClass}" style="cursor: pointer;" onclick="mostrarDetalleDia('${fechaActual}')">${diaActual}</td>`;
+                        diaActual++;
+                    }
+                }
+                html += '</tr>';
+                if (diaActual > diasEnMes) break;
+            }
+
+            html += `
+                    </tbody>
+                </table>
+                <div class="text-muted small">
+                    <span class="badge bg-primary me-2">●</span> Día con reserva
+                </div>
+            `;
+
+            return html;
+        }
+
+        function verificarReservaEnFecha(fecha) {
+            // Verificar si hay reserva en esta fecha (simulado con datos PHP)
+            <?php
+            $fechasReservas = array_column($reservas, 'class_date');
+            echo 'const fechasReservas = ' . json_encode($fechasReservas) . ';';
+            ?>
+            return fechasReservas.includes(fecha);
+        }
+
+        function mostrarDetalleDia(fecha) {
+            const reservasDia = <?php echo json_encode($reservas); ?>.filter(r => r.class_date === fecha);
+
+            if (reservasDia.length > 0) {
+                let detalle = `Reservas para ${fecha}:\n\n`;
+                reservasDia.forEach(reserva => {
+                    detalle += `• ${reserva.profesor_name} - ${reserva.reservation_status}\n`;
+                });
+                alert(detalle);
+            } else {
+                alert(`No hay reservas programadas para ${fecha}`);
+            }
+        }
+
+        // Inicializar calendario cuando se carga la página
+        document.addEventListener('DOMContentLoaded', function() {
+            inicializarCalendarioReservas();
+        });
+    </script>
 </body>
 </html>

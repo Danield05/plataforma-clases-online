@@ -42,6 +42,57 @@ class ReservaModel {
         ]);
     }
 
+    public function checkAvailability($profesorId, $date, $availabilityId = null) {
+        // Verificar si el slot está disponible (no reservado)
+        $query = "SELECT COUNT(*) as count FROM Reservas r
+                  JOIN Disponibilidad_Profesores d ON r.availability_id = d.availability_id
+                  WHERE d.user_id = ? AND r.class_date = ? AND r.reservation_status_id IN (1, 2)"; // 1=pendiente, 2=confirmada
+
+        if ($availabilityId) {
+            $query .= " AND r.availability_id = ?";
+        }
+
+        $stmt = $this->db->prepare($query);
+        if ($availabilityId) {
+            $stmt->execute([$profesorId, $date, $availabilityId]);
+        } else {
+            $stmt->execute([$profesorId, $date]);
+        }
+
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['count'] == 0;
+    }
+
+    public function getAvailableSlots($profesorId, $startDate = null, $endDate = null) {
+        if (!$startDate) $startDate = date('Y-m-d');
+        if (!$endDate) $endDate = date('Y-m-d', strtotime('+30 days'));
+
+        $stmt = $this->db->prepare("
+            SELECT d.*, ds.day, er.status,
+                   CASE WHEN r.reservation_id IS NULL THEN 1 ELSE 0 END as available
+            FROM Disponibilidad_Profesores d
+            JOIN Dias_Semana ds ON d.week_day_id = ds.week_day_id
+            JOIN Estados_Reserva er ON d.reservation_status_id = er.reservation_status_id
+            LEFT JOIN Reservas r ON d.availability_id = r.availability_id
+                AND r.class_date BETWEEN ? AND ?
+                AND r.reservation_status_id IN (1, 2)
+            WHERE d.user_id = ?
+            ORDER BY ds.day, d.start_time
+        ");
+
+        $stmt->execute([$startDate, $endDate, $profesorId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function createReservaWithCheck($data) {
+        // Verificar disponibilidad antes de crear
+        if (!$this->checkAvailability($data['user_id'], $data['class_date'], $data['availability_id'])) {
+            return false; // No disponible
+        }
+
+        return $this->createReserva($data);
+    }
+
     public function updateReservaStatus($id, $statusId) {
         $stmt = $this->db->prepare("UPDATE Reservas SET reservation_status_id = ? WHERE reservation_id = ?");
         return $stmt->execute([$statusId, $id]);

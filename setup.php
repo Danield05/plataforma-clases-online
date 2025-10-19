@@ -61,9 +61,9 @@ try {
     $stmt = $pdo->query("SELECT 1");
     echo "✅ Conexión a base de datos exitosa\n";
 
-    // Verificar si las tablas existen
+    // Verificar si las tablas existen y crear datos iniciales si es necesario
     echo "\n5. Verificando estructura de base de datos...\n";
-    $tables = ['usuarios', 'roles', 'estados_usuario', 'administrador', 'profesor', 'estudiante'];
+    $tables = ['usuarios', 'roles', 'estados_usuario', 'estados_reserva', 'dias_semana', 'administrador', 'profesor', 'estudiante', 'disponibilidad_profesores', 'reservas'];
     $missing_tables = [];
 
     foreach ($tables as $table) {
@@ -75,10 +75,95 @@ try {
 
     if (!empty($missing_tables)) {
         echo "⚠️  Tablas faltantes: " . implode(', ', $missing_tables) . "\n";
-        echo "Ejecuta el archivo plataforma_clases.sql en tu base de datos.\n";
+        echo "Creando tablas faltantes...\n";
+
+        // Crear tablas faltantes
+        try {
+            // Crear tabla de estados de reserva si no existe
+            if (!in_array('estados_reserva', $missing_tables) === false) {
+                $pdo->exec("
+                    CREATE TABLE IF NOT EXISTS estados_reserva (
+                        reservation_status_id INT PRIMARY KEY,
+                        status VARCHAR(20)
+                    )
+                ");
+                $pdo->exec("INSERT IGNORE INTO estados_reserva (reservation_status_id, status) VALUES
+                    (1, 'Disponible'),
+                    (2, 'Reservado'),
+                    (3, 'Cancelado'),
+                    (4, 'Completado'),
+                    (5, 'No Disponible')");
+                echo "✅ Tabla estados_reserva creada\n";
+            }
+
+            // Crear tabla de días de la semana si no existe
+            if (!in_array('dias_semana', $missing_tables) === false) {
+                $pdo->exec("
+                    CREATE TABLE IF NOT EXISTS dias_semana (
+                        week_day_id INT PRIMARY KEY,
+                        day VARCHAR(20)
+                    )
+                ");
+                $pdo->exec("INSERT IGNORE INTO dias_semana (week_day_id, day) VALUES
+                    (1, 'Lunes'),
+                    (2, 'Martes'),
+                    (3, 'Miércoles'),
+                    (4, 'Jueves'),
+                    (5, 'Viernes'),
+                    (6, 'Sábado'),
+                    (7, 'Domingo')");
+                echo "✅ Tabla dias_semana creada\n";
+            }
+
+            // Crear tabla de disponibilidad si no existe
+            if (!in_array('disponibilidad_profesores', $missing_tables) === false) {
+                $pdo->exec("
+                    CREATE TABLE IF NOT EXISTS disponibilidad_profesores (
+                        availability_id INT AUTO_INCREMENT PRIMARY KEY,
+                        user_id INT NOT NULL,
+                        week_day_id INT NOT NULL,
+                        reservation_status_id INT NOT NULL,
+                        start_time TIME NOT NULL,
+                        end_time TIME NOT NULL,
+                        FOREIGN KEY (user_id) REFERENCES usuarios(user_id),
+                        FOREIGN KEY (week_day_id) REFERENCES dias_semana(week_day_id),
+                        FOREIGN KEY (reservation_status_id) REFERENCES estados_reserva(reservation_status_id)
+                    )
+                ");
+                echo "✅ Tabla disponibilidad_profesores creada\n";
+            }
+
+            // Crear tabla de reservas si no existe
+            if (!in_array('reservas', $missing_tables) === false) {
+                $pdo->exec("
+                    CREATE TABLE IF NOT EXISTS reservas (
+                        reservation_id INT PRIMARY KEY,
+                        user_id INT NOT NULL,
+                        student_user_id INT NOT NULL,
+                        availability_id INT NOT NULL,
+                        reservation_status_id INT NOT NULL,
+                        reservation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        class_date DATETIME NOT NULL,
+                        FOREIGN KEY (user_id) REFERENCES usuarios(user_id),
+                        FOREIGN KEY (student_user_id) REFERENCES usuarios(user_id),
+                        FOREIGN KEY (availability_id) REFERENCES disponibilidad_profesores(availability_id),
+                        FOREIGN KEY (reservation_status_id) REFERENCES estados_reserva(reservation_status_id)
+                    )
+                ");
+                echo "✅ Tabla reservas creada\n";
+            }
+
+        } catch (Exception $e) {
+            echo "❌ Error creando tablas: " . $e->getMessage() . "\n";
+        }
+
     } else {
         echo "✅ Todas las tablas existen\n";
     }
+
+    // Ejecutar migraciones para asegurar que todo esté actualizado
+    echo "\n6. Ejecutando migraciones...\n";
+    require_once 'migrations.php';
 
 } catch (Exception $e) {
     echo "❌ Error de conexión: " . $e->getMessage() . "\n";

@@ -98,16 +98,21 @@
                         </div>
 
                         <div class="profesor-actions mt-3">
-                            <a href="/plataforma-clases-online/home/disponibilidad?profesor=<?php echo $profesor['user_id']; ?>"
-                               class="btn btn-primary btn-sm me-2">
+                            <button class="btn btn-primary btn-sm me-2 ver-disponibilidad"
+                                    data-profesor-id="<?php echo $profesor['user_id']; ?>"
+                                    data-profesor-name="<?php echo htmlspecialchars($profesor['first_name'] . ' ' . $profesor['last_name']); ?>"
+                                    type="button">
                                 📅 Ver Disponibilidad
-                            </a>
+                            </button>
                             <button class="btn btn-outline-success btn-sm contact-profesor"
                                     data-profesor-id="<?php echo $profesor['user_id']; ?>"
-                                    data-profesor-name="<?php echo htmlspecialchars($profesor['first_name'] . ' ' . $profesor['last_name']); ?>">
+                                    data-profesor-name="<?php echo htmlspecialchars($profesor['first_name'] . ' ' . $profesor['last_name']); ?>"
+                                    type="button">
                                 💬 Contactar
                             </button>
                         </div>
+
+                        <!-- Modal eliminado - ahora se crea dinámicamente -->
                     </div>
                 </div>
             </div>
@@ -178,6 +183,81 @@
             });
         }
 
+        // Funcionalidad de ver disponibilidad - versión simplificada
+        document.querySelectorAll('.ver-disponibilidad').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const profesorId = this.getAttribute('data-profesor-id');
+                const profesorName = this.getAttribute('data-profesor-name');
+
+                // Crear horarios desde la disponibilidad real del profesor
+                const horariosEjemplo = <?php
+                    $profesorId = $profesor['user_id'];
+                    $disponibilidades = $disponibilidadModel->getDisponibilidadesByProfesor($profesorId);
+                    $horarios = [];
+                    foreach ($disponibilidades as $disp) {
+                        if ($disp['reservation_status_id'] == 1) { // Solo disponibles
+                            $horarios[] = [
+                                'hora' => substr($disp['start_time'], 0, 5) . ' - ' . substr($disp['end_time'], 0, 5),
+                                'id' => $disp['availability_id']
+                            ];
+                        }
+                    }
+                    echo json_encode($horarios);
+                ?>;
+
+                let horariosHtml = '<div class="row g-2">';
+                if (horariosEjemplo.length > 0) {
+                    horariosEjemplo.forEach(horario => {
+                        horariosHtml += `
+                            <div class="col-md-6">
+                                <div class="card p-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>${horario.hora}</span>
+                                        <button class="btn btn-success btn-sm" onclick="reservarHorario('${horario.id}', '${profesorId}')">
+                                            Reservar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    horariosHtml += '<p class="text-muted">No hay horarios disponibles para este profesor.</p>';
+                }
+                horariosHtml += '</div>';
+
+                // Mostrar modal con horarios
+                const modalHtml = `
+                    <div class="modal fade show" id="modalDisponibilidad${profesorId}" style="display: block;" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">📅 Disponibilidad de ${profesorName}</h5>
+                                    <button type="button" class="btn-close" onclick="cerrarModal('${profesorId}')"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Seleccionar Fecha:</label>
+                                        <input type="date" class="form-control" id="fechaSeleccion${profesorId}" value="${new Date().toISOString().split('T')[0]}">
+                                    </div>
+                                    <div id="horariosDisponibles${profesorId}">
+                                        ${horariosHtml}
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" onclick="cerrarModal('${profesorId}')">Cerrar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-backdrop fade show"></div>
+                `;
+
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+            });
+        });
+
         // Funcionalidad de contacto
         document.querySelectorAll('.contact-profesor').forEach(button => {
             button.addEventListener('click', function() {
@@ -185,6 +265,44 @@
                 alert(`Función de contacto próximamente disponible para ${profesorName}`);
             });
         });
+
+        // Función para cerrar modal
+        function cerrarModal(profesorId) {
+            const modal = document.getElementById(`modalDisponibilidad${profesorId}`);
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (modal) modal.remove();
+            if (backdrop) backdrop.remove();
+        }
+
+        // Función para reservar horario
+        function reservarHorario(availabilityId, profesorId) {
+            // Obtener fecha del modal
+            const modal = document.querySelector(`#modalDisponibilidad${profesorId}`);
+            const fechaInput = modal.querySelector(`#fechaSeleccion${profesorId}`);
+            const fecha = fechaInput ? fechaInput.value : new Date().toISOString().split('T')[0];
+
+            // Crear formulario y enviar
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/plataforma-clases-online/home/reservar_clase';
+
+            const fields = [
+                {name: 'availability_id', value: availabilityId},
+                {name: 'class_date', value: fecha},
+                {name: 'profesor_id', value: profesorId}
+            ];
+
+            fields.forEach(field => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = field.name;
+                input.value = field.value;
+                form.appendChild(input);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
+        }
     </script>
 </body>
 </html>

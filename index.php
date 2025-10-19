@@ -25,6 +25,14 @@ if (isset($url[1]) && !empty($url[1])) {
     $action = $url[1];
 }
 
+// Manejar rutas específicas para estudiantes
+if ($controller === 'HomeController' && isset($url[1]) && $url[1] === 'get_available_slots') {
+    $action = 'get_available_slots';
+}
+if ($controller === 'HomeController' && isset($url[1]) && $url[1] === 'reservar_clase') {
+    $action = 'reservar_clase';
+}
+
 // Incluir y ejecutar el controlador
 $controllerFile = 'controllers/' . $controller . '.php';
 if (file_exists($controllerFile)) {

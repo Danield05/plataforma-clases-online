@@ -476,6 +476,13 @@ class HomeController
         $estados = $estadosModel->getEstadosReserva();
         $profesores = $profesorModel->getProfesores();
 
+        // Si es profesor, filtrar solo su propio perfil
+        if ($_SESSION['role'] === 'profesor') {
+            $profesores = array_filter($profesores, function($p) {
+                return $p['user_id'] == $_SESSION['user_id'];
+            });
+        }
+
         $showForm = true;
         require_once 'views/disponibilidad.php';
     }
@@ -493,8 +500,11 @@ class HomeController
         require_once 'models/DisponibilidadModel.php';
         $disModel = new DisponibilidadModel();
 
+        // Si es profesor, forzar que use su propio user_id
+        $userId = ($_SESSION['role'] === 'profesor') ? $_SESSION['user_id'] : ($_POST['user_id'] ?? $_SESSION['user_id']);
+
         $data = [
-            'user_id' => $_POST['user_id'] ?? $_SESSION['user_id'],
+            'user_id' => $userId,
             'week_day_id' => $_POST['week_day_id'] ?? null,
             'reservation_status_id' => $_POST['reservation_status_id'] ?? null,
             'start_time' => $_POST['start_time'] ?? null,
@@ -718,17 +728,31 @@ class HomeController
 
         require_once 'models/ProfesorModel.php';
         require_once 'models/ReviewModel.php';
+        require_once 'models/DisponibilidadModel.php';
+        require_once 'models/ReservaModel.php';
 
         $profesorModel = new ProfesorModel();
         $reviewModel = new ReviewModel();
+        $disponibilidadModel = new DisponibilidadModel();
+        $reservaModel = new ReservaModel();
 
         $profesores = $profesorModel->getProfesores();
 
-        // Obtener reseñas para cada profesor
+        // Obtener reseñas y disponibilidad para cada profesor
         foreach ($profesores as &$profesor) {
             $reviews = $reviewModel->getReviewsByProfesor($profesor['user_id']);
             $profesor['rating'] = !empty($reviews) ? array_sum(array_column($reviews, 'rating')) / count($reviews) : 0;
             $profesor['review_count'] = count($reviews);
+
+            // Obtener disponibilidad del profesor
+            $disponibilidades = $disponibilidadModel->getDisponibilidadesByProfesor($profesor['user_id']);
+            $profesor['disponibilidades'] = $disponibilidades;
+
+            // Obtener slots disponibles para los próximos 7 días
+            $availableSlots = $reservaModel->getAvailableSlots($profesor['user_id'], date('Y-m-d'), date('Y-m-d', strtotime('+7 days')));
+            $profesor['available_slots'] = array_filter($availableSlots, function($slot) {
+                return $slot['available'] == 1;
+            });
         }
 
         $data = [
@@ -848,6 +872,55 @@ class HomeController
         require_once 'views/reportes.php';
     }
 
+    public function reservar_clase()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['estudiante']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /plataforma-clases-online/home/explorar_profesores');
+            exit;
+        }
+
+        require_once 'models/ReservaModel.php';
+        $reservaModel = new ReservaModel();
+
+        $availabilityId = $_POST['availability_id'] ?? null;
+        $classDate = $_POST['class_date'] ?? null;
+        $profesorId = $_POST['profesor_id'] ?? null;
+
+        if (!$availabilityId || !$classDate || !$profesorId) {
+            header('Location: /plataforma-clases-online/home/explorar_profesores?error=missing_data');
+            exit;
+        }
+
+        // Verificar disponibilidad
+        if (!$reservaModel->checkAvailability($profesorId, $classDate, $availabilityId)) {
+            header('Location: /plataforma-clases-online/home/explorar_profesores?error=not_available');
+            exit;
+        }
+
+        // Crear reserva
+        $reservationId = uniqid('res_');
+        $data = [
+            'reservation_id' => $reservationId,
+            'user_id' => $profesorId,
+            'student_user_id' => $_SESSION['user_id'],
+            'availability_id' => $availabilityId,
+            'reservation_status_id' => 1, // Pendiente
+            'class_date' => $classDate
+        ];
+
+        $success = $reservaModel->createReserva($data);
+
+        if ($success) {
+            header('Location: /plataforma-clases-online/home/estudiante_dashboard?success=reservation_created');
+        } else {
+            header('Location: /plataforma-clases-online/home/explorar_profesores?error=creation_failed');
+        }
+        exit;
+    }
+
     public function mensajes()
     {
         AuthController::checkAuth();
@@ -869,6 +942,55 @@ class HomeController
 
         extract($data);
         require_once 'views/mensajes.php';
+    }
+
+    public function get_available_slots()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['estudiante']);
+
+        $profesorId = $_GET['profesor_id'] ?? null;
+        $fecha = $_GET['fecha'] ?? null;
+
+        if (!$profesorId || !$fecha) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
+            exit;
+        }
+
+        require_once 'models/ReservaModel.php';
+        require_once 'models/DisponibilidadModel.php';
+
+        $reservaModel = new ReservaModel();
+        $disponibilidadModel = new DisponibilidadModel();
+
+        // Obtener disponibilidad del profesor para esa fecha
+        $diaSemana = date('N', strtotime($fecha)); // 1=Lunes, 7=Domingo
+
+        $disponibilidades = $disponibilidadModel->getDisponibilidadesByProfesor($profesorId);
+
+        $slotsDisponibles = [];
+        foreach ($disponibilidades as $disp) {
+            // Solo mostrar slots que estén marcados como "Disponible" (ID 1)
+            if ($disp['week_day_id'] == $diaSemana && $disp['reservation_status_id'] == 1) {
+                // Verificar si este slot específico está disponible (no reservado)
+                if ($reservaModel->checkAvailability($profesorId, $fecha, $disp['availability_id'])) {
+                    $slotsDisponibles[] = [
+                        'availability_id' => $disp['availability_id'],
+                        'start_time' => $disp['start_time'],
+                        'end_time' => $disp['end_time'],
+                        'day' => $disp['day']
+                    ];
+                }
+            }
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'slots' => $slotsDisponibles
+        ]);
+        exit;
     }
 
     public function ver_estudiante()
