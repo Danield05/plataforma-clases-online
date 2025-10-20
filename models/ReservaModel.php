@@ -68,15 +68,15 @@ class ReservaModel {
         if (!$endDate) $endDate = date('Y-m-d', strtotime('+30 days'));
 
         $stmt = $this->db->prepare("
-            SELECT d.*, ds.day, er.status,
-                   CASE WHEN r.reservation_id IS NULL THEN 1 ELSE 0 END as available
+            SELECT d.*, ds.day, ed.status as availability_status,
+                    CASE WHEN r.reservation_id IS NULL THEN 1 ELSE 0 END as available
             FROM Disponibilidad_Profesores d
             JOIN Dias_Semana ds ON d.week_day_id = ds.week_day_id
-            JOIN Estados_Reserva er ON d.reservation_status_id = er.reservation_status_id
+            JOIN Estados_Disponibilidad ed ON d.availability_status_id = ed.availability_status_id
             LEFT JOIN Reservas r ON d.availability_id = r.availability_id
                 AND r.class_date BETWEEN ? AND ?
                 AND r.reservation_status_id IN (1, 2)
-            WHERE d.user_id = ?
+            WHERE d.user_id = ? AND d.availability_status_id = 1
             ORDER BY ds.day, d.start_time
         ");
 
@@ -96,6 +96,52 @@ class ReservaModel {
     public function updateReservaStatus($id, $statusId) {
         $stmt = $this->db->prepare("UPDATE Reservas SET reservation_status_id = ? WHERE reservation_id = ?");
         return $stmt->execute([$statusId, $id]);
+    }
+
+    public function cancelReserva($reservationId, $userId) {
+        // Debug: Obtener información de la reserva
+        $stmt = $this->db->prepare("SELECT r.*, er.status as estado_actual FROM Reservas r JOIN Estados_Reserva er ON r.reservation_status_id = er.reservation_status_id WHERE reservation_id = ?");
+        $stmt->execute([$reservationId]);
+        $reserva = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$reserva) {
+            return false; // Reserva no encontrada
+        }
+
+        // Verificar que la reserva pertenece al usuario (estudiante o profesor)
+        $stmt = $this->db->prepare("SELECT * FROM Reservas WHERE reservation_id = ? AND (student_user_id = ? OR user_id = ?)");
+        $stmt->execute([$reservationId, $userId, $userId]);
+        $reservaPropia = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$reservaPropia) {
+            return false; // Reserva no pertenece al usuario
+        }
+
+        // Verificar que el estado actual permita cancelación (pendiente o confirmada)
+        if (!in_array($reserva['reservation_status_id'], [1, 2])) {
+            return false; // Estado no permite cancelación
+        }
+
+        // Cambiar estado a cancelado (ID 3)
+        $stmt = $this->db->prepare("UPDATE Reservas SET reservation_status_id = 3 WHERE reservation_id = ?");
+        return $stmt->execute([$reservationId]);
+    }
+
+    public function fixEstadosReserva() {
+        // Corregir los estados en la tabla Estados_Reserva con mayúsculas
+        $estados = [
+            1 => 'Pendiente',
+            2 => 'Confirmada',
+            3 => 'Cancelada',
+            4 => 'Completada'
+        ];
+
+        foreach ($estados as $id => $estado) {
+            $stmt = $this->db->prepare("UPDATE Estados_Reserva SET status = ? WHERE reservation_status_id = ?");
+            $stmt->execute([$estado, $id]);
+        }
+
+        return true;
     }
 }
 ?>

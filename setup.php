@@ -34,7 +34,7 @@ echo "3. Verificando configuración de base de datos...\n";
 $config_file = 'config/database.php';
 
 if (!file_exists($config_file)) {
-    if (file_exists('config/database.example.php')) {
+    if (file_exists('config/database.php')) {
         echo "⚠️  Archivo database.php no encontrado.\n";
         echo "Copiando archivo de ejemplo...\n";
         copy('config/database.example.php', $config_file);
@@ -61,9 +61,9 @@ try {
     $stmt = $pdo->query("SELECT 1");
     echo "✅ Conexión a base de datos exitosa\n";
 
-    // Verificar si las tablas existen y crear datos iniciales si es necesario
+    // Verificar si las tablas existen
     echo "\n5. Verificando estructura de base de datos...\n";
-    $tables = ['usuarios', 'roles', 'estados_usuario', 'estados_reserva', 'dias_semana', 'administrador', 'profesor', 'estudiante', 'disponibilidad_profesores', 'reservas'];
+    $tables = ['usuarios', 'roles', 'estados_usuario', 'estados_reserva', 'estados_disponibilidad', 'dias_semana', 'disponibilidad_profesores', 'reservas'];
     $missing_tables = [];
 
     foreach ($tables as $table) {
@@ -74,96 +74,130 @@ try {
     }
 
     if (!empty($missing_tables)) {
-        echo "⚠️  Tablas faltantes: " . implode(', ', $missing_tables) . "\n";
-        echo "Creando tablas faltantes...\n";
-
-        // Crear tablas faltantes
-        try {
-            // Crear tabla de estados de reserva si no existe
-            if (!in_array('estados_reserva', $missing_tables) === false) {
-                $pdo->exec("
-                    CREATE TABLE IF NOT EXISTS estados_reserva (
-                        reservation_status_id INT PRIMARY KEY,
-                        status VARCHAR(20)
-                    )
-                ");
-                $pdo->exec("INSERT IGNORE INTO estados_reserva (reservation_status_id, status) VALUES
-                    (1, 'Disponible'),
-                    (2, 'Reservado'),
-                    (3, 'Cancelado'),
-                    (4, 'Completado'),
-                    (5, 'No Disponible')");
-                echo "✅ Tabla estados_reserva creada\n";
-            }
-
-            // Crear tabla de días de la semana si no existe
-            if (!in_array('dias_semana', $missing_tables) === false) {
-                $pdo->exec("
-                    CREATE TABLE IF NOT EXISTS dias_semana (
-                        week_day_id INT PRIMARY KEY,
-                        day VARCHAR(20)
-                    )
-                ");
-                $pdo->exec("INSERT IGNORE INTO dias_semana (week_day_id, day) VALUES
-                    (1, 'Lunes'),
-                    (2, 'Martes'),
-                    (3, 'Miércoles'),
-                    (4, 'Jueves'),
-                    (5, 'Viernes'),
-                    (6, 'Sábado'),
-                    (7, 'Domingo')");
-                echo "✅ Tabla dias_semana creada\n";
-            }
-
-            // Crear tabla de disponibilidad si no existe
-            if (!in_array('disponibilidad_profesores', $missing_tables) === false) {
-                $pdo->exec("
-                    CREATE TABLE IF NOT EXISTS disponibilidad_profesores (
-                        availability_id INT AUTO_INCREMENT PRIMARY KEY,
-                        user_id INT NOT NULL,
-                        week_day_id INT NOT NULL,
-                        reservation_status_id INT NOT NULL,
-                        start_time TIME NOT NULL,
-                        end_time TIME NOT NULL,
-                        FOREIGN KEY (user_id) REFERENCES usuarios(user_id),
-                        FOREIGN KEY (week_day_id) REFERENCES dias_semana(week_day_id),
-                        FOREIGN KEY (reservation_status_id) REFERENCES estados_reserva(reservation_status_id)
-                    )
-                ");
-                echo "✅ Tabla disponibilidad_profesores creada\n";
-            }
-
-            // Crear tabla de reservas si no existe
-            if (!in_array('reservas', $missing_tables) === false) {
-                $pdo->exec("
-                    CREATE TABLE IF NOT EXISTS reservas (
-                        reservation_id INT PRIMARY KEY,
-                        user_id INT NOT NULL,
-                        student_user_id INT NOT NULL,
-                        availability_id INT NOT NULL,
-                        reservation_status_id INT NOT NULL,
-                        reservation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        class_date DATETIME NOT NULL,
-                        FOREIGN KEY (user_id) REFERENCES usuarios(user_id),
-                        FOREIGN KEY (student_user_id) REFERENCES usuarios(user_id),
-                        FOREIGN KEY (availability_id) REFERENCES disponibilidad_profesores(availability_id),
-                        FOREIGN KEY (reservation_status_id) REFERENCES estados_reserva(reservation_status_id)
-                    )
-                ");
-                echo "✅ Tabla reservas creada\n";
-            }
-
-        } catch (Exception $e) {
-            echo "❌ Error creando tablas: " . $e->getMessage() . "\n";
-        }
-
+        echo "❌ Tablas faltantes: " . implode(', ', $missing_tables) . "\n";
+        echo "Ejecuta primero el script database_schema.sql en phpMyAdmin\n";
+        exit(1);
     } else {
         echo "✅ Todas las tablas existen\n";
     }
 
-    // Ejecutar migraciones para asegurar que todo esté actualizado
-    echo "\n6. Ejecutando migraciones...\n";
-    require_once 'migrations.php';
+    // Insertar datos de prueba
+    echo "\n6. Insertando datos de prueba...\n";
+
+    try {
+        // Insertar estados de usuario básicos
+        $pdo->exec("INSERT IGNORE INTO Estados_Usuario (user_status_id, status, description) VALUES
+            (1, 'Activo', 'Usuario activo en el sistema'),
+            (2, 'Inactivo', 'Usuario inactivo')");
+
+        // Insertar estados de pago básicos
+        $pdo->exec("INSERT IGNORE INTO Estados_Pago (payment_status_id, status, description) VALUES
+            (1, 'Pendiente', 'Pago pendiente de procesamiento'),
+            (2, 'Completado', 'Pago completado exitosamente')");
+
+        // Insertar estados de reserva básicos
+        $pdo->exec("INSERT IGNORE INTO Estados_Reserva (reservation_status_id, status, description) VALUES
+            (1, 'Pendiente', 'Reserva solicitada pero no confirmada'),
+            (2, 'Confirmada', 'Reserva confirmada por el profesor'),
+            (3, 'Cancelada', 'Reserva cancelada'),
+            (4, 'Completada', 'Clase completada')");
+
+        // Insertar estados de disponibilidad básicos
+        $pdo->exec("INSERT IGNORE INTO Estados_Disponibilidad (availability_status_id, status, description) VALUES
+            (1, 'Disponible', 'Horario disponible para reservas'),
+            (2, 'No Disponible', 'Horario no disponible para reservas')");
+
+        // Insertar días de la semana
+        $pdo->exec("INSERT IGNORE INTO Dias_Semana (week_day_id, day, day_order) VALUES
+            (1, 'Lunes', 1),
+            (2, 'Martes', 2),
+            (3, 'Miércoles', 3),
+            (4, 'Jueves', 4),
+            (5, 'Viernes', 5),
+            (6, 'Sábado', 6),
+            (7, 'Domingo', 7)");
+
+        // Insertar roles
+        $pdo->exec("INSERT IGNORE INTO Roles (role_id, role_name, description) VALUES
+            (1, 'administrador', 'Usuario con acceso completo al sistema'),
+            (2, 'profesor', 'Usuario que imparte clases'),
+            (3, 'estudiante', 'Usuario que toma clases')");
+
+        // Insertar materias
+        $pdo->exec("INSERT IGNORE INTO Materias (subject_id, subject_name, description, price_per_hour) VALUES
+            (1, 'Matemáticas', 'Clases de matemáticas básicas y avanzadas', 15.00),
+            (2, 'Física', 'Clases de física teórica y práctica', 18.00),
+            (3, 'Química', 'Clases de química general y orgánica', 16.00),
+            (4, 'Programación', 'Clases de desarrollo de software', 20.00),
+            (5, 'Inglés', 'Clases de inglés conversacional y académico', 12.00),
+            (6, 'Español', 'Clases de literatura y gramática española', 14.00)");
+
+        // Insertar usuarios de prueba
+        $pdo->exec("INSERT IGNORE INTO Usuarios (user_id, first_name, last_name, email, password, phone, role_id, user_status_id, bio) VALUES
+            (1, 'Admin', 'Sistema', 'admin@plataforma.com', '\$2y\$10\$8K13cX8QXJzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0', '1234-5678', 1, 1, 'Administrador del sistema'),
+            (2, 'María', 'González', 'maria.profesor@plataforma.com', '\$2y\$10\$8K13cX8QXJzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0', '2222-1111', 2, 1, 'Profesora de Matemáticas y Física'),
+            (3, 'Carlos', 'Rodríguez', 'carlos.profesor@plataforma.com', '\$2y\$10\$8K13cX8QXJzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0', '3333-2222', 2, 1, 'Profesor de Programación'),
+            (4, 'Ana', 'Martínez', 'ana.profesor@plataforma.com', '\$2y\$10\$8K13cX8QXJzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0', '4444-3333', 2, 1, 'Profesora de Inglés'),
+            (5, 'Juan', 'Pérez', 'juan.estudiante@plataforma.com', '\$2y\$10\$8K13cX8QXJzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0', '5555-4444', 3, 1, 'Estudiante de Ingeniería'),
+            (6, 'María', 'López', 'maria.estudiante@plataforma.com', '\$2y\$10\$8K13cX8QXJzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0', '6666-5555', 3, 1, 'Estudiante de Administración'),
+            (7, 'Pedro', 'Sánchez', 'pedro.estudiante@plataforma.com', '\$2y\$10\$8K13cX8QXJzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0', '7777-6666', 3, 1, 'Estudiante de secundaria')");
+
+        // Insertar horarios de profesores
+        $pdo->exec("INSERT IGNORE INTO Disponibilidad_Profesores (availability_id, user_id, week_day_id, availability_status_id, start_time, end_time, subject_id, price_per_hour) VALUES
+            (1, 2, 1, 1, '08:00:00', '10:00:00', 1, 15.00),
+            (2, 2, 1, 1, '14:00:00', '16:00:00', 2, 18.00),
+            (3, 2, 3, 1, '09:00:00', '11:00:00', 1, 15.00),
+            (4, 3, 2, 1, '16:00:00', '18:00:00', 4, 20.00),
+            (5, 3, 4, 1, '17:00:00', '19:00:00', 4, 20.00),
+            (6, 4, 1, 1, '11:00:00', '13:00:00', 5, 12.00),
+            (7, 4, 2, 1, '11:00:00', '13:00:00', 5, 12.00),
+            (8, 4, 3, 1, '11:00:00', '13:00:00', 5, 12.00)");
+
+        // Insertar reservas de prueba
+        $pdo->exec("INSERT IGNORE INTO Reservas (reservation_id, user_id, student_user_id, availability_id, reservation_status_id, class_date, class_time, notes) VALUES
+            (1, 2, 5, 1, 1, DATE_ADD(CURDATE(), INTERVAL 2 DAY), '08:00:00', 'Clase de Matemáticas básicas'),
+            (2, 2, 5, 2, 2, DATE_ADD(CURDATE(), INTERVAL 3 DAY), '14:00:00', 'Repaso de Física'),
+            (3, 3, 6, 4, 1, DATE_ADD(CURDATE(), INTERVAL 1 DAY), '16:00:00', 'Introducción a Programación'),
+            (4, 4, 7, 6, 2, DATE_ADD(CURDATE(), INTERVAL 4 DAY), '11:00:00', 'Inglés conversacional')");
+
+        // Insertar pagos de prueba (solo PayPal)
+        $pdo->exec("INSERT IGNORE INTO Pagos (payment_id, user_id, amount, payment_status_id, payment_date, transaction_id, payment_method, description) VALUES
+            (1, 5, 15.00, 2, DATE_SUB(CURDATE(), INTERVAL 1 DAY), 'TXN_001', 'paypal', 'Pago por clase de Matemáticas'),
+            (2, 5, 18.00, 2, DATE_SUB(CURDATE(), INTERVAL 2 DAY), 'TXN_002', 'paypal', 'Pago por clase de Física'),
+            (3, 6, 20.00, 1, CURDATE(), 'TXN_003', 'paypal', 'Pago pendiente por clase de Programación')");
+
+        // Insertar reviews de prueba
+        $pdo->exec("INSERT IGNORE INTO Reviews (review_id, reservation_id, reviewer_user_id, reviewed_user_id, rating, comment) VALUES
+            (1, 1, 5, 2, 5, 'Excelente profesora, muy paciente y explica muy bien los conceptos'),
+            (2, 2, 5, 2, 4, 'Buena clase de física, me ayudó mucho con los conceptos básicos'),
+            (3, 3, 6, 3, 5, 'Carlos es un excelente profesor de programación')");
+
+        // Crear relaciones entre usuarios y sus tablas específicas
+        echo "Creando relaciones de usuarios...\n";
+
+        // Administradores
+        $pdo->exec("INSERT IGNORE INTO Administrador (user_id, permissions) VALUES
+            (1, 'full_access')");
+
+        // Profesores
+        $pdo->exec("INSERT IGNORE INTO Profesor (user_id, personal_description) VALUES
+            (2, 'Profesora de Matemáticas y Física'),
+            (3, 'Profesor de Programación'),
+            (4, 'Profesora de Inglés')");
+
+        // Estudiantes
+        $pdo->exec("INSERT IGNORE INTO Estudiante (user_id, personal_description) VALUES
+            (5, 'Estudiante de Ingeniería'),
+            (6, 'Estudiante de Administración'),
+            (7, 'Estudiante de secundaria')");
+
+        echo "✅ Relaciones de usuarios creadas correctamente\n";
+        echo "✅ Datos de prueba insertados correctamente\n";
+
+    } catch (Exception $e) {
+        echo "❌ Error insertando datos de prueba: " . $e->getMessage() . "\n";
+    }
+
 
 } catch (Exception $e) {
     echo "❌ Error de conexión: " . $e->getMessage() . "\n";
@@ -194,10 +228,10 @@ echo "Tu plataforma está lista. Accede a: http://localhost/plataforma-clases-on
 
 echo "Usuarios de prueba:\n";
 echo "- Admin: admin@plataforma.com / admin123\n";
-echo "- Profesor: profesor@plataforma.com / prof123\n";
-echo "- Estudiante: estudiante@plataforma.com / estu123\n\n";
+echo "- Profesores: maria.profesor@plataforma.com, carlos.profesor@plataforma.com, ana.profesor@plataforma.com / prof123\n";
+echo "- Estudiantes: juan.estudiante@plataforma.com, maria.estudiante@plataforma.com, pedro.estudiante@plataforma.com / estu123\n\n";
 
-echo "Para registrar nuevos usuarios: http://localhost/plataforma-clases-online/register\n";
+echo "Para registrar nuevos usuarios: http://localhost:8080/plataforma-clases-online/register\n";
 echo "Para iniciar sesión: http://localhost/plataforma-clases-online/auth/login\n\n";
 
 echo "¡Disfruta tu plataforma de clases online! 📚\n";

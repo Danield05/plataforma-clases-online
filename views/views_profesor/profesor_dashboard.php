@@ -15,11 +15,11 @@
     <header class="modern-header">
         <div class="header-content">
             <h1 class="header-title">👨‍🏫 Dashboard Profesor</h1>
-            <?php include __DIR__ . '/../nav.php'; ?>
+            <?php include __DIR__ . '/../layouts/nav.php'; ?>
         </div>
     </header>
 
-    <main class="container my-4">
+    <main class="container my-5">
         <!-- Bienvenida del Profesor -->
         <div class="dashboard-welcome mb-4">
             <div class="row align-items-center">

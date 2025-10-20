@@ -8,6 +8,16 @@ require_once 'config/database.php';
 
 // Parsear la URL para determinar controlador y acción
 $url = isset($_GET['url']) ? $_GET['url'] : 'home';
+
+// Remover el prefijo del proyecto si existe
+$url = preg_replace('/^plataforma-clases-online\//', '', $url);
+
+// Manejar rutas de auth
+if (isset($url[0]) && $url[0] === 'auth') {
+    $controller = 'AuthController';
+    $action = isset($url[1]) ? $url[1] : 'login';
+}
+
 $url = rtrim($url, '/');
 $url = explode('/', $url);
 

@@ -15,7 +15,7 @@
     <header class="modern-header">
         <div class="header-content">
             <h1 class="header-title">🔍 Explorar Profesores</h1>
-            <?php include __DIR__ . '/../nav.php'; ?>
+            <?php include __DIR__ . '/../layouts/nav.php'; ?>
         </div>
     </header>
 

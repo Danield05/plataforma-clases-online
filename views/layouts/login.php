@@ -16,19 +16,34 @@
     
     <div class="login-container">
         <?php if (isset($error)): ?>
-            <p class="error"><?php echo $error; ?></p>
+            <div class="alert alert-danger" role="alert">
+                <strong>Error:</strong> <?php echo $error; ?>
+            </div>
         <?php endif; ?>
-        <form action="/plataforma-clases-online/auth/login" method="POST">
+
+        <!-- Debug info -->
+        <?php if ($_SERVER['REQUEST_METHOD'] === 'POST'): ?>
+        <div class="alert alert-info" role="alert">
+            <strong>Debug Info:</strong><br>
+            REQUEST_METHOD: <?php echo $_SERVER['REQUEST_METHOD']; ?><br>
+            Email recibido: "<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>"<br>
+            Password recibido: <?php echo isset($_POST['password']) && !empty($_POST['password']) ? 'Presente' : 'Vacío'; ?>
+        </div>
+        <?php endif; ?>
+
+        <!-- Formulario de login simplificado -->
+        <form action="http://localhost:8080/plataforma-clases-online/auth/login" method="POST" id="loginForm">
             <div class="form-group">
                 <label for="email">Correo Electrónico:</label>
-                <input type="email" id="email" name="email" required>
+                <input type="email" id="email" name="email" value="admin@plataforma.com" required>
             </div>
             <div class="form-group">
                 <label for="password">Contraseña:</label>
-                <input type="password" id="password" name="password" required>
+                <input type="password" id="password" name="password" value="admin123" required>
             </div>
-            <button type="submit">Iniciar Sesión</button>
+            <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
         </form>
+
     </div>
     
     <footer class="modern-footer">

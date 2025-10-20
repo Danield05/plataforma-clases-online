@@ -15,7 +15,7 @@
     <header class="modern-header">
         <div class="header-content">
             <h1 class="header-title">🎓 Dashboard Estudiante</h1>
-            <?php include __DIR__ . '/../nav.php'; ?>
+            <?php include __DIR__ . '/../layouts/nav.php'; ?>
         </div>
     </header>
 
@@ -82,6 +82,24 @@
                             <a href="/plataforma-clases-online/home/explorar_profesores" class="btn btn-primary btn-sm">Explorar Profesores</a>
                         </div>
                         <?php else: ?>
+                        <!-- Mostrar mensaje de éxito o error si existe -->
+                        <?php if (!empty($_GET['success'])): ?>
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <?php if ($_GET['success'] === 'cancelled'): ?>
+                                    ✅ Clase cancelada exitosamente
+                                <?php endif; ?>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (!empty($_GET['error'])): ?>
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <?php if ($_GET['error'] === 'cancel_failed'): ?>
+                                    ❌ Error al cancelar la clase
+                                <?php endif; ?>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        <?php endif; ?>
                         <div class="list-group">
                             <?php
                             // Ordenar reservas por fecha
@@ -100,9 +118,17 @@
                                             <?php echo htmlspecialchars($reserva['reservation_status']); ?>
                                         </small>
                                     </div>
-                                    <span class="badge bg-<?php echo $reserva['reservation_status'] === 'confirmada' ? 'success' : ($reserva['reservation_status'] === 'pendiente' ? 'warning' : 'secondary'); ?>">
-                                        <?php echo htmlspecialchars($reserva['reservation_status']); ?>
-                                    </span>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-<?php echo $reserva['reservation_status'] === 'confirmada' ? 'success' : ($reserva['reservation_status'] === 'pendiente' ? 'warning' : 'secondary'); ?> me-2">
+                                            <?php echo htmlspecialchars($reserva['reservation_status']); ?>
+                                        </span>
+                                        <?php if ($reserva['reservation_status'] === 'pendiente' || $reserva['reservation_status'] === 'confirmada'): ?>
+                                        <form method="post" action="/plataforma-clases-online/home/cancelar_reserva" style="display: inline;" onsubmit="return confirm('¿Estás seguro de que quieres cancelar esta clase?');">
+                                            <input type="hidden" name="reservation_id" value="<?php echo htmlspecialchars($reserva['reservation_id']); ?>">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">❌ Cancelar</button>
+                                        </form>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
                             </div>
                             <?php endforeach; ?>
@@ -284,16 +310,23 @@
         }
 
         function verificarReservaEnFecha(fecha) {
-            // Verificar si hay reserva en esta fecha (simulado con datos PHP)
+            // Verificar si hay reserva en esta fecha (comparar solo la fecha, no la hora)
             <?php
-            $fechasReservas = array_column($reservas, 'class_date');
+            $fechasReservas = array_map(function($reserva) {
+                return date('Y-m-d', strtotime($reserva['class_date']));
+            }, $reservas);
             echo 'const fechasReservas = ' . json_encode($fechasReservas) . ';';
             ?>
             return fechasReservas.includes(fecha);
         }
 
         function mostrarDetalleDia(fecha) {
-            const reservasDia = <?php echo json_encode($reservas); ?>.filter(r => r.class_date === fecha);
+            // Verificar si hay reserva en esta fecha
+            const reservasDia = <?php echo json_encode($reservas); ?>.filter(r => {
+                const fechaReserva = new Date(r.class_date);
+                const fechaComparar = new Date(fecha);
+                return fechaReserva.toDateString() === fechaComparar.toDateString();
+            });
 
             if (reservasDia.length > 0) {
                 let detalle = `Reservas para ${fecha}:\n\n`;

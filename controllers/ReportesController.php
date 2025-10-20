@@ -29,7 +29,7 @@ class ReportesController {
         // Escribir encabezados
         fputcsv($output, [
             'ID Pago',
-            'ID Reserva', 
+            'Usuario',
             'Monto',
             'Método de Pago',
             'Fecha',
@@ -40,7 +40,7 @@ class ReportesController {
         foreach ($pagos as $pago) {
             fputcsv($output, [
                 $pago['payment_id'],
-                $pago['reservation_id'],
+                $pago['first_name'] . ' ' . $pago['last_name'],
                 '$' . number_format($pago['amount'], 2),
                 $pago['payment_method'],
                 $pago['payment_date'],
@@ -243,9 +243,10 @@ class ReportesController {
                     text-transform: uppercase;
                     letter-spacing: 0.5px;
                 }
-                
+
                 .status-pendiente { background: #fff3cd; color: #856404; }
                 .status-pagado { background: #d1ecf1; color: #0c5460; }
+                .status-completado { background: #d1ecf1; color: #0c5460; }
                 .status-cancelado { background: #f8d7da; color: #721c24; }
                 
                 .actions {
@@ -344,7 +345,7 @@ class ReportesController {
                             <thead>
                                 <tr>
                                     <th>🆔 ID Pago</th>
-                                    <th>📋 ID Reserva</th>
+                                    <th>👤 Usuario</th>
                                     <th>💰 Monto</th>
                                     <th>💳 Método</th>
                                     <th>📅 Fecha</th>
@@ -354,9 +355,10 @@ class ReportesController {
                             <tbody>
                                 <?php foreach($pagos as $pago): ?>
                                     <?php
-                                        $estado = strtolower($pago['payment_status']);
+                                        $estado = strtolower($pago['payment_status'] ?? 'pendiente');
                                         $statusClass = match($estado) {
                                             'pendiente' => 'status-pendiente',
+                                            'completado' => 'status-completado',
                                             'pagado' => 'status-pagado',
                                             'cancelado' => 'status-cancelado',
                                             default => 'status-pendiente'
@@ -364,13 +366,13 @@ class ReportesController {
                                     ?>
                                     <tr>
                                         <td><?= htmlspecialchars($pago['payment_id']); ?></td>
-                                        <td><?= htmlspecialchars($pago['reservation_id']); ?></td>
+                                        <td><?= htmlspecialchars($pago['first_name'] . ' ' . $pago['last_name']); ?></td>
                                         <td><strong>$<?= number_format($pago['amount'], 2); ?></strong></td>
                                         <td><?= htmlspecialchars($pago['payment_method']); ?></td>
                                         <td><?= htmlspecialchars($pago['payment_date']); ?></td>
                                         <td>
                                             <span class="status-badge <?= $statusClass; ?>">
-                                                <?= ucfirst($pago['payment_status']); ?>
+                                                <?= ucfirst($estado); ?>
                                             </span>
                                         </td>
                                     </tr>

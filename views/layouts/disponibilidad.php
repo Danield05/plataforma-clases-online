@@ -74,7 +74,7 @@
     <header class="modern-header">
         <div class="header-content">
             <h1 class="header-title">🕒 Disponibilidad</h1>
-            <?php include 'nav.php'; ?>
+            <?php include __DIR__ . '/nav.php'; ?>
         </div>
     </header>
     
@@ -160,7 +160,7 @@
                                                     <td><?php echo htmlspecialchars($disp['end_time']); ?></td>
                                                     <td>
                                                         <span class="estado-disponible">
-                                                            <?php echo htmlspecialchars($disp['status']); ?>
+                                                            <?php echo htmlspecialchars($disp['availability_status'] ?? 'Disponible'); ?>
                                                         </span>
                                                     </td>
                                                     <td>

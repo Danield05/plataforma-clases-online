@@ -15,7 +15,7 @@
     <header class="modern-header">
         <div class="header-content">
             <h1 class="header-title">💰 Gestión de Pagos</h1>
-            <?php include 'nav.php'; ?>
+            <?php include __DIR__ . '/nav.php'; ?>
         </div>
     </header>
 
@@ -67,7 +67,7 @@
                     <thead>
                         <tr>
                             <th>🆔 ID Pago</th>
-                            <th>📋 ID Reserva</th>
+                            <th>👤 Usuario</th>
                             <th>💰 Monto</th>
                             <th>💳 Método</th>
                             <th>📅 Fecha</th>
@@ -78,9 +78,10 @@
                     <tbody>
                         <?php foreach($pagos as $pago): ?>
                             <?php
-                                $estado = strtolower($pago['payment_status']);
+                                $estado = strtolower($pago['payment_status'] ?? 'pendiente');
                                 $statusClass = match($estado) {
                                     'pendiente' => 'status-pendiente',
+                                    'completado' => 'status-pagado',
                                     'pagado' => 'status-pagado',
                                     'cancelado' => 'status-cancelado',
                                     default => 'status-pendiente'
@@ -88,13 +89,13 @@
                             ?>
                             <tr>
                                 <td><?= htmlspecialchars($pago['payment_id']); ?></td>
-                                <td><?= htmlspecialchars($pago['reservation_id']); ?></td>
+                                <td><?= htmlspecialchars($pago['first_name'] . ' ' . $pago['last_name']); ?></td>
                                 <td><strong>$<?= number_format($pago['amount'], 2); ?></strong></td>
                                 <td><?= htmlspecialchars($pago['payment_method']); ?></td>
                                 <td><?= htmlspecialchars($pago['payment_date']); ?></td>
                                 <td>
                                     <span class="status-badge-pagos <?= $statusClass; ?>">
-                                        <?= ucfirst($pago['payment_status']); ?>
+                                        <?= ucfirst($estado); ?>
                                     </span>
                                 </td>
                                 <td>

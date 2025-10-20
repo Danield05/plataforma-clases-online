@@ -10,6 +10,7 @@ class HomeController
             exit;
         }
 
+
         // Verificar rol y mostrar dashboard correspondiente
         $role = $_SESSION['role'] ?? '';
 
@@ -18,19 +19,47 @@ class HomeController
             require_once 'models/ProfesorModel.php';
             require_once 'models/EstudianteModel.php';
             require_once 'models/ReservaModel.php';
+            require_once 'models/PagoModel.php';
 
             $profesorModel = new ProfesorModel();
             $estudianteModel = new EstudianteModel();
             $reservaModel = new ReservaModel();
+            $pagoModel = new PagoModel();
+
+            // Obtener datos principales
+            $profesores = $profesorModel->getProfesores();
+            $estudiantes = $estudianteModel->getEstudiantes();
+            $reservas = $reservaModel->getReservas();
+            $pagos = $pagoModel->getPagos();
+
+            // Calcular estadísticas adicionales
+            $reservasActivas = count(array_filter($reservas, function($r) {
+                return strtolower($r['reservation_status'] ?? '') === 'pendiente' ||
+                       strtolower($r['reservation_status'] ?? '') === 'confirmada';
+            }));
+
+            $ingresosMensuales = array_sum(array_filter(array_column($pagos, 'amount'), function($amount, $index) use ($pagos) {
+                return isset($pagos[$index]['payment_date']) &&
+                       date('Y-m', strtotime($pagos[$index]['payment_date'])) === date('Y-m') &&
+                       in_array($pagos[$index]['payment_status_id'], [2, 3]); // Solo pagos completados o pagados
+            }, ARRAY_FILTER_USE_BOTH));
 
             $data = [
-                'profesores' => $profesorModel->getProfesores(),
-                'estudiantes' => $estudianteModel->getEstudiantes(),
-                'reservas' => $reservaModel->getReservas()
+                'profesores' => $profesores,
+                'estudiantes' => $estudiantes,
+                'reservas' => $reservas,
+                'pagos' => $pagos,
+                'estadisticas' => [
+                    'totalProfesores' => count($profesores),
+                    'totalEstudiantes' => count($estudiantes),
+                    'reservasActivas' => $reservasActivas,
+                    'ingresosMensuales' => $ingresosMensuales,
+                    'profesoresRecientes' => array_slice($profesores, 0, 3)
+                ]
             ];
 
             // Pasar datos a la vista
-            require_once 'views/home.php';
+            require_once 'views/layouts/home.php';
         } elseif ($role === 'profesor') {
             $this->profesor_dashboard();
         } elseif ($role === 'estudiante') {
@@ -158,7 +187,7 @@ class HomeController
         require_once 'models/ProfesorModel.php';
         $profesorModel = new ProfesorModel();
         $profesores = $profesorModel->getProfesores();
-        require_once 'views/profesores.php';
+        require_once 'views/layouts/profesores.php';
     }
 
     // Mostrar formulario para crear profesor
@@ -167,7 +196,7 @@ class HomeController
         AuthController::checkRole(['administrador']);
 
         $showForm = true;
-        require_once 'views/profesores.php';
+        require_once 'views/layouts/profesores.php';
     }
 
     // Almacenar profesor (POST)
@@ -236,7 +265,7 @@ class HomeController
         $profesor = $profesorModel->getProfesorById($id);
         $user = $userModel->getUserById($id);
         $showForm = true;
-        require_once 'views/profesores.php';
+        require_once 'views/layouts/profesores.php';
     }
 
     // Actualizar profesor (POST)
@@ -308,7 +337,7 @@ class HomeController
         require_once 'models/EstudianteModel.php';
         $estudianteModel = new EstudianteModel();
         $estudiantes = $estudianteModel->getEstudiantes();
-        require_once 'views/estudiantes.php';
+        require_once 'views/layouts/estudiantes.php';
     }
 
     // Mostrar formulario para crear estudiante
@@ -317,7 +346,7 @@ class HomeController
         AuthController::checkRole(['administrador']);
 
         $showForm = true;
-        require_once 'views/estudiantes.php';
+        require_once 'views/layouts/estudiantes.php';
     }
 
     // Almacenar estudiante (POST)
@@ -375,7 +404,7 @@ class HomeController
         $estudiante = $estudianteModel->getEstudianteById($id);
         $user = $userModel->getUserById($id);
         $showForm = true;
-        require_once 'views/estudiantes.php';
+        require_once 'views/layouts/estudiantes.php';
     }
 
     // Actualizar estudiante (POST)
@@ -444,8 +473,22 @@ class HomeController
 
         require_once 'models/ReservaModel.php';
         $reservaModel = new ReservaModel();
-        $reservas = $reservaModel->getReservas();
-        require_once 'views/reservas.php';
+
+        // Filtrar reservas según el rol del usuario
+        if ($_SESSION['role'] === 'estudiante') {
+            $reservas = $reservaModel->getReservasByEstudiante($_SESSION['user_id']);
+        } elseif ($_SESSION['role'] === 'profesor') {
+            $reservas = $reservaModel->getReservasByProfesor($_SESSION['user_id']);
+        } else {
+            // Administrador ve todas las reservas
+            $reservas = $reservaModel->getReservas();
+        }
+
+        // Pasar información a la vista
+        $data = compact('reservas');
+        extract($data);
+
+        require_once 'views/layouts/reservas.php';
     }
 
     public function disponibilidad()
@@ -456,7 +499,7 @@ class HomeController
         require_once 'models/DisponibilidadModel.php';
         $disponibilidadModel = new DisponibilidadModel();
         $disponibilidades = $disponibilidadModel->getDisponibilidades();
-        require_once 'views/disponibilidad.php';
+        require_once 'views/layouts/disponibilidad.php';
     }
 
     // Mostrar formulario para crear disponibilidad
@@ -484,7 +527,7 @@ class HomeController
         }
 
         $showForm = true;
-        require_once 'views/disponibilidad.php';
+        require_once 'views/layouts/disponibilidad.php';
     }
 
     // Almacenar disponibilidad (POST)
@@ -544,7 +587,7 @@ class HomeController
         $profesores = $profesorModel->getProfesores();
 
         $showForm = true;
-        require_once 'views/disponibilidad.php';
+        require_once 'views/layouts/disponibilidad.php';
     }
 
     // Actualizar disponibilidad (POST)
@@ -609,7 +652,7 @@ class HomeController
         $totales = $pagoModel->getTotales();
 
         extract($totales);
-        require_once 'views/pagos.php';
+        require_once 'views/layouts/pagos.php';
     }
     public function verPago()
     {
@@ -631,7 +674,7 @@ class HomeController
             return;
         }
 
-        require_once 'views/ver_pago.php'; // Nueva vista para detalle
+        require_once 'views/layouts/ver_pago.php'; // Nueva vista para detalle
     }
 
     public function reviews()
@@ -642,7 +685,7 @@ class HomeController
         require_once 'models/ReviewModel.php';
         $reviewModel = new ReviewModel();
         $reviews = $reviewModel->getReviews();
-        require_once 'views/reviews.php';
+        require_once 'views/layouts/reviews.php';
     }
 
     public function perfil_edit()
@@ -765,7 +808,7 @@ class HomeController
 
     public function about()
     {
-        require_once 'views/about.php';
+        require_once 'views/layouts/about.php';
     }
 
     public function crear_clase()
@@ -779,7 +822,7 @@ class HomeController
 
         $data = ['estudiantes' => $estudiantes];
         extract($data);
-        require_once 'views/crear_clase.php';
+        require_once 'views/layouts/crear_clase.php';
     }
 
     public function crear_clase_store()
@@ -795,17 +838,14 @@ class HomeController
         require_once 'models/ReservaModel.php';
         $reservaModel = new ReservaModel();
 
-        $reservationId = uniqid('res_');
+        $reservationId = time() . rand(1000, 9999); // timestamp + número aleatorio
         $data = [
             'reservation_id' => $reservationId,
             'user_id' => $_SESSION['user_id'],
             'student_user_id' => $_POST['student_user_id'] ?? null,
             'availability_id' => null, // Se puede asignar después
             'reservation_status_id' => 1, // Pendiente
-            'class_date' => $_POST['class_date'] ?? null,
-            'start_time' => $_POST['start_time'] ?? null,
-            'end_time' => $_POST['end_time'] ?? null,
-            'class_description' => $_POST['class_description'] ?? null
+            'class_date' => $_POST['class_date'] ?? null
         ];
 
         $ok = $reservaModel->createReserva($data);
@@ -869,7 +909,7 @@ class HomeController
         ];
 
         extract($data);
-        require_once 'views/reportes.php';
+        require_once 'views/layouts/reportes.php';
     }
 
     public function reservar_clase()
@@ -900,8 +940,8 @@ class HomeController
             exit;
         }
 
-        // Crear reserva
-        $reservationId = uniqid('res_');
+        // Crear reserva - Generar ID único numérico
+        $reservationId = time() . rand(1000, 9999); // timestamp + número aleatorio
         $data = [
             'reservation_id' => $reservationId,
             'user_id' => $profesorId,
@@ -917,6 +957,53 @@ class HomeController
             header('Location: /plataforma-clases-online/home/estudiante_dashboard?success=reservation_created');
         } else {
             header('Location: /plataforma-clases-online/home/explorar_profesores?error=creation_failed');
+        }
+        exit;
+    }
+
+    public function cancelar_reserva()
+    {
+        AuthController::checkAuth();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /plataforma-clases-online/home/estudiante_dashboard');
+            exit;
+        }
+
+        $reservationId = $_POST['reservation_id'] ?? null;
+
+        if (!$reservationId) {
+            header('Location: /plataforma-clases-online/home/estudiante_dashboard?error=missing_id');
+            exit;
+        }
+
+        require_once 'models/ReservaModel.php';
+        $reservaModel = new ReservaModel();
+
+        $success = $reservaModel->cancelReserva($reservationId, $_SESSION['user_id']);
+
+        if ($success) {
+            header('Location: /plataforma-clases-online/home/reservas?success=cancelled');
+        } else {
+            header('Location: /plataforma-clases-online/home/reservas?error=cancel_failed&debug=check_permissions');
+        }
+        exit;
+    }
+
+    public function fix_estado_reserva()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['administrador']);
+
+        require_once 'models/ReservaModel.php';
+        $reservaModel = new ReservaModel();
+
+        $success = $reservaModel->fixEstadosReserva();
+
+        if ($success) {
+            header('Location: /plataforma-clases-online/home/reservas?success=estados_fixed');
+        } else {
+            header('Location: /plataforma-clases-online/home/reservas?error=fix_failed');
         }
         exit;
     }
@@ -941,7 +1028,7 @@ class HomeController
         ];
 
         extract($data);
-        require_once 'views/mensajes.php';
+        require_once 'views/layouts/mensajes.php';
     }
 
     public function get_available_slots()
@@ -1051,6 +1138,6 @@ class HomeController
         ];
 
         extract($data);
-        require_once 'views/ver_estudiante.php';
+        require_once 'views/layouts/ver_estudiante.php';
     }
 }
