@@ -21,7 +21,7 @@
         <div class="container">
           <div class="row">
             <div class="col-md-9 col-lg-8 mx-auto">
-              <h3 class="login-heading text-center fw-bold mb-4">Bienvenido!</h3>
+              <h2 class="login-heading text-center fw-bold mb-4">Bienvenido!</h2>
 
               <!-- Sign In Form -->
             <?php if (isset($error)): ?>

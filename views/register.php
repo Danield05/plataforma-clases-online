@@ -35,7 +35,7 @@
                         <form action="/plataforma-clases-online/register/register" method="POST">
                             <div class="form-select mb-3">
                                 <label for="role">Tipo de Usuario:</label>
-                                <select id="role" name="role" class="form-control" placeholder="" required
+                                <select id="role" name="role" class="form-control"  required
                                     onchange="toggleFields()">
                                     <option value="">Seleccionar...</option>
                                     <option value="1">Administrador</option>
