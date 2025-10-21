@@ -48,16 +48,61 @@ class HomeController
         require_once 'models/ReservaModel.php';
         require_once 'models/DisponibilidadModel.php';
         require_once 'models/PagoModel.php';
+        require_once 'models/ReviewModel.php';
+        require_once 'models/EstudianteModel.php';
 
         $reservaModel = new ReservaModel();
         $disponibilidadModel = new DisponibilidadModel();
         $pagoModel = new PagoModel();
+        $reviewModel = new ReviewModel();
+        $estudianteModel = new EstudianteModel();
 
-        // Obtener reservas del profesor (asumiendo que hay una forma de filtrar por profesor)
-        $reservas = $reservaModel->getReservas(); // TODO: filtrar por profesor logueado
-        $disponibilidades = $disponibilidadModel->getDisponibilidades(); // TODO: filtrar por profesor
-        $pagos = $pagoModel->getPagos(); // TODO: filtrar por profesor logueado
+        $profesorId = $_SESSION['user_id'];
 
+        // Obtener reservas del profesor
+        $reservas = $reservaModel->getReservasByProfesor($profesorId);
+        $disponibilidades = $disponibilidadModel->getDisponibilidadesByProfesor($profesorId);
+        $pagos = $pagoModel->getPagosByProfesor($profesorId);
+
+        // Calcular estadísticas
+        $reservasActivas = count(array_filter($reservas, function($r) { return $r['reservation_status'] === 'activa' || $r['reservation_status'] === 'confirmada'; }));
+        $estudiantesUnicos = array_unique(array_column($reservas, 'student_user_id'));
+        $estudiantesTotales = count($estudiantesUnicos);
+
+        // Calificación promedio
+        $reviews = $reviewModel->getReviewsByProfesor($profesorId);
+        $calificacionPromedio = !empty($reviews) ? array_sum(array_column($reviews, 'rating')) / count($reviews) : 0;
+
+        // Ingresos del mes actual
+        $mesActual = date('Y-m');
+        $ingresosMes = array_sum(array_filter(array_column($pagos, 'amount'), function($amount, $index) use ($pagos, $mesActual) {
+            return isset($pagos[$index]['payment_date']) && date('Y-m', strtotime($pagos[$index]['payment_date'])) === $mesActual;
+        }, ARRAY_FILTER_USE_BOTH));
+
+        // Obtener estudiantes con reservas
+        $estudiantes = [];
+        if (!empty($estudiantesUnicos)) {
+            foreach ($estudiantesUnicos as $estId) {
+                $estudiante = $estudianteModel->getEstudianteById($estId);
+                if ($estudiante) {
+                    $estudiantes[] = $estudiante;
+                }
+            }
+        }
+
+        $data = [
+            'reservas' => $reservas,
+            'disponibilidades' => $disponibilidades,
+            'pagos' => $pagos,
+            'estudiantes' => $estudiantes,
+            'stats' => [
+                'reservasActivas' => $reservasActivas,
+                'estudiantesTotales' => $estudiantesTotales,
+                'calificacionPromedio' => round($calificacionPromedio, 1),
+                'ingresosMes' => $ingresosMes
+            ]
+        ];
+        extract($data);
         require_once 'views/views_profesor/profesor_dashboard.php';
     }
 
@@ -66,14 +111,42 @@ class HomeController
         // Dashboard específico para estudiantes
         require_once 'models/ReservaModel.php';
         require_once 'models/PagoModel.php';
+        require_once 'models/ProfesorModel.php';
 
         $reservaModel = new ReservaModel();
         $pagoModel = new PagoModel();
+        $profesorModel = new ProfesorModel();
 
-        // Obtener reservas y pagos del estudiante
-        $reservas = $reservaModel->getReservas(); // TODO: filtrar por estudiante logueado
-        $pagos = $pagoModel->getPagos(); // TODO: filtrar por estudiante
+        $userId = $_SESSION['user_id'];
 
+        // Obtener reservas del estudiante
+        $reservas = $reservaModel->getReservasByEstudiante($userId);
+
+        // Obtener pagos del estudiante
+        $pagos = $pagoModel->getPagosByEstudiante($userId);
+
+        // Calcular estadísticas
+        $clasesReservadas = count($reservas);
+        $clasesCompletadas = count(array_filter($reservas, function($r) { return $r['reservation_status'] === 'completada'; }));
+        $profesoresActivos = count(array_unique(array_column($reservas, 'user_id')));
+        $totalInvertido = array_sum(array_column($pagos, 'amount'));
+
+        // Obtener profesores disponibles
+        $profesores = $profesorModel->getProfesores();
+
+        $data = [
+            'reservas' => $reservas,
+            'pagos' => $pagos,
+            'profesores' => $profesores,
+            'stats' => [
+                'clasesReservadas' => $clasesReservadas,
+                'clasesCompletadas' => $clasesCompletadas,
+                'profesoresActivos' => $profesoresActivos,
+                'totalInvertido' => $totalInvertido
+            ]
+        ];
+
+        extract($data);
         require_once 'views/views_estudiante/estudiante_dashboard.php';
     }
 
@@ -88,6 +161,145 @@ class HomeController
         require_once 'views/profesores.php';
     }
 
+    // Mostrar formulario para crear profesor
+    public function profesores_create() {
+        AuthController::checkAuth();
+        AuthController::checkRole(['administrador']);
+
+        $showForm = true;
+        require_once 'views/profesores.php';
+    }
+
+    // Almacenar profesor (POST)
+    public function profesores_store() {
+        AuthController::checkAuth();
+        AuthController::checkRole(['administrador']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /plataforma-clases-online/home/profesores');
+            exit;
+        }
+
+        require_once 'models/UserModel.php';
+        require_once 'models/ProfesorModel.php';
+
+        $userModel = new UserModel();
+        $profesorModel = new ProfesorModel();
+
+        $dataUser = [
+            'role_id' => 2,
+            'user_status_id' => 1,
+            'first_name' => $_POST['first_name'] ?? '',
+            'last_name' => $_POST['last_name'] ?? '',
+            'email' => $_POST['email'] ?? '',
+            'password' => $_POST['password'] ?? '',
+            'personal_description' => $_POST['personal_description'] ?? null,
+            'academic_level' => $_POST['academic_level'] ?? null,
+            'hourly_rate' => $_POST['hourly_rate'] ?? null,
+        ];
+
+        $created = $userModel->createUser($dataUser);
+        $msg = 'error';
+        if ($created) {
+            global $pdo;
+            $userId = $pdo->lastInsertId();
+            // createUser already creates profesor row but ensure data updated
+            $profData = [
+                'personal_description' => $dataUser['personal_description'],
+                'academic_level' => $dataUser['academic_level'],
+                'hourly_rate' => $dataUser['hourly_rate'],
+            ];
+            $ok = $profesorModel->updateProfesor($userId, $profData);
+            $msg = $ok ? 'created' : 'created';
+        }
+
+        header('Location: /plataforma-clases-online/home/profesores?status=' . $msg);
+        exit;
+    }
+
+    // Editar profesor (mostrar formulario)
+    public function profesores_edit() {
+        AuthController::checkAuth();
+        AuthController::checkRole(['administrador']);
+
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            header('Location: /plataforma-clases-online/home/profesores');
+            exit;
+        }
+
+        require_once 'models/ProfesorModel.php';
+        require_once 'models/UserModel.php';
+        $profesorModel = new ProfesorModel();
+        $userModel = new UserModel();
+
+        $profesor = $profesorModel->getProfesorById($id);
+        $user = $userModel->getUserById($id);
+        $showForm = true;
+        require_once 'views/profesores.php';
+    }
+
+    // Actualizar profesor (POST)
+    public function profesores_update() {
+        AuthController::checkAuth();
+        AuthController::checkRole(['administrador']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /plataforma-clases-online/home/profesores');
+            exit;
+        }
+
+        $id = $_POST['user_id'] ?? null;
+        if (!$id) {
+            header('Location: /plataforma-clases-online/home/profesores?status=error');
+            exit;
+        }
+
+        require_once 'models/UserModel.php';
+        require_once 'models/ProfesorModel.php';
+        $userModel = new UserModel();
+        $profesorModel = new ProfesorModel();
+
+        $userData = [
+            'first_name' => $_POST['first_name'] ?? '',
+            'last_name' => $_POST['last_name'] ?? '',
+            'email' => $_POST['email'] ?? '',
+            'password' => $_POST['password'] ?? '',
+            'photo_url' => null,
+        ];
+        $profData = [
+            'personal_description' => $_POST['personal_description'] ?? null,
+            'academic_level' => $_POST['academic_level'] ?? null,
+            'hourly_rate' => $_POST['hourly_rate'] ?? null,
+        ];
+
+        $ok1 = $userModel->updateUser($id, $userData);
+        $ok2 = $profesorModel->updateProfesor($id, $profData);
+        $msg = ($ok1 || $ok2) ? 'updated' : 'error';
+
+        header('Location: /plataforma-clases-online/home/profesores?status=' . $msg);
+        exit;
+    }
+
+    // Eliminar profesor
+    public function profesores_delete() {
+        AuthController::checkAuth();
+        AuthController::checkRole(['administrador']);
+
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            header('Location: /plataforma-clases-online/home/profesores');
+            exit;
+        }
+
+        require_once 'models/UserModel.php';
+        $userModel = new UserModel();
+        $ok = $userModel->deleteUser($id);
+        $msg = $ok ? 'deleted' : 'error';
+        header('Location: /plataforma-clases-online/home/profesores?status=' . $msg);
+        exit;
+    }
+
     public function estudiantes()
     {
         AuthController::checkAuth();
@@ -97,6 +309,132 @@ class HomeController
         $estudianteModel = new EstudianteModel();
         $estudiantes = $estudianteModel->getEstudiantes();
         require_once 'views/estudiantes.php';
+    }
+
+    // Mostrar formulario para crear estudiante
+    public function estudiantes_create() {
+        AuthController::checkAuth();
+        AuthController::checkRole(['administrador']);
+
+        $showForm = true;
+        require_once 'views/estudiantes.php';
+    }
+
+    // Almacenar estudiante (POST)
+    public function estudiantes_store() {
+        AuthController::checkAuth();
+        AuthController::checkRole(['administrador']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /plataforma-clases-online/home/estudiantes');
+            exit;
+        }
+
+        require_once 'models/UserModel.php';
+        require_once 'models/EstudianteModel.php';
+
+        $userModel = new UserModel();
+        $estudianteModel = new EstudianteModel();
+
+        $dataUser = [
+            'role_id' => 3,
+            'user_status_id' => 1,
+            'first_name' => $_POST['first_name'] ?? '',
+            'last_name' => $_POST['last_name'] ?? '',
+            'email' => $_POST['email'] ?? '',
+            'password' => $_POST['password'] ?? '',
+            'personal_description' => $_POST['personal_description'] ?? null,
+        ];
+
+        $created = $userModel->createUser($dataUser);
+        $msg = 'error';
+        if ($created) {
+            $msg = 'created';
+        }
+
+        header('Location: /plataforma-clases-online/home/estudiantes?status=' . $msg);
+        exit;
+    }
+
+    // Editar estudiante (mostrar formulario)
+    public function estudiantes_edit() {
+        AuthController::checkAuth();
+        AuthController::checkRole(['administrador']);
+
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            header('Location: /plataforma-clases-online/home/estudiantes');
+            exit;
+        }
+
+        require_once 'models/EstudianteModel.php';
+        require_once 'models/UserModel.php';
+        $estudianteModel = new EstudianteModel();
+        $userModel = new UserModel();
+
+        $estudiante = $estudianteModel->getEstudianteById($id);
+        $user = $userModel->getUserById($id);
+        $showForm = true;
+        require_once 'views/estudiantes.php';
+    }
+
+    // Actualizar estudiante (POST)
+    public function estudiantes_update() {
+        AuthController::checkAuth();
+        AuthController::checkRole(['administrador']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /plataforma-clases-online/home/estudiantes');
+            exit;
+        }
+
+        $id = $_POST['user_id'] ?? null;
+        if (!$id) {
+            header('Location: /plataforma-clases-online/home/estudiantes?status=error');
+            exit;
+        }
+
+        require_once 'models/UserModel.php';
+        require_once 'models/EstudianteModel.php';
+        $userModel = new UserModel();
+        $estudianteModel = new EstudianteModel();
+
+        $userData = [
+            'first_name' => $_POST['first_name'] ?? '',
+            'last_name' => $_POST['last_name'] ?? '',
+            'email' => $_POST['email'] ?? '',
+            'password' => $_POST['password'] ?? '',
+            'photo_url' => null,
+        ];
+        $estData = [
+            'personal_description' => $_POST['personal_description'] ?? null,
+        ];
+
+        $ok1 = $userModel->updateUser($id, $userData);
+        $ok2 = $estudianteModel->updateEstudiante($id, $estData);
+        $msg = ($ok1 || $ok2) ? 'updated' : 'error';
+
+        header('Location: /plataforma-clases-online/home/estudiantes?status=' . $msg);
+        exit;
+    }
+
+    // Eliminar estudiante
+    public function estudiantes_delete() {
+        AuthController::checkAuth();
+        AuthController::checkRole(['administrador']);
+
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            header('Location: /plataforma-clases-online/home/estudiantes');
+            exit;
+        }
+
+        require_once 'models/UserModel.php';
+        $userModel = new UserModel();
+        $ok = $userModel->deleteUser($id);
+        $msg = $ok ? 'deleted' : 'error';
+        header('Location: /plataforma-clases-online/home/estudiantes?status=' . $msg);
+        exit;
     }
 
     public function reservas()
@@ -119,6 +457,135 @@ class HomeController
         $disponibilidadModel = new DisponibilidadModel();
         $disponibilidades = $disponibilidadModel->getDisponibilidades();
         require_once 'views/disponibilidad.php';
+    }
+
+    // Mostrar formulario para crear disponibilidad
+    public function disponibilidad_create() {
+        AuthController::checkAuth();
+        AuthController::checkRole(['administrador','profesor']);
+
+        require_once 'models/DiaSemanaModel.php';
+        require_once 'models/EstadoReservaModel.php';
+        require_once 'models/ProfesorModel.php';
+
+        $diasModel = new DiaSemanaModel();
+        $estadosModel = new EstadoReservaModel();
+        $profesorModel = new ProfesorModel();
+
+        $dias = $diasModel->getDiasSemana();
+        $estados = $estadosModel->getEstadosReserva();
+        $profesores = $profesorModel->getProfesores();
+
+        $showForm = true;
+        require_once 'views/disponibilidad.php';
+    }
+
+    // Almacenar disponibilidad (POST)
+    public function disponibilidad_store() {
+        AuthController::checkAuth();
+        AuthController::checkRole(['administrador','profesor']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /plataforma-clases-online/home/disponibilidad');
+            exit;
+        }
+
+        require_once 'models/DisponibilidadModel.php';
+        $disModel = new DisponibilidadModel();
+
+        $data = [
+            'user_id' => $_POST['user_id'] ?? $_SESSION['user_id'],
+            'week_day_id' => $_POST['week_day_id'] ?? null,
+            'reservation_status_id' => $_POST['reservation_status_id'] ?? null,
+            'start_time' => $_POST['start_time'] ?? null,
+            'end_time' => $_POST['end_time'] ?? null,
+        ];
+
+        $ok = $disModel->createDisponibilidad($data);
+        $msg = $ok ? 'created' : 'error';
+        header('Location: /plataforma-clases-online/home/disponibilidad?status=' . $msg);
+        exit;
+    }
+
+    // Editar disponibilidad (mostrar formulario)
+    public function disponibilidad_edit() {
+        AuthController::checkAuth();
+        AuthController::checkRole(['administrador','profesor']);
+
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            header('Location: /plataforma-clases-online/home/disponibilidad');
+            exit;
+        }
+
+        require_once 'models/DisponibilidadModel.php';
+        require_once 'models/DiaSemanaModel.php';
+        require_once 'models/EstadoReservaModel.php';
+        require_once 'models/ProfesorModel.php';
+
+        $disModel = new DisponibilidadModel();
+        $diasModel = new DiaSemanaModel();
+        $estadosModel = new EstadoReservaModel();
+        $profesorModel = new ProfesorModel();
+
+        $disponibilidad = $disModel->getDisponibilidadById($id);
+        $dias = $diasModel->getDiasSemana();
+        $estados = $estadosModel->getEstadosReserva();
+        $profesores = $profesorModel->getProfesores();
+
+        $showForm = true;
+        require_once 'views/disponibilidad.php';
+    }
+
+    // Actualizar disponibilidad (POST)
+    public function disponibilidad_update() {
+        AuthController::checkAuth();
+        AuthController::checkRole(['administrador','profesor']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /plataforma-clases-online/home/disponibilidad');
+            exit;
+        }
+
+        $id = $_POST['availability_id'] ?? null;
+        if (!$id) {
+            header('Location: /plataforma-clases-online/home/disponibilidad?status=error');
+            exit;
+        }
+
+        require_once 'models/DisponibilidadModel.php';
+        $disModel = new DisponibilidadModel();
+
+        $data = [
+            'week_day_id' => $_POST['week_day_id'] ?? null,
+            'reservation_status_id' => $_POST['reservation_status_id'] ?? null,
+            'start_time' => $_POST['start_time'] ?? null,
+            'end_time' => $_POST['end_time'] ?? null,
+        ];
+
+        $ok = $disModel->updateDisponibilidad($id, $data);
+        $msg = $ok ? 'updated' : 'error';
+        header('Location: /plataforma-clases-online/home/disponibilidad?status=' . $msg);
+        exit;
+    }
+
+    // Eliminar disponibilidad
+    public function disponibilidad_delete() {
+        AuthController::checkAuth();
+        AuthController::checkRole(['administrador','profesor']);
+
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            header('Location: /plataforma-clases-online/home/disponibilidad');
+            exit;
+        }
+
+        require_once 'models/DisponibilidadModel.php';
+        $disModel = new DisponibilidadModel();
+        $ok = $disModel->deleteDisponibilidad($id);
+        $msg = $ok ? 'deleted' : 'error';
+        header('Location: /plataforma-clases-online/home/disponibilidad?status=' . $msg);
+        exit;
     }
 
     public function pagos()
@@ -168,8 +635,300 @@ class HomeController
         require_once 'views/reviews.php';
     }
 
+    public function perfil_edit()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['profesor', 'estudiante']);
+
+        $role = $_SESSION['role'];
+        require_once 'models/UserModel.php';
+        $userModel = new UserModel();
+        $user = $userModel->getUserById($_SESSION['user_id']);
+
+        if ($role === 'profesor') {
+            require_once 'models/ProfesorModel.php';
+            $profesorModel = new ProfesorModel();
+            $profesor = $profesorModel->getProfesorById($_SESSION['user_id']);
+            $data = ['user' => $user, 'profesor' => $profesor];
+            require_once 'views/views_profesor/perfil_edit.php';
+        } elseif ($role === 'estudiante') {
+            require_once 'models/EstudianteModel.php';
+            $estudianteModel = new EstudianteModel();
+            $estudiante = $estudianteModel->getEstudianteById($_SESSION['user_id']);
+            $data = ['user' => $user, 'estudiante' => $estudiante];
+            require_once 'views/views_estudiante/perfil_edit.php';
+        }
+    }
+
+    public function perfil_update()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['profesor', 'estudiante']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /plataforma-clases-online/home/perfil_edit');
+            exit;
+        }
+
+        $role = $_SESSION['role'];
+        require_once 'models/UserModel.php';
+        $userModel = new UserModel();
+
+        $userData = [
+            'first_name' => $_POST['first_name'] ?? '',
+            'last_name' => $_POST['last_name'] ?? '',
+            'email' => $_POST['email'] ?? '',
+            'photo_url' => $_POST['photo_url'] ?? null,
+        ];
+
+        if (!empty($_POST['password'])) {
+            $userData['password'] = $_POST['password'];
+        }
+
+        $ok1 = $userModel->updateUser($_SESSION['user_id'], $userData);
+
+        $ok2 = true;
+        if ($role === 'profesor') {
+            require_once 'models/ProfesorModel.php';
+            $profesorModel = new ProfesorModel();
+            $profData = [
+                'personal_description' => $_POST['personal_description'] ?? null,
+                'academic_level' => $_POST['academic_level'] ?? null,
+                'hourly_rate' => $_POST['hourly_rate'] ?? null,
+            ];
+            $ok2 = $profesorModel->updateProfesor($_SESSION['user_id'], $profData);
+        } elseif ($role === 'estudiante') {
+            require_once 'models/EstudianteModel.php';
+            $estudianteModel = new EstudianteModel();
+            $estData = [
+                'personal_description' => $_POST['personal_description'] ?? null,
+            ];
+            $ok2 = $estudianteModel->updateEstudiante($_SESSION['user_id'], $estData);
+        }
+
+        $msg = ($ok1 && $ok2) ? 'updated' : 'error';
+        header('Location: /plataforma-clases-online/home/perfil_edit?status=' . $msg);
+        exit;
+    }
+
+    public function explorar_profesores()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['estudiante']);
+
+        require_once 'models/ProfesorModel.php';
+        require_once 'models/ReviewModel.php';
+
+        $profesorModel = new ProfesorModel();
+        $reviewModel = new ReviewModel();
+
+        $profesores = $profesorModel->getProfesores();
+
+        // Obtener reseñas para cada profesor
+        foreach ($profesores as &$profesor) {
+            $reviews = $reviewModel->getReviewsByProfesor($profesor['user_id']);
+            $profesor['rating'] = !empty($reviews) ? array_sum(array_column($reviews, 'rating')) / count($reviews) : 0;
+            $profesor['review_count'] = count($reviews);
+        }
+
+        $data = [
+            'profesores' => $profesores
+        ];
+
+        extract($data);
+        require_once 'views/views_estudiante/explorar_profesores.php';
+    }
+
     public function about()
     {
         require_once 'views/about.php';
+    }
+
+    public function crear_clase()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['profesor']);
+
+        require_once 'models/EstudianteModel.php';
+        $estudianteModel = new EstudianteModel();
+        $estudiantes = $estudianteModel->getEstudiantes();
+
+        $data = ['estudiantes' => $estudiantes];
+        extract($data);
+        require_once 'views/crear_clase.php';
+    }
+
+    public function crear_clase_store()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['profesor']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /plataforma-clases-online/home/crear_clase');
+            exit;
+        }
+
+        require_once 'models/ReservaModel.php';
+        $reservaModel = new ReservaModel();
+
+        $reservationId = uniqid('res_');
+        $data = [
+            'reservation_id' => $reservationId,
+            'user_id' => $_SESSION['user_id'],
+            'student_user_id' => $_POST['student_user_id'] ?? null,
+            'availability_id' => null, // Se puede asignar después
+            'reservation_status_id' => 1, // Pendiente
+            'class_date' => $_POST['class_date'] ?? null,
+            'start_time' => $_POST['start_time'] ?? null,
+            'end_time' => $_POST['end_time'] ?? null,
+            'class_description' => $_POST['class_description'] ?? null
+        ];
+
+        $ok = $reservaModel->createReserva($data);
+        $msg = $ok ? 'created' : 'error';
+        header('Location: /plataforma-clases-online/home/profesor_dashboard?status=' . $msg);
+        exit;
+    }
+
+    public function reportes()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['profesor']);
+
+        require_once 'models/ReservaModel.php';
+        require_once 'models/PagoModel.php';
+        require_once 'models/ReviewModel.php';
+        require_once 'models/EstudianteModel.php';
+
+        $reservaModel = new ReservaModel();
+        $pagoModel = new PagoModel();
+        $reviewModel = new ReviewModel();
+        $estudianteModel = new EstudianteModel();
+
+        $profesorId = $_SESSION['user_id'];
+
+        // Datos para reportes
+        $reservas = $reservaModel->getReservasByProfesor($profesorId);
+        $pagos = $pagoModel->getPagosByProfesor($profesorId);
+        $reviews = $reviewModel->getReviewsByProfesor($profesorId);
+
+        // Calcular estadísticas
+        $totalClases = count($reservas);
+        $totalEstudiantes = count(array_unique(array_column($reservas, 'student_user_id')));
+        $ingresosTotales = array_sum(array_column($pagos, 'amount'));
+        $calificacionPromedio = !empty($reviews) ? array_sum(array_column($reviews, 'rating')) / count($reviews) : 0;
+
+        // Top estudiantes
+        $estudiantesCount = array_count_values(array_column($reservas, 'student_user_id'));
+        arsort($estudiantesCount);
+        $topEstudiantes = [];
+        foreach(array_slice($estudiantesCount, 0, 5, true) as $estId => $count) {
+            $estudiante = $estudianteModel->getEstudianteById($estId);
+            if ($estudiante) {
+                $topEstudiantes[] = [
+                    'nombre' => $estudiante['first_name'] . ' ' . $estudiante['last_name'],
+                    'clases' => $count,
+                    'ultima_clase' => '2024-01-01' // Placeholder
+                ];
+            }
+        }
+
+        $data = [
+            'reportes' => [
+                'total_clases' => $totalClases,
+                'total_estudiantes' => $totalEstudiantes,
+                'ingresos_totales' => $ingresosTotales,
+                'calificacion_promedio' => $calificacionPromedio,
+                'top_estudiantes' => $topEstudiantes,
+                'calificaciones_recientes' => array_slice($reviews, 0, 5)
+            ]
+        ];
+
+        extract($data);
+        require_once 'views/reportes.php';
+    }
+
+    public function mensajes()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['profesor']);
+
+        require_once 'models/EstudianteModel.php';
+        $estudianteModel = new EstudianteModel();
+        $estudiantes = $estudianteModel->getEstudiantes();
+
+        // Placeholder para conversaciones y mensajes
+        $conversaciones = [];
+        $historial_mensajes = [];
+
+        $data = [
+            'estudiantes' => $estudiantes,
+            'conversaciones' => $conversaciones,
+            'historial_mensajes' => $historial_mensajes
+        ];
+
+        extract($data);
+        require_once 'views/mensajes.php';
+    }
+
+    public function ver_estudiante()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['profesor']);
+
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            header('Location: /plataforma-clases-online/home/profesor_dashboard');
+            exit;
+        }
+
+        require_once 'models/UserModel.php';
+        require_once 'models/EstudianteModel.php';
+        require_once 'models/ReservaModel.php';
+        require_once 'models/PagoModel.php';
+        require_once 'models/ReviewModel.php';
+
+        $userModel = new UserModel();
+        $estudianteModel = new EstudianteModel();
+        $reservaModel = new ReservaModel();
+        $pagoModel = new PagoModel();
+        $reviewModel = new ReviewModel();
+
+        $estudiante = $userModel->getUserById($id);
+        if (!$estudiante) {
+            header('Location: /plataforma-clases-online/home/profesor_dashboard');
+            exit;
+        }
+
+        // Obtener datos adicionales
+        $reservas = $reservaModel->getReservasByEstudiante($id);
+        $pagos = $pagoModel->getPagosByEstudiante($id);
+        $reviews = $reviewModel->getReviewsByProfesor($_SESSION['user_id']);
+
+        // Filtrar reviews de este estudiante
+        $estudianteReviews = array_filter($reviews, function($r) use ($id) {
+            return $r['student_user_id'] == $id;
+        });
+
+        // Calcular estadísticas
+        $clasesTotales = count($reservas);
+        $clasesCompletadas = count(array_filter($reservas, function($r) { return $r['reservation_status'] === 'completada'; }));
+        $clasesPendientes = $clasesTotales - $clasesCompletadas;
+        $totalInvertido = array_sum(array_column($pagos, 'amount'));
+
+        $data = [
+            'estudiante' => $estudiante,
+            'historial_clases' => $reservas,
+            'calificaciones' => $estudianteReviews,
+            'estadisticas' => [
+                'clases_totales' => $clasesTotales,
+                'clases_completadas' => $clasesCompletadas,
+                'clases_pendientes' => $clasesPendientes,
+                'total_invertido' => $totalInvertido
+            ]
+        ];
+
+        extract($data);
+        require_once 'views/ver_estudiante.php';
     }
 }

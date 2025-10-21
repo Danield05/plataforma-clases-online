@@ -75,14 +75,18 @@ class UserModel {
     }
 
     public function updateUser($id, $data) {
-        $stmt = $this->db->prepare("UPDATE usuarios SET first_name = ?, last_name = ?, email = ?, photo_url = ? WHERE user_id = ?");
-        return $stmt->execute([
-            $data['first_name'],
-            $data['last_name'],
-            $data['email'],
-            $data['photo_url'] ?? null,
-            $id
-        ]);
+        $fields = ['first_name', 'last_name', 'email', 'photo_url'];
+        $values = [$data['first_name'], $data['last_name'], $data['email'], $data['photo_url'] ?? null];
+
+        if (!empty($data['password'])) {
+            $fields[] = 'password';
+            $values[] = password_hash($data['password'], PASSWORD_DEFAULT);
+        }
+
+        $setClause = implode(' = ?, ', $fields) . ' = ?';
+        $stmt = $this->db->prepare("UPDATE usuarios SET $setClause WHERE user_id = ?");
+        $values[] = $id;
+        return $stmt->execute($values);
     }
 
     public function deleteUser($id) {
