@@ -1,14 +1,13 @@
 
 @import "variables-generales.css";
 
-
-/* Estilos para el login*/
+/*Estilo para login y register*/
 .login {
-  min-height: 100vh;
+  min-height: 50vh;
 }
 
 .bg-image {
-  background-image: url('https://static.wixstatic.com/media/04ba0b2450a4460bad90b90bc9908adf.jpg/v1/fill/w_839,h_559,al_c,q_85,usm_0.66_1.00_0.01,enc_auto/04ba0b2450a4460bad90b90bc9908adf.jpg');
+  background-image: url('https://img.freepik.com/fotos-premium/lugar-vacio-mesa-blanca_700248-25288.jpg');
   background-size: cover;
   background-position: center;
 }
@@ -21,7 +20,42 @@
   font-size: 0.9rem;
   letter-spacing: 0.05rem;
   padding: 0.75rem 1rem;
+
 }
+.btn-login {
+    background: linear-gradient(135deg, #371783 0%, #8B5A96 100%);
+    transition: all 0.3s ease  ;
+    color: var(--color-white);
+    box-shadow: 0 4px 20px rgba(55, 23, 131, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+.form-select {
+    margin-bottom: 1rem;
+}
+.register-container {
+    align-items: center;
+  margin-top: 50px;
+  margin-bottom: 50px;
+}
+.card-img-left {
+  width: 45%;
+  /* Link to your background image using in the property below! */
+  background: url('https://img.freepik.com/foto-gratis/teclado-gafas-cerca-notas-taza-cafe-escritorio_23-2148128455.jpg');
+  background-size: cover;
+}
+
+.btn-register {
+  
+   background: linear-gradient(135deg, #371783 0%, #8B5A96 100%);
+    transition: all 0.3s ease  ;
+    color: var(--color-white);
+    box-shadow: 0 4px 20px rgba(55, 23, 131, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+
 
 /* Estilos básicos para el proyecto MVC */
 body {
