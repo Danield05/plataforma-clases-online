@@ -133,15 +133,20 @@ try {
             (5, 'Inglés', 'Clases de inglés conversacional y académico', 12.00),
             (6, 'Español', 'Clases de literatura y gramática española', 14.00)");
 
+        // Generar hashes de contraseñas reales
+        $admin_password = password_hash('admin123', PASSWORD_DEFAULT);
+        $professor_password = password_hash('prof123', PASSWORD_DEFAULT);
+        $student_password = password_hash('estu123', PASSWORD_DEFAULT);
+
         // Insertar usuarios de prueba
         $pdo->exec("INSERT IGNORE INTO Usuarios (user_id, first_name, last_name, email, password, phone, role_id, user_status_id, bio) VALUES
-            (1, 'Admin', 'Sistema', 'admin@plataforma.com', '\$2y\$10\$8K13cX8QXJzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0', '1234-5678', 1, 1, 'Administrador del sistema'),
-            (2, 'María', 'González', 'maria.profesor@plataforma.com', '\$2y\$10\$8K13cX8QXJzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0', '2222-1111', 2, 1, 'Profesora de Matemáticas y Física'),
-            (3, 'Carlos', 'Rodríguez', 'carlos.profesor@plataforma.com', '\$2y\$10\$8K13cX8QXJzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0', '3333-2222', 2, 1, 'Profesor de Programación'),
-            (4, 'Ana', 'Martínez', 'ana.profesor@plataforma.com', '\$2y\$10\$8K13cX8QXJzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0', '4444-3333', 2, 1, 'Profesora de Inglés'),
-            (5, 'Juan', 'Pérez', 'juan.estudiante@plataforma.com', '\$2y\$10\$8K13cX8QXJzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0', '5555-4444', 3, 1, 'Estudiante de Ingeniería'),
-            (6, 'María', 'López', 'maria.estudiante@plataforma.com', '\$2y\$10\$8K13cX8QXJzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0', '6666-5555', 3, 1, 'Estudiante de Administración'),
-            (7, 'Pedro', 'Sánchez', 'pedro.estudiante@plataforma.com', '\$2y\$10\$8K13cX8QXJzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0ZzZ0', '7777-6666', 3, 1, 'Estudiante de secundaria')");
+            (1, 'Admin', 'Sistema', 'admin@plataforma.com', '$admin_password', '1234-5678', 1, 1, 'Administrador del sistema'),
+            (2, 'María', 'González', 'maria.profesor@plataforma.com', '$professor_password', '2222-1111', 2, 1, 'Profesora de Matemáticas y Física'),
+            (3, 'Carlos', 'Rodríguez', 'carlos.profesor@plataforma.com', '$professor_password', '3333-2222', 2, 1, 'Profesor de Programación'),
+            (4, 'Ana', 'Martínez', 'ana.profesor@plataforma.com', '$professor_password', '4444-3333', 2, 1, 'Profesora de Inglés'),
+            (5, 'Juan', 'Pérez', 'juan.estudiante@plataforma.com', '$student_password', '5555-4444', 3, 1, 'Estudiante de Ingeniería'),
+            (6, 'María', 'López', 'maria.estudiante@plataforma.com', '$student_password', '6666-5555', 3, 1, 'Estudiante de Administración'),
+            (7, 'Pedro', 'Sánchez', 'pedro.estudiante@plataforma.com', '$student_password', '7777-6666', 3, 1, 'Estudiante de secundaria')");
 
         // Insertar horarios de profesores
         $pdo->exec("INSERT IGNORE INTO Disponibilidad_Profesores (availability_id, user_id, week_day_id, availability_status_id, start_time, end_time, subject_id, price_per_hour) VALUES

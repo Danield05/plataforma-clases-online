@@ -16,26 +16,16 @@
         <div class="star"></div>
         <div class="star"></div>
     </div>
-
+    
+    <?php if (isset($error)): ?>
+         <div class="alert alert-danger alert-dismissible fade show notification-alert" role="alert" id="errorAlert">
+                 <strong>¡Error!</strong> <?php echo $error; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+     <?php endif; ?>
     <div class="login-container">
         <!-- Panel izquierdo con el formulario -->
         <div class="login-panel">
-            <?php if (isset($error)): ?>
-                <div class="alert alert-danger" role="alert">
-                    <strong>Error:</strong> <?php echo $error; ?>
-                </div>
-            <?php endif; ?>
-
-            <!-- Debug info -->
-            <?php if ($_SERVER['REQUEST_METHOD'] === 'POST'): ?>
-            <div class="alert alert-info" role="alert">
-                <strong>Debug Info:</strong><br>
-                REQUEST_METHOD: <?php echo $_SERVER['REQUEST_METHOD']; ?><br>
-                Email recibido: "<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>"<br>
-                Password recibido: <?php echo isset($_POST['password']) && !empty($_POST['password']) ? 'Presente' : 'Vacío'; ?>
-            </div>
-            <?php endif; ?>
-
             <!-- Formulario de login moderno -->
             <form action="http://localhost:8080/plataforma-clases-online/auth/login" method="POST" id="loginForm" class="modern-login-form">
                 <div class="form-header">
@@ -97,5 +87,17 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-ocultar la notificación de error después de 5 segundos
+        document.addEventListener('DOMContentLoaded', function() {
+            const errorAlert = document.getElementById('errorAlert');
+            if (errorAlert) {
+                setTimeout(function() {
+                    const bsAlert = new bootstrap.Alert(errorAlert);
+                    bsAlert.close();
+                }, 5000); // 5 segundos
+            }
+        });
+    </script>
 </body>
 </html>

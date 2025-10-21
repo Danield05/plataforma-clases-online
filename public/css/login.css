@@ -604,6 +604,43 @@ body.login-page::after {
     text-decoration: underline;
 }
 
+/* Notificación emergente para errores */
+.notification-alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    min-width: 300px;
+    max-width: 400px;
+    animation: slideInRight 0.5s ease-out;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border: none;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    background: rgba(220, 53, 69, 0.95) !important;
+    color: white !important;
+}
+
+.notification-alert .btn-close {
+    filter: invert(1);
+    opacity: 0.8;
+}
+
+.notification-alert .btn-close:hover {
+    opacity: 1;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
 /* Footer moderno oculto en login */
 .modern-footer {
     display: none;
