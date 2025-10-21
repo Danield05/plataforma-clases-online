@@ -332,11 +332,33 @@ class HomeController
     public function estudiantes()
     {
         AuthController::checkAuth();
-        AuthController::checkRole(['administrador']);
+        AuthController::checkRole(['administrador', 'profesor']);
 
         require_once 'models/EstudianteModel.php';
         $estudianteModel = new EstudianteModel();
-        $estudiantes = $estudianteModel->getEstudiantes();
+
+        // Si es profesor, mostrar solo sus estudiantes
+        if ($_SESSION['role'] === 'profesor') {
+            require_once 'models/ReservaModel.php';
+            $reservaModel = new ReservaModel();
+
+            $reservas = $reservaModel->getReservasByProfesor($_SESSION['user_id']);
+            $estudiantesUnicos = array_unique(array_column($reservas, 'student_user_id'));
+
+            $estudiantes = [];
+            if (!empty($estudiantesUnicos)) {
+                foreach ($estudiantesUnicos as $estId) {
+                    $estudiante = $estudianteModel->getEstudianteById($estId);
+                    if ($estudiante) {
+                        $estudiantes[] = $estudiante;
+                    }
+                }
+            }
+        } else {
+            // Administrador ve todos los estudiantes
+            $estudiantes = $estudianteModel->getEstudiantes();
+        }
+
         require_once 'views/layouts/estudiantes.php';
     }
 
@@ -1118,6 +1140,19 @@ class HomeController
         $estudianteReviews = array_filter($reviews, function($r) use ($id) {
             return $r['student_user_id'] == $id;
         });
+
+        // Agregar información de disponibilidad a las reservas para mostrar horas
+        foreach ($reservas as &$reserva) {
+            if (isset($reserva['availability_id']) && $reserva['availability_id']) {
+                require_once 'models/DisponibilidadModel.php';
+                $disponibilidadModel = new DisponibilidadModel();
+                $disponibilidad = $disponibilidadModel->getDisponibilidadById($reserva['availability_id']);
+                if ($disponibilidad) {
+                    $reserva['start_time'] = $disponibilidad['start_time'];
+                    $reserva['end_time'] = $disponibilidad['end_time'];
+                }
+            }
+        }
 
         // Calcular estadísticas
         $clasesTotales = count($reservas);

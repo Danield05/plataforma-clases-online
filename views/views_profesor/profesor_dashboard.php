@@ -166,7 +166,7 @@
             </div>
 
             <!-- Estudiantes -->
-            <div class="col-lg-6">
+            <div class="col-lg-6" id="estudiantes-section">
                 <div class="dashboard-card">
                     <div class="card-header">
                         <h3>🎓 Mis Estudiantes</h3>
@@ -202,7 +202,7 @@
                         <?php else: ?>
                             <div class="empty-state">
                                 <div class="empty-icon">👥</div>
-                                <p>No tienes estudiantes asignados</p>
+                                <p>Aún no tienes estudiantes registrados contigo</p>
                                 <a href="/plataforma-clases-online/home/estudiantes" class="btn btn-success btn-sm">Ver Todos</a>
                             </div>
                         <?php endif; ?>
@@ -440,6 +440,14 @@
                 alert(detalle);
             } else {
                 alert(`No hay reservas programadas para ${fecha}`);
+            }
+        }
+
+        // Función para hacer scroll a la sección de estudiantes
+        function scrollToEstudiantes() {
+            const estudiantesSection = document.getElementById('estudiantes-section');
+            if (estudiantesSection) {
+                estudiantesSection.scrollIntoView({ behavior: 'smooth' });
             }
         }
 

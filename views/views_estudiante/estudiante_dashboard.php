@@ -161,7 +161,7 @@
                             <div class="list-group-item">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <small class="text-muted">Reserva #<?php echo htmlspecialchars($pago['reservation_id']); ?></small>
+                                        <small class="text-muted"><?php echo strpos($pago['reservation_id'], 'Pago-') === 0 ? 'Pago' : 'Reserva'; ?> #<?php echo htmlspecialchars(str_replace('Pago-', '', $pago['reservation_id'])); ?></small>
                                         <p class="mb-0">$<?php echo number_format($pago['amount'], 2); ?> - <?php echo htmlspecialchars($pago['payment_method']); ?></p>
                                     </div>
                                     <span class="badge bg-<?php echo $pago['payment_status'] === 'pagado' ? 'success' : 'warning'; ?>"><?php echo htmlspecialchars($pago['payment_status']); ?></span>

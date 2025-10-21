@@ -35,9 +35,24 @@ class PagoModel {
     }
     /* NUEVOS MÉTODOS PARA LOS TOTALES */
     public function getPagosByEstudiante($studentUserId) {
-        $stmt = $this->db->prepare("SELECT p.*, u.first_name, u.last_name, ep.status as payment_status FROM Pagos p JOIN Usuarios u ON p.user_id = u.user_id JOIN Estados_Pago ep ON p.payment_status_id = ep.payment_status_id WHERE p.user_id = ?");
+        $stmt = $this->db->prepare("SELECT p.*, u.first_name, u.last_name, ep.status as payment_status FROM Pagos p LEFT JOIN Usuarios u ON p.user_id = u.user_id LEFT JOIN Estados_Pago ep ON p.payment_status_id = ep.payment_status_id WHERE p.user_id = ? ORDER BY p.payment_date DESC");
         $stmt->execute([$studentUserId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $pagos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Para cada pago, intentar encontrar la reserva más cercana por fecha
+        foreach ($pagos as &$pago) {
+            $stmt2 = $this->db->prepare("SELECT reservation_id FROM Reservas WHERE student_user_id = ? AND class_date <= DATE(?) ORDER BY class_date DESC LIMIT 1");
+            $stmt2->execute([$studentUserId, $pago['payment_date']]);
+            $reserva = $stmt2->fetch(PDO::FETCH_ASSOC);
+            if ($reserva) {
+                $pago['reservation_id'] = $reserva['reservation_id'];
+            } else {
+                // Si no hay reserva anterior, usar el ID del pago como referencia temporal
+                $pago['reservation_id'] = 'Pago-' . $pago['payment_id'];
+            }
+        }
+
+        return $pagos;
     }
 
     public function getPagosByProfesor($profesorUserId) {

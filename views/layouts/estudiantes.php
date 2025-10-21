@@ -29,9 +29,11 @@
             ?>
 
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2>Estudiantes</h2>
+                <h2><?php echo $_SESSION['role'] === 'profesor' ? 'Mis Estudiantes' : 'Estudiantes'; ?></h2>
                 <div>
-                    <a href="/plataforma-clases-online/home/estudiantes_create" class="btn btn-primary">Crear estudiante</a>
+                    <?php if ($_SESSION['role'] === 'administrador'): ?>
+                        <a href="/plataforma-clases-online/home/estudiantes_create" class="btn btn-primary">Crear estudiante</a>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -90,8 +92,12 @@
                             <td><?= htmlspecialchars($e['email']) ?></td>
                             <td><?= htmlspecialchars($e['personal_description'] ?? '') ?></td>
                             <td>
-                                <a href="/plataforma-clases-online/home/estudiantes_edit?id=<?= $e['user_id'] ?>" class="btn btn-sm btn-primary">Editar</a>
-                                <a href="/plataforma-clases-online/home/estudiantes_delete?id=<?= $e['user_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar estudiante?');">Eliminar</a>
+                                <?php if ($_SESSION['role'] === 'administrador'): ?>
+                                    <a href="/plataforma-clases-online/home/estudiantes_edit?id=<?= $e['user_id'] ?>" class="btn btn-sm btn-primary">Editar</a>
+                                    <a href="/plataforma-clases-online/home/estudiantes_delete?id=<?= $e['user_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar estudiante?');">Eliminar</a>
+                                <?php else: ?>
+                                    <a href="/plataforma-clases-online/home/ver_estudiante?id=<?= $e['user_id'] ?>" class="btn btn-sm btn-outline-primary">Ver Perfil</a>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
