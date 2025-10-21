@@ -21,7 +21,7 @@
     
     <main>
         <h2>Comentarios y Calificaciones</h2>
-        <table>
+        <table class="table table-striped">
             <thead>
                 <tr>
                     <th>Profesor</th>
@@ -43,6 +43,8 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
+
+        
     </main>
     
     <footer class="modern-footer">

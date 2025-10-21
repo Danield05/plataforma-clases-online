@@ -28,6 +28,9 @@
                     <p class="welcome-subtitle">Gestiona tus clases y estudiantes desde aquí</p>
                 </div>
                 <div class="col-lg-4 text-end">
+                    <a href="/plataforma-clases-online/home/perfil_edit" class="btn btn-outline-primary me-2">
+                        👤 Editar Perfil
+                    </a>
                     <a href="/plataforma-clases-online/auth/logout" class="btn btn-outline-danger">
                         🚪 Cerrar Sesión
                     </a>
@@ -39,22 +42,22 @@
         <div class="modern-stats-grid mb-5">
             <div class="modern-stat-card">
                 <div class="stat-icon">📅</div>
-                <div class="stat-value text-primary">0</div>
+                <div class="stat-value text-primary"><?php echo $stats['reservasActivas']; ?></div>
                 <p class="stat-label">Reservas Activas</p>
             </div>
             <div class="modern-stat-card">
                 <div class="stat-icon">🎓</div>
-                <div class="stat-value text-success">0</div>
+                <div class="stat-value text-success"><?php echo $stats['estudiantesTotales']; ?></div>
                 <p class="stat-label">Estudiantes Totales</p>
             </div>
             <div class="modern-stat-card">
                 <div class="stat-icon">⭐</div>
-                <div class="stat-value text-warning">5.0</div>
+                <div class="stat-value text-warning"><?php echo $stats['calificacionPromedio']; ?></div>
                 <p class="stat-label">Calificación Promedio</p>
             </div>
             <div class="modern-stat-card">
                 <div class="stat-icon">💰</div>
-                <div class="stat-value text-info">$0.00</div>
+                <div class="stat-value text-info">$<?php echo number_format($stats['ingresosMes'], 2); ?></div>
                 <p class="stat-label">Ingresos del Mes</p>
             </div>
         </div>
@@ -69,14 +72,41 @@
                         <span class="badge bg-primary">Clases Programadas</span>
                     </div>
                     <div class="card-body">
-                        <div class="empty-state">
-                            <div class="empty-icon">📚</div>
-                            <p>No tienes reservas asignadas</p>
-                            <a href="#" class="btn btn-primary btn-sm">Configurar Disponibilidad</a>
-                        </div>
+                            <?php if (!empty($reservas)): ?>
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Reserva</th>
+                                                <th>Estudiante</th>
+                                                <th>Fecha</th>
+                                                <th>Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach((array)$reservas as $r): ?>
+                                                <tr>
+                                                    <td><?php echo htmlspecialchars($r['reservation_id'] ?? ''); ?></td>
+                                                    <td><?php echo htmlspecialchars($r['estudiante_name'] ?? ''); ?></td>
+                                                    <td><?php echo htmlspecialchars($r['class_date'] ?? ''); ?></td>
+                                                    <td><?php echo htmlspecialchars($r['reservation_status'] ?? ''); ?></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php else: ?>
+                                <div class="empty-state">
+                                    <div class="empty-icon">📚</div>
+                                    <p>No tienes reservas asignadas</p>
+                                    <a href="/plataforma-clases-online/home/disponibilidad_create" class="btn btn-primary btn-sm">Configurar Disponibilidad</a>
+                                </div>
+                            <?php endif; ?>
                     </div>
                 </div>
             </div>
+
+            
 
             <!-- Mi Disponibilidad -->
             <div class="col-lg-6">
@@ -86,11 +116,44 @@
                         <span class="badge bg-info">Horarios</span>
                     </div>
                     <div class="card-body">
-                        <div class="empty-state">
-                            <div class="empty-icon">⏰</div>
-                            <p>Configura tus horarios disponibles</p>
-                            <a href="#" class="btn btn-info btn-sm">Gestionar Horarios</a>
-                        </div>
+                        <?php if (!empty($disponibilidades)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Día</th>
+                                            <th>Hora Inicio</th>
+                                            <th>Hora Fin</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach($disponibilidades as $disp): ?>
+                                            <tr>
+                                                <td><?php echo htmlspecialchars($disp['day']); ?></td>
+                                                <td><?php echo htmlspecialchars($disp['start_time']); ?></td>
+                                                <td><?php echo htmlspecialchars($disp['end_time']); ?></td>
+                                                <td><?php echo htmlspecialchars($disp['status']); ?></td>
+                                                <td>
+                                                    <a href="/plataforma-clases-online/home/disponibilidad_edit?id=<?php echo $disp['availability_id']; ?>" class="btn btn-sm btn-outline-primary">Editar</a>
+                                                    <a href="/plataforma-clases-online/home/disponibilidad_delete?id=<?php echo $disp['availability_id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar disponibilidad?');">Eliminar</a>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-center mt-3">
+                                <a href="/plataforma-clases-online/home/disponibilidad_create" class="btn btn-info btn-sm">Agregar Horario</a>
+                            </div>
+                        <?php else: ?>
+                            <div class="empty-state">
+                                <div class="empty-icon">⏰</div>
+                                <p>Configura tus horarios disponibles</p>
+                                <a href="/plataforma-clases-online/home/disponibilidad_create" class="btn btn-info btn-sm">Gestionar Horarios</a>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -103,11 +166,39 @@
                         <span class="badge bg-success">Activos</span>
                     </div>
                     <div class="card-body">
-                        <div class="empty-state">
-                            <div class="empty-icon">👥</div>
-                            <p>No tienes estudiantes asignados</p>
-                            <a href="#" class="btn btn-success btn-sm">Ver Todos</a>
-                        </div>
+                        <?php if (!empty($estudiantes)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Estudiante</th>
+                                            <th>Email</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach($estudiantes as $est): ?>
+                                            <tr>
+                                                <td><?php echo htmlspecialchars($est['first_name'] . ' ' . $est['last_name']); ?></td>
+                                                <td><?php echo htmlspecialchars($est['email']); ?></td>
+                                                <td>
+                                                    <a href="/plataforma-clases-online/home/ver_estudiante?id=<?php echo $est['user_id']; ?>" class="btn btn-sm btn-outline-primary">Ver Perfil</a>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-center mt-3">
+                                <a href="/plataforma-clases-online/home/estudiantes" class="btn btn-success btn-sm">Ver Todos los Estudiantes</a>
+                            </div>
+                        <?php else: ?>
+                            <div class="empty-state">
+                                <div class="empty-icon">👥</div>
+                                <p>No tienes estudiantes asignados</p>
+                                <a href="/plataforma-clases-online/home/estudiantes" class="btn btn-success btn-sm">Ver Todos</a>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -150,13 +241,13 @@
                                 </table>
                             </div>
                             <div class="text-center mt-3">
-                                <a href="#" class="btn btn-outline-warning btn-sm">Ver Todos los Pagos</a>
+                                <a href="/plataforma-clases-online/home/pagos" class="btn btn-outline-warning btn-sm">Ver Todos los Pagos</a>
                             </div>
                         <?php else: ?>
                             <div class="empty-state">
                                 <div class="empty-icon">💸</div>
                                 <p>No hay pagos registrados</p>
-                                <a href="#" class="btn btn-warning btn-sm">Ver Historial</a>
+                                <a href="/plataforma-clases-online/home/pagos" class="btn btn-warning btn-sm">Ver Historial</a>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -179,7 +270,7 @@
                                     <div class="action-icon">📝</div>
                                     <h4>Crear Clase</h4>
                                     <p>Programa una nueva clase</p>
-                                    <a href="#" class="btn btn-outline-primary btn-sm">Crear</a>
+                                    <a href="/plataforma-clases-online/home/crear_clase" class="btn btn-outline-primary btn-sm">Crear</a>
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -187,7 +278,7 @@
                                     <div class="action-icon">📊</div>
                                     <h4>Ver Reportes</h4>
                                     <p>Analiza tu rendimiento</p>
-                                    <a href="#" class="btn btn-outline-info btn-sm">Reportes</a>
+                                    <a href="/plataforma-clases-online/home/reportes" class="btn btn-outline-info btn-sm">Reportes</a>
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -195,7 +286,7 @@
                                     <div class="action-icon">⚙️</div>
                                     <h4>Configuración</h4>
                                     <p>Ajusta tu perfil</p>
-                                    <a href="#" class="btn btn-outline-secondary btn-sm">Configurar</a>
+                                    <a href="/plataforma-clases-online/home/perfil_edit" class="btn btn-outline-secondary btn-sm">Configurar</a>
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -203,7 +294,7 @@
                                     <div class="action-icon">💬</div>
                                     <h4>Mensajes</h4>
                                     <p>Comunícate con estudiantes</p>
-                                    <a href="#" class="btn btn-outline-success btn-sm">Mensajes</a>
+                                    <a href="/plataforma-clases-online/home/mensajes" class="btn btn-outline-success btn-sm">Mensajes</a>
                                 </div>
                             </div>
                         </div>
