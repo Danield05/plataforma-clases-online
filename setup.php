@@ -1,3 +1,4 @@
+-- Active: 1760930496821@@localhost@3306@phpmyadmin
 <?php
 // Script de instalación automática para Plataforma de Clases Online
 
@@ -63,7 +64,7 @@ try {
 
     // Verificar si las tablas existen
     echo "\n5. Verificando estructura de base de datos...\n";
-    $tables = ['usuarios', 'roles', 'estados_usuario', 'estados_reserva', 'estados_disponibilidad', 'dias_semana', 'disponibilidad_profesores', 'reservas'];
+    $tables = ['usuarios', 'roles', 'estados_usuario', 'administrador', 'profesor', 'estudiante', 'estados_pago', 'pagos', 'estados_reserva', 'estados_disponibilidad', 'dias_semana', 'materias', 'profesor_materia', 'estudiante_materia', 'disponibilidad_profesores', 'reservas', 'reviews'];
     $missing_tables = [];
 
     foreach ($tables as $table) {
@@ -75,7 +76,7 @@ try {
 
     if (!empty($missing_tables)) {
         echo "❌ Tablas faltantes: " . implode(', ', $missing_tables) . "\n";
-        echo "Ejecuta primero el script database_schema.sql en phpMyAdmin\n";
+        echo "Ejecuta primero el script plataforma_clases.sql en phpMyAdmin\n";
         exit(1);
     } else {
         echo "✅ Todas las tablas existen\n";
@@ -191,6 +192,24 @@ try {
             (6, 'Estudiante de Administración'),
             (7, 'Estudiante de secundaria')");
 
+        // Insertar relaciones Profesor-Materia
+        $pdo->exec("INSERT IGNORE INTO Profesor_Materia (profesor_id, subject_id, experience_years, certification) VALUES
+            (1, 1, 5, 'Certificación en Matemáticas Avanzadas'),
+            (1, 2, 3, 'Certificación en Física'),
+            (2, 4, 8, 'Certificación en Desarrollo de Software'),
+            (3, 5, 6, 'Certificación TEFL'),
+            (3, 6, 4, 'Certificación en Literatura Española')");
+
+        // Insertar relaciones Estudiante-Materia
+        $pdo->exec("INSERT IGNORE INTO Estudiante_Materia (estudiante_id, subject_id, enrollment_date, status) VALUES
+            (1, 1, DATE_SUB(CURDATE(), INTERVAL 30 DAY), 'activo'),
+            (1, 2, DATE_SUB(CURDATE(), INTERVAL 25 DAY), 'activo'),
+            (1, 4, DATE_SUB(CURDATE(), INTERVAL 20 DAY), 'activo'),
+            (2, 4, DATE_SUB(CURDATE(), INTERVAL 15 DAY), 'activo'),
+            (2, 5, DATE_SUB(CURDATE(), INTERVAL 10 DAY), 'activo'),
+            (3, 1, DATE_SUB(CURDATE(), INTERVAL 35 DAY), 'completado'),
+            (3, 5, DATE_SUB(CURDATE(), INTERVAL 5 DAY), 'activo')");
+
         echo "✅ Relaciones de usuarios creadas correctamente\n";
         echo "✅ Datos de prueba insertados correctamente\n";
 
@@ -206,7 +225,7 @@ try {
 }
 
 // Verificar permisos de archivos
-echo "\n6. Verificando permisos de archivos...\n";
+echo "\n7. Verificando permisos de archivos...\n";
 $writable_dirs = ['config', 'public'];
 $permission_errors = [];
 

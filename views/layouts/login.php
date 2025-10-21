@@ -68,7 +68,7 @@
                 <button type="submit" class="btn-login">Iniciar Sesión</button>
 
                 <div class="form-footer">
-                    <p>Al iniciar sesión aceptas nuestros <a href="#terms">Términos de Servicio</a> | <a href="#privacy">Política de Privacidad</a></p>
+                    <p>© <?php echo date('Y'); ?> Plataforma Clases Online. Todos los derechos reservados.</p>
                 </div>
             </form>
         </div>
