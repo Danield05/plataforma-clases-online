@@ -867,6 +867,64 @@ class HomeController
         require_once 'views/views_estudiante/explorar_profesores.php';
     }
 
+    public function explorar_materias()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['estudiante']);
+
+        require_once 'models/MateriaModel.php';
+        $materiaModel = new MateriaModel();
+
+        // Filtrar por búsqueda si se proporciona
+        $search = $_GET['search'] ?? '';
+        if (!empty($search)) {
+            $materias = $materiaModel->searchMaterias($search);
+        } else {
+            $materias = $materiaModel->getMaterias();
+        }
+
+        $data = [
+            'materias' => $materias
+        ];
+
+        extract($data);
+        require_once 'views/views_estudiante/explorar_materias.php';
+    }
+
+    public function profesores_por_materia()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['estudiante']);
+
+        $materiaId = $_GET['materia_id'] ?? null;
+        if (!$materiaId) {
+            header('Location: /plataforma-clases-online/home/explorar_materias');
+            exit;
+        }
+
+        require_once 'models/MateriaModel.php';
+        require_once 'models/ProfesorModel.php';
+
+        $materiaModel = new MateriaModel();
+        $profesorModel = new ProfesorModel();
+
+        $materia = $materiaModel->getMateriaById($materiaId);
+        if (!$materia) {
+            header('Location: /plataforma-clases-online/home/explorar_materias');
+            exit;
+        }
+
+        $profesores = $materiaModel->getProfesoresByMateria($materiaId);
+
+        $data = [
+            'materia' => $materia,
+            'profesores' => $profesores
+        ];
+
+        extract($data);
+        require_once 'views/views_estudiante/profesores_por_materia.php';
+    }
+
     public function about()
     {
         require_once 'views/layouts/about.php';
@@ -1058,6 +1116,50 @@ class HomeController
             header('Location: /plataforma-clases-online/home/reservas?success=cancelled');
         } else {
             header('Location: /plataforma-clases-online/home/reservas?error=cancel_failed&debug=check_permissions');
+        }
+        exit;
+    }
+
+    public function completar_reserva()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['profesor']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /plataforma-clases-online/home/profesor_dashboard');
+            exit;
+        }
+
+        $reservationId = $_POST['reservation_id'] ?? null;
+
+        if (!$reservationId) {
+            header('Location: /plataforma-clases-online/home/profesor_dashboard?error=missing_id');
+            exit;
+        }
+
+        require_once 'models/ReservaModel.php';
+        $reservaModel = new ReservaModel();
+
+        // Verificar que la reserva pertenece al profesor
+        $reserva = $reservaModel->getReservaById($reservationId);
+        if (!$reserva || $reserva['user_id'] != $_SESSION['user_id']) {
+            header('Location: /plataforma-clases-online/home/profesor_dashboard?error=not_authorized');
+            exit;
+        }
+
+        // Solo permitir completar reservas confirmadas
+        if ($reserva['reservation_status_id'] != 2) {
+            header('Location: /plataforma-clases-online/home/profesor_dashboard?error=invalid_status');
+            exit;
+        }
+
+        // Marcar como completada (estado 4)
+        $success = $reservaModel->updateReservaStatus($reservationId, 4);
+
+        if ($success) {
+            header('Location: /plataforma-clases-online/home/reservas?success=completed');
+        } else {
+            header('Location: /plataforma-clases-online/home/reservas?error=complete_failed');
         }
         exit;
     }

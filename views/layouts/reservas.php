@@ -55,6 +55,14 @@
             border-radius: 20px;
             font-size: 0.85rem;
         }
+        .btn-completar {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
         .table th {
             background: #f8f9fa;
             border: none;
@@ -86,6 +94,8 @@
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <?php if ($_GET['success'] === 'cancelled'): ?>
                     ✅ Clase cancelada exitosamente
+                <?php elseif ($_GET['success'] === 'completed'): ?>
+                    ✅ Clase marcada como completada exitosamente
                 <?php elseif ($_GET['success'] === 'estados_fixed'): ?>
                     ✅ Estados de reserva corregidos exitosamente
                 <?php endif; ?>
@@ -100,6 +110,12 @@
                     <?php if (!empty($_GET['debug'])): ?>
                         <br><small>Debug: <?php echo htmlspecialchars($_GET['debug']); ?></small>
                     <?php endif; ?>
+                <?php elseif ($_GET['error'] === 'complete_failed'): ?>
+                    ❌ Error al completar la clase
+                <?php elseif ($_GET['error'] === 'not_authorized'): ?>
+                    ❌ No tienes permisos para realizar esta acción
+                <?php elseif ($_GET['error'] === 'invalid_status'): ?>
+                    ❌ Solo puedes completar clases confirmadas
                 <?php endif; ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
@@ -137,7 +153,7 @@
                                             <?php endif; ?>
                                             <th>Fecha de Clase</th>
                                             <th>Estado</th>
-                                            <?php if ($_SESSION['role'] === 'estudiante'): ?>
+                                            <?php if ($_SESSION['role'] === 'estudiante' || $_SESSION['role'] === 'profesor'): ?>
                                             <th>Acciones</th>
                                             <?php endif; ?>
                                         </tr>
@@ -192,6 +208,34 @@
                                                     <span class="badge bg-secondary">No cancelable</span>
                                                     <small class="text-muted d-block">Estado: <?php echo htmlspecialchars($reserva['reservation_status']); ?> (ID: <?php echo $reserva['reservation_status_id']; ?>)</small>
                                                     <?php endif; ?>
+                                                </td>
+                                                <?php elseif ($_SESSION['role'] === 'profesor'): ?>
+                                                <td>
+                                                    <div class="d-flex gap-1 flex-wrap">
+                                                        <?php if ($reserva['reservation_status'] === 'confirmada'): ?>
+                                                        <form method="post" action="/plataforma-clases-online/home/completar_reserva" style="display: inline;" onsubmit="return confirm('¿Estás seguro de que quieres marcar esta clase como completada?');">
+                                                            <input type="hidden" name="reservation_id" value="<?php echo htmlspecialchars($reserva['reservation_id']); ?>">
+                                                            <button type="submit" class="btn btn-completar btn-sm">✅ Completar</button>
+                                                        </form>
+                                                        <?php endif; ?>
+
+                                                        <?php if ($reserva['reservation_status'] === 'pendiente' || $reserva['reservation_status'] === 'confirmada'): ?>
+                                                        <form method="post" action="/plataforma-clases-online/home/cancelar_reserva" style="display: inline;" onsubmit="return confirm('¿Estás seguro de que quieres cancelar esta clase? Esto permitirá reagendarla si es necesario.');">
+                                                            <input type="hidden" name="reservation_id" value="<?php echo htmlspecialchars($reserva['reservation_id']); ?>">
+                                                            <button type="submit" class="btn btn-cancelar btn-sm">❌ Cancelar</button>
+                                                        </form>
+                                                        <?php endif; ?>
+
+                                                        <?php if ($reserva['reservation_status'] === 'completada'): ?>
+                                                        <span class="badge bg-success">✅ Completada</span>
+                                                        <small class="text-muted d-block">Clase finalizada</small>
+                                                        <?php elseif ($reserva['reservation_status'] === 'cancelada'): ?>
+                                                        <span class="badge bg-danger">❌ Cancelada</span>
+                                                        <small class="text-muted d-block">Clase cancelada</small>
+                                                        <?php else: ?>
+                                                        <span class="badge bg-secondary"><?php echo htmlspecialchars($reserva['reservation_status']); ?></span>
+                                                        <?php endif; ?>
+                                                    </div>
                                                 </td>
                                                 <?php endif; ?>
                                             </tr>

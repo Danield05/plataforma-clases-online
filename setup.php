@@ -1,4 +1,3 @@
--- Active: 1760930496821@@localhost@3306@phpmyadmin
 <?php
 // Script de instalación automática para Plataforma de Clases Online
 
@@ -197,23 +196,46 @@ try {
             (6, 'Estudiante de Administración'),
             (7, 'Estudiante de secundaria')");
 
-        // Insertar relaciones Profesor-Materia
+        // Insertar relaciones Profesor-Materia (obtener IDs reales de la tabla Profesor)
+        $stmt = $pdo->query("SELECT profesor_id, user_id FROM Profesor ORDER BY profesor_id");
+        $profesores = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Crear mapeo: user_id -> profesor_id real
+        $profesorMap = [];
+        foreach ($profesores as $prof) {
+            $profesorMap[$prof['user_id']] = $prof['profesor_id'];
+        }
+
+        // Insertar relaciones usando los profesor_id reales
         $pdo->exec("INSERT IGNORE INTO Profesor_Materia (profesor_id, subject_id, experience_years, certification) VALUES
-            (1, 1, 5, 'Certificación en Matemáticas Avanzadas'),
-            (1, 2, 3, 'Certificación en Física'),
-            (2, 4, 8, 'Certificación en Desarrollo de Software'),
-            (3, 5, 6, 'Certificación TEFL'),
-            (3, 6, 4, 'Certificación en Literatura Española')");
+            ({$profesorMap[2]}, 1, 5, 'Certificación en Matemáticas Avanzadas'),
+            ({$profesorMap[2]}, 2, 3, 'Certificación en Física'),
+            ({$profesorMap[3]}, 4, 8, 'Certificación en Desarrollo de Software'),
+            ({$profesorMap[4]}, 5, 6, 'Certificación TEFL')");
+
+        // Verificar que se insertaron correctamente
+        $stmt = $pdo->query("SELECT COUNT(*) as total FROM Profesor_Materia");
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        echo "✅ Profesor_Materia: " . $result['total'] . " registros insertados\n";
+
+        // Verificar que se insertaron todos los registros
+        $stmt = $pdo->query("SELECT COUNT(*) as total FROM Profesor_Materia");
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($result['total'] != 4) {
+            echo "⚠️  Solo se insertaron " . $result['total'] . " registros en Profesor_Materia (deberían ser 4)\n";
+        } else {
+            echo "✅ Se insertaron correctamente 4 registros en Profesor_Materia\n";
+        }
 
         // Insertar relaciones Estudiante-Materia
-        $pdo->exec("INSERT IGNORE INTO Estudiante_Materia (estudiante_id, subject_id, enrollment_date, status) VALUES
-            (1, 1, DATE_SUB(CURDATE(), INTERVAL 30 DAY), 'activo'),
-            (1, 2, DATE_SUB(CURDATE(), INTERVAL 25 DAY), 'activo'),
-            (1, 4, DATE_SUB(CURDATE(), INTERVAL 20 DAY), 'activo'),
-            (2, 4, DATE_SUB(CURDATE(), INTERVAL 15 DAY), 'activo'),
-            (2, 5, DATE_SUB(CURDATE(), INTERVAL 10 DAY), 'activo'),
-            (3, 1, DATE_SUB(CURDATE(), INTERVAL 35 DAY), 'completado'),
-            (3, 5, DATE_SUB(CURDATE(), INTERVAL 5 DAY), 'activo')");
+        $pdo->exec("INSERT IGNORE INTO Estudiante_Materia (estudiante_materia_id, estudiante_id, subject_id, enrollment_date, status, created_at, updated_at) VALUES
+            (1, 1, 1, DATE_SUB(CURDATE(), INTERVAL 30 DAY), 'activo', DATE_SUB(CURDATE(), INTERVAL 30 DAY), DATE_SUB(CURDATE(), INTERVAL 30 DAY)),
+            (2, 1, 2, DATE_SUB(CURDATE(), INTERVAL 25 DAY), 'activo', DATE_SUB(CURDATE(), INTERVAL 25 DAY), DATE_SUB(CURDATE(), INTERVAL 25 DAY)),
+            (3, 1, 4, DATE_SUB(CURDATE(), INTERVAL 20 DAY), 'activo', DATE_SUB(CURDATE(), INTERVAL 20 DAY), DATE_SUB(CURDATE(), INTERVAL 20 DAY)),
+            (4, 2, 4, DATE_SUB(CURDATE(), INTERVAL 15 DAY), 'activo', DATE_SUB(CURDATE(), INTERVAL 15 DAY), DATE_SUB(CURDATE(), INTERVAL 15 DAY)),
+            (5, 2, 5, DATE_SUB(CURDATE(), INTERVAL 10 DAY), 'activo', DATE_SUB(CURDATE(), INTERVAL 10 DAY), DATE_SUB(CURDATE(), INTERVAL 10 DAY)),
+            (6, 3, 1, DATE_SUB(CURDATE(), INTERVAL 35 DAY), 'completado', DATE_SUB(CURDATE(), INTERVAL 35 DAY), DATE_SUB(CURDATE(), INTERVAL 30 DAY)),
+            (7, 3, 5, DATE_SUB(CURDATE(), INTERVAL 5 DAY), 'activo', DATE_SUB(CURDATE(), INTERVAL 5 DAY), DATE_SUB(CURDATE(), INTERVAL 5 DAY))");
 
         echo "✅ Relaciones de usuarios creadas correctamente\n";
         echo "✅ Datos de prueba insertados correctamente\n";

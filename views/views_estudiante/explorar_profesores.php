@@ -6,6 +6,7 @@
     <title>🔍 Buscar Profesores - Plataforma de Clases Online</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/plataforma-clases-online/public/css/style.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="/plataforma-clases-online/public/css/explorar_profesores.css?v=<?php echo time(); ?>">
 </head>
 <body>
     <?php 
@@ -23,14 +24,21 @@
         <h2>Lista de Profesores</h2>
 
         <!-- Formulario de búsqueda -->
-        <div class="mb-4">
-            <form method="GET" action="/plataforma-clases-online/home/explorar_profesores" class="d-flex">
-                <input type="text" name="search" class="form-control me-2" placeholder="Buscar por nombre..." value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
-                <button type="submit" class="btn btn-primary">Buscar</button>
-                <?php if (!empty($_GET['search'])): ?>
-                    <a href="/plataforma-clases-online/home/explorar_profesores" class="btn btn-secondary ms-2">Limpiar</a>
-                <?php endif; ?>
-            </form>
+        <div class="search-container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex">
+                    <form method="GET" action="/plataforma-clases-online/home/explorar_profesores" class="d-flex me-3">
+                        <input type="text" name="search" class="form-control me-2 search-input" placeholder="Buscar por nombre..." value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
+                        <button type="submit" class="btn search-btn">🔍 Buscar</button>
+                        <?php if (!empty($_GET['search'])): ?>
+                            <a href="/plataforma-clases-online/home/explorar_profesores" class="btn clear-btn ms-2">🧹 Limpiar</a>
+                        <?php endif; ?>
+                    </form>
+                </div>
+                <div>
+                    <a href="/plataforma-clases-online/home/explorar_materias" class="btn btn-outline-primary">📚 Explorar Materias</a>
+                </div>
+            </div>
         </div>
 
         <?php
@@ -88,26 +96,34 @@
         <?php else: ?>
         <?php endif; ?>
 
-        <table class="table tabla-pagos-nueva">
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Email</th>
-                    <th>Nivel Académico</th>
-                    <th>Tarifa por Hora</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach((array)$profesores as $pr): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($pr['first_name'] . ' ' . $pr['last_name']); ?></td>
-                        <td><?php echo htmlspecialchars($pr['email']); ?></td>
-                        <td><?php echo htmlspecialchars($pr['academic_level'] ?? 'N/A'); ?></td>
-                        <td><?php echo $pr['hourly_rate'] ? '$' . htmlspecialchars($pr['hourly_rate']) : 'N/A'; ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+        <div class="row">
+            <?php foreach((array)$profesores as $pr): ?>
+                <div class="col-md-4 mb-4">
+                    <div class="profesor-card">
+                        <div class="card-body">
+                            <h5 class="card-title">👨‍🏫 <?php echo htmlspecialchars($pr['first_name'] . ' ' . $pr['last_name']); ?></h5>
+                            <p class="card-text">
+                                📧 <?php echo htmlspecialchars($pr['email']); ?>
+                            </p>
+                            <p class="card-text">
+                                <strong>🎓 Nivel Académico:</strong> <?php echo htmlspecialchars($pr['academic_level'] ?? 'N/A'); ?>
+                            </p>
+                            <p class="card-text">
+                                <strong>💰 Tarifa por Hora:</strong> <?php echo $pr['hourly_rate'] ? '$' . htmlspecialchars($pr['hourly_rate']) : 'N/A'; ?>
+                            </p>
+                            <?php if (!empty($pr['personal_description'])): ?>
+                                <p class="card-text">
+                                    <strong>📝 Descripción:</strong> <?php echo htmlspecialchars(substr($pr['personal_description'], 0, 100)); ?><?php echo strlen($pr['personal_description']) > 100 ? '...' : ''; ?>
+                                </p>
+                            <?php endif; ?>
+                        </div>
+                        <div class="card-footer">
+                            <a href="/plataforma-clases-online/home/reservar_clase?profesor_id=<?php echo $pr['user_id']; ?>" class="btn">📅 Reservar Clase</a>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
     </main>
     
     <footer class="modern-footer">
@@ -132,5 +148,6 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/plataforma-clases-online/public/js/script.js"></script>
+    <script src="/plataforma-clases-online/public/js/explorar_profesores.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>
