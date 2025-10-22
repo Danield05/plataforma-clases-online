@@ -2,6 +2,17 @@
 require_once 'controllers/AuthController.php';
 class HomeController
 {
+    private function normalizeString($string) {
+        // Convertir a minúsculas y quitar tildes
+        $string = strtolower($string);
+        $string = str_replace(
+            ['á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ'],
+            ['a', 'e', 'i', 'o', 'u', 'u', 'n'],
+            $string
+        );
+        return $string;
+    }
+
     public function index()
     {
         // Verificar si el usuario está logueado
@@ -819,6 +830,17 @@ class HomeController
         $reservaModel = new ReservaModel();
 
         $profesores = $profesorModel->getProfesores();
+
+        // Filtrar por búsqueda si se proporciona
+        $search = $_GET['search'] ?? '';
+        if (!empty($search)) {
+            $profesores = array_filter($profesores, function($p) use ($search) {
+                $fullName = $p['first_name'] . ' ' . $p['last_name'];
+                $normalizedName = $this->normalizeString($fullName);
+                $normalizedSearch = $this->normalizeString($search);
+                return stripos($normalizedName, $normalizedSearch) !== false;
+            });
+        }
 
         // Obtener reseñas y disponibilidad para cada profesor
         foreach ($profesores as &$profesor) {
