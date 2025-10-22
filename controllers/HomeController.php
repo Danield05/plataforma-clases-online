@@ -34,8 +34,7 @@ class HomeController
 
             // Calcular estadísticas adicionales
             $reservasActivas = count(array_filter($reservas, function($r) {
-                return strtolower($r['reservation_status'] ?? '') === 'pendiente' ||
-                       strtolower($r['reservation_status'] ?? '') === 'confirmada';
+                return in_array($r['reservation_status_id'] ?? 0, [1, 2]); // 1=Pendiente, 2=Confirmada
             }));
 
             $ingresosMensuales = array_sum(array_filter(array_column($pagos, 'amount'), function($amount, $index) use ($pagos) {
@@ -94,7 +93,7 @@ class HomeController
         $pagos = $pagoModel->getPagosByProfesor($profesorId);
 
         // Calcular estadísticas
-        $reservasActivas = count(array_filter($reservas, function($r) { return $r['reservation_status'] === 'activa' || $r['reservation_status'] === 'confirmada'; }));
+        $reservasActivas = count(array_filter($reservas, function($r) { return in_array($r['reservation_status_id'] ?? 0, [1, 2]); }));
         $estudiantesUnicos = array_unique(array_column($reservas, 'student_user_id'));
         $estudiantesTotales = count($estudiantesUnicos);
 
@@ -520,7 +519,15 @@ class HomeController
 
         require_once 'models/DisponibilidadModel.php';
         $disponibilidadModel = new DisponibilidadModel();
-        $disponibilidades = $disponibilidadModel->getDisponibilidades();
+
+        // Si es profesor, mostrar solo sus disponibilidades
+        if ($_SESSION['role'] === 'profesor') {
+            $disponibilidades = $disponibilidadModel->getDisponibilidadesByProfesor($_SESSION['user_id']);
+        } else {
+            // Administrador ve todas las disponibilidades
+            $disponibilidades = $disponibilidadModel->getDisponibilidades();
+        }
+
         require_once 'views/layouts/disponibilidad.php';
     }
 
@@ -666,11 +673,21 @@ class HomeController
     public function pagos()
     {
         AuthController::checkAuth();
-        AuthController::checkRole(['administrador', 'estudiante']);
+        AuthController::checkRole(['administrador', 'estudiante', 'profesor']);
 
         require_once 'models/PagoModel.php';
         $pagoModel = new PagoModel();
-        $pagos = $pagoModel->getPagos();
+
+        // Filtrar pagos según el rol del usuario
+        if ($_SESSION['role'] === 'profesor') {
+            $pagos = $pagoModel->getPagosByProfesor($_SESSION['user_id']);
+        } elseif ($_SESSION['role'] === 'estudiante') {
+            $pagos = $pagoModel->getPagosByEstudiante($_SESSION['user_id']);
+        } else {
+            // Administrador ve todos los pagos
+            $pagos = $pagoModel->getPagos();
+        }
+
         $totales = $pagoModel->getTotales();
 
         extract($totales);
@@ -919,6 +936,17 @@ class HomeController
             }
         }
 
+        // Preparar calificaciones recientes con formato correcto
+        $calificacionesRecientes = [];
+        foreach(array_slice($reviews, 0, 5) as $review) {
+            $calificacionesRecientes[] = [
+                'estudiante' => $review['estudiante_name'] . ' ' . $review['estudiante_last_name'],
+                'rating' => $review['rating'],
+                'fecha' => $review['created_at'] ?? date('Y-m-d'),
+                'comentario' => $review['comment'] ?? ''
+            ];
+        }
+
         $data = [
             'reportes' => [
                 'total_clases' => $totalClases,
@@ -926,7 +954,7 @@ class HomeController
                 'ingresos_totales' => $ingresosTotales,
                 'calificacion_promedio' => $calificacionPromedio,
                 'top_estudiantes' => $topEstudiantes,
-                'calificaciones_recientes' => array_slice($reviews, 0, 5)
+                'calificaciones_recientes' => $calificacionesRecientes
             ]
         ];
 
@@ -1138,8 +1166,16 @@ class HomeController
 
         // Filtrar reviews de este estudiante
         $estudianteReviews = array_filter($reviews, function($r) use ($id) {
-            return $r['student_user_id'] == $id;
+            return isset($r['reviewer_user_id']) && $r['reviewer_user_id'] == $id;
         });
+
+        // Debug: Agregar logs para verificar datos
+        error_log("Estudiante ID: $id");
+        error_log("Total reviews del profesor: " . count($reviews));
+        error_log("Reviews filtradas para estudiante: " . count($estudianteReviews));
+        foreach ($estudianteReviews as $review) {
+            error_log("Review ID: " . ($review['review_id'] ?? 'N/A') . ", Reservation ID: " . ($review['reservation_id'] ?? 'N/A') . ", Rating: " . ($review['rating'] ?? 'N/A'));
+        }
 
         // Agregar información de disponibilidad a las reservas para mostrar horas
         foreach ($reservas as &$reserva) {
@@ -1150,6 +1186,16 @@ class HomeController
                 if ($disponibilidad) {
                     $reserva['start_time'] = $disponibilidad['start_time'];
                     $reserva['end_time'] = $disponibilidad['end_time'];
+                }
+            }
+
+            // Agregar calificación si existe para esta reserva
+            $reserva['rating'] = null;
+            foreach ($estudianteReviews as $review) {
+                if (isset($review['reservation_id']) && $review['reservation_id'] == $reserva['reservation_id']) {
+                    $reserva['rating'] = $review['rating'];
+                    error_log("Asignando rating {$review['rating']} a reserva {$reserva['reservation_id']}");
+                    break;
                 }
             }
         }

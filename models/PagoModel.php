@@ -56,7 +56,18 @@ class PagoModel {
     }
 
     public function getPagosByProfesor($profesorUserId) {
-        $stmt = $this->db->prepare("SELECT p.*, u.first_name, u.last_name, ep.status as payment_status FROM Pagos p JOIN Usuarios u ON p.user_id = u.user_id JOIN Estados_Pago ep ON p.payment_status_id = ep.payment_status_id WHERE p.user_id = ?");
+        // Los pagos están asociados al estudiante (user_id del estudiante), pero necesitamos pagos de reservas del profesor
+        // Usar GROUP BY para evitar duplicados
+        $stmt = $this->db->prepare("
+            SELECT p.*, u.first_name, u.last_name, ep.status as payment_status, r.reservation_id
+            FROM Pagos p
+            JOIN Usuarios u ON p.user_id = u.user_id
+            JOIN Estados_Pago ep ON p.payment_status_id = ep.payment_status_id
+            JOIN Reservas r ON r.student_user_id = p.user_id AND r.user_id = ?
+            WHERE p.payment_status_id IN (2, 3)
+            GROUP BY p.payment_id
+            ORDER BY p.payment_date DESC
+        ");
         $stmt->execute([$profesorUserId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

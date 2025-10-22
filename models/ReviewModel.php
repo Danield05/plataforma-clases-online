@@ -19,7 +19,8 @@ class ReviewModel {
     }
 
     public function getReviewsByProfesor($userId) {
-        $stmt = $this->db->prepare("SELECT r.*, est.first_name as estudiante_name, est.last_name as estudiante_last_name FROM Reviews r JOIN Usuarios est ON r.reviewed_user_id = est.user_id WHERE r.reviewer_user_id = ?");
+        // Las reviews están hechas por estudiantes (reviewer_user_id = estudiante), pero queremos reviews del profesor (reviewed_user_id = profesor)
+        $stmt = $this->db->prepare("SELECT r.*, est.first_name as estudiante_name, est.last_name as estudiante_last_name FROM Reviews r JOIN Usuarios est ON r.reviewer_user_id = est.user_id WHERE r.reviewed_user_id = ?");
         $stmt->execute([$userId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
