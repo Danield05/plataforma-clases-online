@@ -26,7 +26,7 @@
                 <h3>🔍 Filtros de Reporte</h3>
             </div>
             <div class="card-body">
-                <form class="row g-3">
+                <form class="row g-3" action="/plataforma-clases-online/reportes/profesor" method="GET">
                     <div class="col-md-3">
                         <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
                         <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio">
@@ -202,22 +202,22 @@
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-md-3">
-                                <button class="btn btn-outline-primary w-100">
+                                <button class="btn btn-outline-primary w-100" onclick="exportarReporte('pdf')">
                                     📄 PDF
                                 </button>
                             </div>
                             <div class="col-md-3">
-                                <button class="btn btn-outline-success w-100">
+                                <button class="btn btn-outline-success w-100" onclick="exportarReporte('excel')">
                                     📊 Excel
                                 </button>
                             </div>
                             <div class="col-md-3">
-                                <button class="btn btn-outline-info w-100">
+                                <button class="btn btn-outline-info w-100" onclick="exportarReporte('csv')">
                                     📈 CSV
                                 </button>
                             </div>
                             <div class="col-md-3">
-                                <button class="btn btn-outline-secondary w-100">
+                                <button class="btn btn-outline-secondary w-100" onclick="exportarReporte('email')">
                                     📧 Email
                                 </button>
                             </div>
@@ -282,6 +282,65 @@
                 }]
             }
         });
+
+        // Función para exportar reportes
+        function exportarReporte(tipo) {
+            // Obtener filtros del formulario
+            const fechaInicio = document.getElementById('fecha_inicio').value;
+            const fechaFin = document.getElementById('fecha_fin').value;
+            const tipoReporte = document.getElementById('tipo_reporte').value;
+
+            // Construir URL con parámetros - usar el controlador de reportes
+            let url = `/plataforma-clases-online/reportes/exportar?tipo=${tipo}&tipo_reporte=${tipoReporte}`;
+            
+            if (fechaInicio) url += `&fecha_inicio=${fechaInicio}`;
+            if (fechaFin) url += `&fecha_fin=${fechaFin}`;
+
+            switch(tipo) {
+                case 'pdf':
+                    // Abrir en nueva ventana para ver y poder imprimir/guardar como PDF
+                    window.open(url, '_blank');
+                    break;
+                case 'excel':
+                case 'csv':
+                    // Descargar archivo
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = '';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    break;
+                case 'email':
+                    // Enviar por email usando AJAX
+                    enviarPorEmail(url);
+                    break;
+            }
+        }
+
+        // Función para enviar reporte por email
+        function enviarPorEmail(url) {
+            if (confirm('¿Desea enviar el reporte por email?')) {
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Reporte enviado exitosamente por email');
+                    } else {
+                        alert('Error al enviar el reporte: ' + (data.message || 'Error desconocido'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al enviar el reporte por email');
+                });
+            }
+        }
     </script>
 </body>
 </html>

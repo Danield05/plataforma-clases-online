@@ -67,6 +67,10 @@ function getRoleDisplayName($role) {
         </a>
 
         <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'administrador'): ?>
+            <a href="/plataforma-clases-online/reportes/general" class="nav-link <?= isActive('reportes', $currentUrl, $currentPage); ?>">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">Reportes</span>
+            </a>
             <a href="/plataforma-clases-online/home/profesores" class="nav-link <?= isActive('profesores', $currentUrl, $currentPage); ?>">
                 <span class="nav-icon">👨‍🏫</span>
                 <span class="nav-text">Profesores</span>
@@ -92,6 +96,10 @@ function getRoleDisplayName($role) {
                 <span class="nav-text">Reviews</span>
             </a>
         <?php elseif (isset($_SESSION['role']) && $_SESSION['role'] === 'profesor'): ?>
+            <a href="/plataforma-clases-online/reportes/profesor" class="nav-link <?= isActive('reportes', $currentUrl, $currentPage); ?>">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">Ver Reportes</span>
+            </a>
             <a href="/plataforma-clases-online/home/reservas" class="nav-link <?= isActive('reservas', $currentUrl, $currentPage); ?>">
                 <span class="nav-icon">📅</span>
                 <span class="nav-text">Mis Reservas</span>
@@ -109,6 +117,10 @@ function getRoleDisplayName($role) {
                 <span class="nav-text">Mi Perfil</span>
             </a>
         <?php elseif (isset($_SESSION['role']) && $_SESSION['role'] === 'estudiante'): ?>
+            <a href="/plataforma-clases-online/reportes/estudiante" class="nav-link <?= isActive('reportes', $currentUrl, $currentPage); ?>">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">Mis Reportes</span>
+            </a>
             <a href="/plataforma-clases-online/home/reservas" class="nav-link <?= isActive('reservas', $currentUrl, $currentPage); ?>">
                 <span class="nav-icon">📅</span>
                 <span class="nav-text">Mis Reservas</span>

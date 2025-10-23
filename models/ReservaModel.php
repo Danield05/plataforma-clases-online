@@ -51,10 +51,33 @@ class ReservaModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getReservasByProfesor($profesorUserId) {
-        $stmt = $this->db->prepare("SELECT r.*, s.first_name as estudiante_name, s.last_name as estudiante_last_name, er.status as reservation_status, d.start_time, d.end_time FROM reservas r JOIN usuarios s ON r.student_user_id = s.user_id JOIN estados_reserva er ON r.reservation_status_id = er.reservation_status_id LEFT JOIN disponibilidad_profesores d ON r.availability_id = d.availability_id WHERE r.user_id = ?");
-        $stmt->execute([$profesorUserId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    public function getReservasByProfesor($profesorUserId, $fechaInicio = null, $fechaFin = null) {
+        $query = "SELECT r.*, s.first_name as estudiante_name, s.last_name as estudiante_last_name, er.status as reservation_status, d.start_time, d.end_time, prof.academic_level, prof.hourly_rate, m.subject_name as subject_name FROM reservas r JOIN usuarios s ON r.student_user_id = s.user_id JOIN estados_reserva er ON r.reservation_status_id = er.reservation_status_id LEFT JOIN disponibilidad_profesores d ON r.availability_id = d.availability_id LEFT JOIN profesor prof ON r.user_id = prof.user_id LEFT JOIN materias m ON d.subject_id = m.subject_id WHERE r.user_id = ?";
+
+        $params = [$profesorUserId];
+
+        if ($fechaInicio) {
+            $query .= " AND r.class_date >= ?";
+            $params[] = $fechaInicio;
+        }
+
+        if ($fechaFin) {
+            $query .= " AND r.class_date <= ?";
+            $params[] = $fechaFin;
+        }
+
+        $query .= " ORDER BY r.class_date DESC, d.start_time DESC";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute($params);
+        $reservas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Agregar el campo notes a cada reserva
+        foreach ($reservas as &$reserva) {
+            $reserva['notes'] = $reserva['notes'] ?? '';
+        }
+
+        return $reservas;
     }
 
     public function createReserva($data) {

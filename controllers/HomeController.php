@@ -1368,68 +1368,19 @@ class HomeController
         AuthController::checkAuth();
         AuthController::checkRole(['profesor']);
 
-        require_once 'models/ReservaModel.php';
-        require_once 'models/PagoModel.php';
-        require_once 'models/ReviewModel.php';
-        require_once 'models/EstudianteModel.php';
+        // Redirigir al controlador de reportes con los parámetros necesarios
+        $fechaInicio = $_GET['fecha_inicio'] ?? '';
+        $fechaFin = $_GET['fecha_fin'] ?? '';
+        $tipoReporte = $_GET['tipo_reporte'] ?? 'general';
 
-        $reservaModel = new ReservaModel();
-        $pagoModel = new PagoModel();
-        $reviewModel = new ReviewModel();
-        $estudianteModel = new EstudianteModel();
+        // Construir URL para el controlador de reportes
+        $url = '/plataforma-clases-online/reportes/profesor';
+        if ($fechaInicio) $url .= "?fecha_inicio=$fechaInicio";
+        if ($fechaFin) $url .= ($fechaInicio ? '&' : '?') . "fecha_fin=$fechaFin";
+        if ($tipoReporte) $url .= (($fechaInicio || $fechaFin) ? '&' : '?') . "tipo_reporte=$tipoReporte";
 
-        $profesorId = $_SESSION['user_id'];
-
-        // Datos para reportes
-        $reservas = $reservaModel->getReservasByProfesor($profesorId);
-        $pagos = $pagoModel->getPagosByProfesor($profesorId);
-        $reviews = $reviewModel->getReviewsByProfesor($profesorId);
-
-        // Calcular estadísticas
-        $totalClases = count($reservas);
-        $totalEstudiantes = count(array_unique(array_column($reservas, 'student_user_id')));
-        $ingresosTotales = array_sum(array_column($pagos, 'amount'));
-        $calificacionPromedio = !empty($reviews) ? array_sum(array_column($reviews, 'rating')) / count($reviews) : 0;
-
-        // Top estudiantes
-        $estudiantesCount = array_count_values(array_column($reservas, 'student_user_id'));
-        arsort($estudiantesCount);
-        $topEstudiantes = [];
-        foreach(array_slice($estudiantesCount, 0, 5, true) as $estId => $count) {
-            $estudiante = $estudianteModel->getEstudianteById($estId);
-            if ($estudiante) {
-                $topEstudiantes[] = [
-                    'nombre' => $estudiante['first_name'] . ' ' . $estudiante['last_name'],
-                    'clases' => $count,
-                    'ultima_clase' => '2024-01-01' // Placeholder
-                ];
-            }
-        }
-
-        // Preparar calificaciones recientes con formato correcto
-        $calificacionesRecientes = [];
-        foreach(array_slice($reviews, 0, 5) as $review) {
-            $calificacionesRecientes[] = [
-                'estudiante' => $review['estudiante_name'] . ' ' . $review['estudiante_last_name'],
-                'rating' => $review['rating'],
-                'fecha' => $review['created_at'] ?? date('Y-m-d'),
-                'comentario' => $review['comment'] ?? ''
-            ];
-        }
-
-        $data = [
-            'reportes' => [
-                'total_clases' => $totalClases,
-                'total_estudiantes' => $totalEstudiantes,
-                'ingresos_totales' => $ingresosTotales,
-                'calificacion_promedio' => $calificacionPromedio,
-                'top_estudiantes' => $topEstudiantes,
-                'calificaciones_recientes' => $calificacionesRecientes
-            ]
-        ];
-
-        extract($data);
-        require_once 'views/layouts/reportes.php';
+        header("Location: $url");
+        exit;
     }
 
     public function reservar_clase()

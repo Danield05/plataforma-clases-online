@@ -18,10 +18,26 @@ class ReviewModel {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function getReviewsByProfesor($userId) {
+    public function getReviewsByProfesor($userId, $fechaInicio = null, $fechaFin = null) {
         // Las reviews están hechas por estudiantes (reviewer_user_id = estudiante), pero queremos reviews del profesor (reviewed_user_id = profesor)
-        $stmt = $this->db->prepare("SELECT r.*, est.first_name as estudiante_name, est.last_name as estudiante_last_name FROM Reviews r JOIN Usuarios est ON r.reviewer_user_id = est.user_id WHERE r.reviewed_user_id = ?");
-        $stmt->execute([$userId]);
+        $query = "SELECT r.*, est.first_name as estudiante_name, est.last_name as estudiante_last_name FROM Reviews r JOIN Usuarios est ON r.reviewer_user_id = est.user_id WHERE r.reviewed_user_id = ?";
+
+        $params = [$userId];
+
+        if ($fechaInicio) {
+            $query .= " AND DATE(r.created_at) >= ?";
+            $params[] = $fechaInicio;
+        }
+
+        if ($fechaFin) {
+            $query .= " AND DATE(r.created_at) <= ?";
+            $params[] = $fechaFin;
+        }
+
+        $query .= " ORDER BY r.created_at DESC";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 

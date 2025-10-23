@@ -43,6 +43,55 @@ if ($controller === 'HomeController' && isset($url[1]) && $url[1] === 'reservar_
     $action = 'reservar_clase';
 }
 
+// Manejar rutas específicas para reportes
+if ($controller === 'ReportesController') {
+    if (isset($url[1]) && $url[1] === 'exportar') {
+        $action = 'exportar';
+    } elseif (isset($url[1]) && $url[1] === 'profesor') {
+        $action = 'reporteProfesor';
+    } elseif (isset($url[1]) && $url[1] === 'estudiante') {
+        $action = 'reporteEstudiante';
+    } elseif (isset($url[1]) && $url[1] === 'general') {
+        $action = 'reporteGeneral';
+    } elseif (isset($url[1]) && $url[1] === 'reservas') {
+        $action = 'reporteReservas';
+    } elseif (isset($url[1]) && $url[1] === 'ingresos') {
+        $action = 'reporteIngresos';
+    } else {
+        $action = 'reporteProfesor'; // Acción por defecto
+    }
+}
+
+// También manejar rutas sin controlador explícito
+if (isset($url[0]) && $url[0] === 'reportes') {
+    $controller = 'ReportesController';
+    if (isset($url[1]) && $url[1] === 'exportar') {
+        $action = 'exportar';
+    } elseif (isset($url[1]) && $url[1] === 'profesor') {
+        $action = 'reporteProfesor';
+    } elseif (isset($url[1]) && $url[1] === 'estudiante') {
+        $action = 'reporteEstudiante';
+    } elseif (isset($url[1]) && $url[1] === 'general') {
+        $action = 'reporteGeneral';
+    } elseif (isset($url[1]) && $url[1] === 'reservas') {
+        $action = 'reporteReservas';
+    } elseif (isset($url[1]) && $url[1] === 'ingresos') {
+        $action = 'reporteIngresos';
+    } else {
+        $action = 'index'; // Acción por defecto - redirige según el rol
+    }
+}
+
+// También manejar rutas con "reporte" (singular) por si acaso
+if (isset($url[0]) && $url[0] === 'reporte') {
+    $controller = 'ReportesController';
+    if (isset($url[1]) && $url[1] === 'exportar') {
+        $action = 'exportar';
+    } else {
+        $action = 'reporteProfesor';
+    }
+}
+
 // Incluir y ejecutar el controlador
 $controllerFile = 'controllers/' . $controller . '.php';
 if (file_exists($controllerFile)) {
