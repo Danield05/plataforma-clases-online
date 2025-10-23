@@ -154,6 +154,25 @@ class ReservaModel {
         return $stmt->execute([$reservationId]);
     }
 
+    public function reagendarReserva($reservationId, $newDate, $newAvailabilityId = null) {
+        // Verificar que la reserva existe
+        $reserva = $this->getReservaById($reservationId);
+        if (!$reserva) {
+            return false; // Reserva no encontrada
+        }
+
+        // Si se proporciona availability_id, verificar que esté disponible en la nueva fecha
+        if ($newAvailabilityId) {
+            if (!$this->checkAvailability($reserva['user_id'], $newDate, $newAvailabilityId)) {
+                return false; // Slot no disponible
+            }
+        }
+
+        // Actualizar la reserva con la nueva fecha y availability_id si se proporciona
+        $stmt = $this->db->prepare("UPDATE reservas SET class_date = ?, availability_id = ? WHERE reservation_id = ?");
+        return $stmt->execute([$newDate, $newAvailabilityId, $reservationId]);
+    }
+
     public function fixEstadosReserva() {
         // Corregir los estados en la tabla estados_reserva con minúsculas
         $estados = [

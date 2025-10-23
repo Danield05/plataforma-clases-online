@@ -711,8 +711,18 @@ class HomeController
 
     public function reservas()
     {
+        // Verificar autenticación manualmente para debug
+        if (!isset($_SESSION['user_id'])) {
+            error_log("No hay sesión activa en reservas()");
+            header('Location: /plataforma-clases-online/auth/login');
+            exit;
+        }
+
         AuthController::checkAuth();
         AuthController::checkRole(['administrador', 'profesor', 'estudiante']);
+
+        // Debug: Log de información de sesión
+        error_log("Sesión en reservas(): user_id=" . ($_SESSION['user_id'] ?? 'no definido') . ", role=" . ($_SESSION['role'] ?? 'no definido'));
 
         require_once 'models/ReservaModel.php';
         $reservaModel = new ReservaModel();
@@ -739,6 +749,14 @@ class HomeController
 
         // Pasar información a la vista
         $data = compact('reservas');
+
+        // Debug: Agregar información de sesión para troubleshooting
+        $data['debug_session'] = [
+            'user_id' => $_SESSION['user_id'] ?? 'no definido',
+            'role' => $_SESSION['role'] ?? 'no definido',
+            'session_exists' => isset($_SESSION['user_id'])
+        ];
+
         extract($data);
 
         require_once 'views/layouts/reservas.php';
@@ -1532,6 +1550,52 @@ class HomeController
             header('Location: /plataforma-clases-online/home/reservas?success=completed');
         } else {
             header('Location: /plataforma-clases-online/home/reservas?error=complete_failed');
+        }
+        exit;
+    }
+
+    public function reagendar_reserva()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['profesor']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /plataforma-clases-online/home/profesor_dashboard');
+            exit;
+        }
+
+        $reservationId = $_POST['reservation_id'] ?? null;
+        $newDate = $_POST['new_date'] ?? null;
+        $newAvailabilityId = $_POST['new_availability_id'] ?? null;
+
+        if (!$reservationId || !$newDate) {
+            header('Location: /plataforma-clases-online/home/reservas?error=missing_data');
+            exit;
+        }
+
+        require_once 'models/ReservaModel.php';
+        $reservaModel = new ReservaModel();
+
+        // Verificar que la reserva pertenece al profesor
+        $reserva = $reservaModel->getReservaById($reservationId);
+        if (!$reserva || $reserva['user_id'] != $_SESSION['user_id']) {
+            header('Location: /plataforma-clases-online/home/reservas?error=not_authorized');
+            exit;
+        }
+
+        // Solo permitir reagendar reservas pendientes o confirmadas
+        if (!in_array($reserva['reservation_status_id'], [1, 2])) {
+            header('Location: /plataforma-clases-online/home/reservas?error=invalid_status_reschedule');
+            exit;
+        }
+
+        // Intentar reagendar la reserva
+        $success = $reservaModel->reagendarReserva($reservationId, $newDate, $newAvailabilityId);
+
+        if ($success) {
+            header('Location: /plataforma-clases-online/home/reservas?success=rescheduled');
+        } else {
+            header('Location: /plataforma-clases-online/home/reservas?error=reschedule_failed&debug=slot_not_available');
         }
         exit;
     }
