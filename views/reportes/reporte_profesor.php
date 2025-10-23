@@ -377,11 +377,8 @@
                 </div>
             </div>
             <div style="display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap;">
-                <button onclick="guardarComoPDF()" class="print-button" style="background: linear-gradient(135deg, #371783 0%, #8B5A96 100%); font-size: 1.2em; padding: 18px 35px; box-shadow: 0 6px 20px rgba(55, 23, 131, 0.4);">
-                    📄 Exportar PDF
-                </button>
                 <button onclick="window.print()" class="print-button" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%); font-size: 1.1em; padding: 15px 25px;">
-                    🖨️ Imprimir Físico
+                    🖨️ Imprimir Como PDF
                 </button>
                 <a href="/plataforma-clases-online/reportes/exportar?tipo=excel&tipo_reporte=profesor" class="print-button" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); font-size: 1.1em; padding: 15px 25px;">
                     📊 Descargar Excel
@@ -399,25 +396,7 @@
         </div>
 
         <script>
-        function guardarComoPDF() {
-            try {
-                // Abrir nueva ventana con el reporte PDF
-                const fechaInicio = '<?= $filtros['fecha_inicio'] ?? ''; ?>';
-                const fechaFin = '<?= $filtros['fecha_fin'] ?? ''; ?>';
-                let url = '/plataforma-clases-online/reportes/exportar?tipo=pdf&tipo_reporte=profesor';
-                if (fechaInicio) url += '&fecha_inicio=' + fechaInicio;
-                if (fechaFin) url += '&fecha_fin=' + fechaFin;
-
-                window.open(url, '_blank');
-            } catch (error) {
-                // Fallback para navegadores que no soportan window.open()
-                alert('Para imprimir PDF:\n\n' +
-                      '1. Presiona Ctrl+P (Cmd+P en Mac)\n' +
-                      '2. Selecciona "Guardar como PDF" o "Exportar a PDF"\n' +
-                      '3. Elige la ubicación y guarda el archivo');
-            }
-        }
-
+        // Función para enviar el reporte por email
         function enviarPorEmail() {
             // Obtener parámetros de la URL actual
             const urlParams = new URLSearchParams(window.location.search);
