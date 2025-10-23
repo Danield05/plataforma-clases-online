@@ -15,7 +15,7 @@
     <header class="modern-header">
         <div class="header-content">
             <h1 class="header-title">👨‍🏫 Profesores</h1>
-            <?php include 'nav.php'; ?>
+            <?php include __DIR__ . '/nav.php'; ?>
         </div>
     </header>
     

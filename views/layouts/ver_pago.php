@@ -15,7 +15,7 @@
     <header class="modern-header">
         <div class="header-content">
             <h1 class="header-title">💰 Detalle del Pago</h1>
-            <?php include 'nav.php'; ?>
+            <?php include __DIR__ . '/nav.php'; ?>
         </div>
     </header>
 
@@ -43,10 +43,10 @@
                         </div>
 
                         <div class="info-item">
-                            <div class="info-icon">📋</div>
+                            <div class="info-icon">👤</div>
                             <div class="info-content">
-                                <div class="info-label">ID Reserva</div>
-                                <div class="info-value"><?= htmlspecialchars($pago['reservation_id']); ?></div>
+                                <div class="info-label">Usuario</div>
+                                <div class="info-value"><?= htmlspecialchars($pago['first_name'] . ' ' . $pago['last_name']); ?></div>
                             </div>
                         </div>
 
@@ -80,20 +80,41 @@
                                 <div class="info-label">Estado</div>
                                 <div class="info-value">
                                     <?php
-                                        $estado = strtolower($pago['payment_status']);
+                                        $estado = strtolower($pago['payment_status'] ?? 'pendiente');
                                         $statusClass = match($estado) {
                                             'pendiente' => 'status-pendiente',
+                                            'completado' => 'status-pagado',
                                             'pagado' => 'status-pagado',
                                             'cancelado' => 'status-cancelado',
                                             default => 'status-pendiente'
                                         };
                                     ?>
                                     <span class="status-badge-detalle <?= $statusClass; ?>">
-                                        <?= ucfirst($pago['payment_status']); ?>
+                                        <?= ucfirst($estado); ?>
                                     </span>
                                 </div>
                             </div>
                         </div>
+
+                        <?php if (!empty($pago['transaction_id'])): ?>
+                        <div class="info-item">
+                            <div class="info-icon">🔗</div>
+                            <div class="info-content">
+                                <div class="info-label">ID Transacción</div>
+                                <div class="info-value transaction-id"><?= htmlspecialchars($pago['transaction_id']); ?></div>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if (!empty($pago['description'])): ?>
+                        <div class="info-item">
+                            <div class="info-icon">📝</div>
+                            <div class="info-content">
+                                <div class="info-label">Descripción</div>
+                                <div class="info-value description"><?= htmlspecialchars($pago['description']); ?></div>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

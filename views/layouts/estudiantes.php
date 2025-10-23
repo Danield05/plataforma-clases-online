@@ -15,7 +15,7 @@
     <header class="modern-header">
         <div class="header-content">
             <h1 class="header-title">🎓 Estudiantes</h1>
-            <?php include 'nav.php'; ?>
+            <?php include __DIR__ . '/nav.php'; ?>
         </div>
     </header>
     
@@ -29,9 +29,11 @@
             ?>
 
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2>Estudiantes</h2>
+                <h2><?php echo $_SESSION['role'] === 'profesor' ? 'Mis Estudiantes' : 'Estudiantes'; ?></h2>
                 <div>
-                    <a href="/plataforma-clases-online/home/estudiantes_create" class="btn btn-primary">Crear estudiante</a>
+                    <?php if ($_SESSION['role'] === 'administrador'): ?>
+                        <a href="/plataforma-clases-online/home/estudiantes_create" class="btn btn-primary">Crear estudiante</a>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -70,33 +72,62 @@
                 </div>
             <?php endif; ?>
 
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Apellido</th>
-                        <th>Email</th>
-                        <th>Descripción</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ((array)$estudiantes as $e): ?>
-                        <tr>
-                            <td><?= $e['user_id'] ?></td>
-                            <td><?= htmlspecialchars($e['first_name']) ?></td>
-                            <td><?= htmlspecialchars($e['last_name']) ?></td>
-                            <td><?= htmlspecialchars($e['email']) ?></td>
-                            <td><?= htmlspecialchars($e['personal_description'] ?? '') ?></td>
-                            <td>
-                                <a href="/plataforma-clases-online/home/estudiantes_edit?id=<?= $e['user_id'] ?>" class="btn btn-sm btn-primary">Editar</a>
-                                <a href="/plataforma-clases-online/home/estudiantes_delete?id=<?= $e['user_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar estudiante?');">Eliminar</a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3><?php echo $_SESSION['role'] === 'profesor' ? '🎓 Mis Estudiantes' : '🎓 Estudiantes'; ?></h3>
+                    <span class="badge bg-success"><?php echo count($estudiantes); ?> estudiantes</span>
+                </div>
+                <div class="card-body">
+                    <?php if (!empty($estudiantes)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>👤 Estudiante</th>
+                                        <th>📧 Email</th>
+                                        <th>📝 Descripción</th>
+                                        <th>⚡ Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ((array)$estudiantes as $e): ?>
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-circle me-2">
+                                                        <?php echo strtoupper(substr($e['first_name'], 0, 1) . substr($e['last_name'], 0, 1)); ?>
+                                                    </div>
+                                                    <div>
+                                                        <strong><?php echo htmlspecialchars($e['first_name'] . ' ' . $e['last_name']); ?></strong>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td><?php echo htmlspecialchars($e['email']); ?></td>
+                                            <td><?php echo htmlspecialchars($e['personal_description'] ?? 'Sin descripción'); ?></td>
+                                            <td>
+                                                <?php if ($_SESSION['role'] === 'administrador'): ?>
+                                                    <a href="/plataforma-clases-online/home/estudiantes_edit?id=<?= $e['user_id'] ?>" class="btn btn-sm btn-outline-primary me-1">✏️ Editar</a>
+                                                    <a href="/plataforma-clases-online/home/estudiantes_delete?id=<?= $e['user_id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar estudiante?');">🗑️ Eliminar</a>
+                                                <?php else: ?>
+                                                    <a href="/plataforma-clases-online/home/ver_estudiante?id=<?= $e['user_id'] ?>" class="btn btn-sm btn-outline-primary">👁️ Ver Perfil</a>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <div class="empty-state">
+                            <div class="empty-icon">👥</div>
+                            <p><?php echo $_SESSION['role'] === 'profesor' ? 'Aún no tienes estudiantes registrados contigo' : 'No hay estudiantes registrados'; ?></p>
+                            <?php if ($_SESSION['role'] === 'administrador'): ?>
+                                <a href="/plataforma-clases-online/home/estudiantes_create" class="btn btn-primary btn-sm">Crear estudiante</a>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
     </main>
     
     <footer class="modern-footer">
