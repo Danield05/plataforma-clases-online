@@ -88,7 +88,7 @@
                                                 <tr>
                                                     <td><?php echo htmlspecialchars($r['reservation_id'] ?? ''); ?></td>
                                                     <td><?php echo htmlspecialchars($r['estudiante_name'] ?? ''); ?></td>
-                                                    <td><?php echo htmlspecialchars($r['class_date'] ?? ''); ?></td>
+                                                    <td><?php echo date('d/m/Y', strtotime($r['class_date'] ?? '')); ?> (<?php echo $r['start_time'] ?? 'N/A'; ?> - <?php echo $r['end_time'] ?? 'N/A'; ?>)</td>
                                                     <td><?php echo htmlspecialchars($r['reservation_status'] ?? ''); ?></td>
                                                 </tr>
                                             <?php endforeach; ?>
@@ -391,7 +391,7 @@
                             indicador = `<small class="text-muted">${reservasDia}</small>`;
                         }
 
-                        const hoyClass = fechaActual === new Date().toISOString().split('T')[0] ? 'fw-bold' : '';
+                        const hoyClass = fechaActual === '2025-10-22' ? 'fw-bold' : '';
 
                         html += `<td class="text-center ${claseDia} ${hoyClass}" style="cursor: pointer;" onclick="mostrarDetalleDiaProfesor('${fechaActual}')">${diaActual}${indicador}</td>`;
                         diaActual++;
@@ -418,7 +418,7 @@
             <?php
             $reservasPorFecha = [];
             foreach ($reservas as $reserva) {
-                $fechaReserva = $reserva['class_date'];
+                $fechaReserva = date('Y-m-d', strtotime($reserva['class_date']));
                 if (!isset($reservasPorFecha[$fechaReserva])) {
                     $reservasPorFecha[$fechaReserva] = 0;
                 }
@@ -430,12 +430,15 @@
         }
 
         function mostrarDetalleDiaProfesor(fecha) {
-            const reservasDia = <?php echo json_encode($reservas); ?>.filter(r => r.class_date === fecha);
+            const reservasDia = <?php echo json_encode($reservas); ?>.filter(r => new Date(r.class_date).toISOString().split('T')[0] === fecha);
 
             if (reservasDia.length > 0) {
                 let detalle = `Reservas para ${fecha}:\n\n`;
                 reservasDia.forEach(reserva => {
-                    detalle += `• ${reserva.estudiante_name} - ${reserva.reservation_status}\n`;
+                    const fechaFormateada = new Date(fecha).toLocaleDateString('es-ES');
+                    const horaInicio = reserva.start_time || 'N/A';
+                    const horaFin = reserva.end_time || 'N/A';
+                    detalle += `• ${reserva.estudiante_name} - ${reserva.reservation_status} (${fechaFormateada}, ${horaInicio} - ${horaFin})\n`;
                 });
                 alert(detalle);
             } else {

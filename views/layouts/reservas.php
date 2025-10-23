@@ -163,14 +163,14 @@
                                             <tr>
                                                 <td><span class="badge bg-light text-dark">#<?php echo $reserva['reservation_id']; ?></span></td>
                                                 <?php if ($_SESSION['role'] === 'estudiante'): ?>
-                                                <td><?php echo htmlspecialchars($reserva['profesor_name']); ?></td>
+                                                <td><?php echo htmlspecialchars($reserva['profesor_name'] . ' ' . $reserva['profesor_last_name']); ?></td>
                                                 <?php elseif ($_SESSION['role'] === 'profesor'): ?>
-                                                <td><?php echo htmlspecialchars($reserva['estudiante_name']); ?></td>
+                                                <td><?php echo htmlspecialchars($reserva['estudiante_name'] . ' ' . $reserva['estudiante_last_name']); ?></td>
                                                 <?php else: ?>
-                                                <td><?php echo htmlspecialchars($reserva['profesor_name']); ?></td>
-                                                <td><?php echo htmlspecialchars($reserva['estudiante_name']); ?></td>
+                                                <td><?php echo htmlspecialchars($reserva['profesor_name'] . ' ' . $reserva['profesor_last_name']); ?></td>
+                                                <td><?php echo htmlspecialchars($reserva['estudiante_name'] . ' ' . $reserva['estudiante_last_name']); ?></td>
                                                 <?php endif; ?>
-                                                <td><?php echo date('d/m/Y H:i', strtotime($reserva['class_date'])); ?></td>
+                                                <td><?php echo date('d/m/Y', strtotime($reserva['class_date'])); ?> (<?php echo isset($reserva['start_time']) ? date('H:i', strtotime($reserva['start_time'])) : 'N/A'; ?> - <?php echo isset($reserva['end_time']) ? date('H:i', strtotime($reserva['end_time'])) : 'N/A'; ?>)</td>
                                                 <td>
                                                     <?php
                                                     $estado = strtolower($reserva['reservation_status']);
@@ -206,7 +206,6 @@
                                                     </form>
                                                     <?php else: ?>
                                                     <span class="badge bg-secondary">No cancelable</span>
-                                                    <small class="text-muted d-block">Estado: <?php echo htmlspecialchars($reserva['reservation_status']); ?> (ID: <?php echo $reserva['reservation_status_id']; ?>)</small>
                                                     <?php endif; ?>
                                                 </td>
                                                 <?php elseif ($_SESSION['role'] === 'profesor'): ?>
