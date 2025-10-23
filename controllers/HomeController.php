@@ -596,19 +596,26 @@ class HomeController
         header('Location: /plataforma-clases-online/home/estudiantes?status=' . $msg);
         exit;
     }
-    // Obtener reservas del estudiante en formato JSON para el calendario
+    // Obtener reservas del usuario en formato JSON para el calendario
     public function calendario()
     {
         AuthController::checkAuth();
-        AuthController::checkRole(['estudiante']);
+        AuthController::checkRole(['estudiante', 'profesor']);
 
         require_once 'models/ReservaModel.php';
         $reservaModel = new ReservaModel();
 
         $userId = $_SESSION['user_id'];
+        $role = $_SESSION['role'];
 
-        // Obtener reservas del estudiante con información detallada (sin duplicados)
-        $reservas_raw = $reservaModel->getReservasByEstudianteWithDetails($userId);
+        // Obtener reservas según el rol
+        if ($role === 'estudiante') {
+            $reservas_raw = $reservaModel->getReservasByEstudianteWithDetails($userId);
+        } elseif ($role === 'profesor') {
+            $reservas_raw = $reservaModel->getReservasByProfesor($userId);
+        } else {
+            $reservas_raw = [];
+        }
 
         // Eliminar duplicados basados en reservation_id
         $uniqueReservations = [];
@@ -665,18 +672,33 @@ class HomeController
         // Preparar datos para JavaScript
         $reservasJS = [];
         foreach ($reservas as $reserva) {
-            $reservasJS[] = [
-                'reservation_id' => $reserva['reservation_id'] ?? '',
-                'fecha' => $reserva['class_date_formatted'] ?? '',
-                'fecha_display' => $reserva['class_date_display'] ?? '',
-                'profesor_name' => $reserva['profesor_name'] . ' ' . $reserva['profesor_last_name'],
-                'start_time' => $reserva['start_time_formatted'] ?? '08:00',
-                'end_time' => $reserva['end_time_formatted'] ?? '10:00',
-                'reservation_status' => strtolower($reserva['reservation_status'] ?? 'pendiente'),
-                'academic_level' => $reserva['academic_level'] ?? '',
-                'hourly_rate' => $reserva['hourly_rate'] ?? '',
-                'notes' => $reserva['notes'] ?? ''
-            ];
+            if ($role === 'estudiante') {
+                $reservasJS[] = [
+                    'reservation_id' => $reserva['reservation_id'] ?? '',
+                    'fecha' => $reserva['class_date_formatted'] ?? '',
+                    'fecha_display' => $reserva['class_date_display'] ?? '',
+                    'profesor_name' => $reserva['profesor_name'] . ' ' . $reserva['profesor_last_name'],
+                    'start_time' => $reserva['start_time_formatted'] ?? '08:00',
+                    'end_time' => $reserva['end_time_formatted'] ?? '10:00',
+                    'reservation_status' => strtolower($reserva['reservation_status'] ?? 'pendiente'),
+                    'academic_level' => $reserva['academic_level'] ?? '',
+                    'hourly_rate' => $reserva['hourly_rate'] ?? '',
+                    'notes' => $reserva['notes'] ?? ''
+                ];
+            } elseif ($role === 'profesor') {
+                $reservasJS[] = [
+                    'reservation_id' => $reserva['reservation_id'] ?? '',
+                    'fecha' => $reserva['class_date_formatted'] ?? '',
+                    'fecha_display' => $reserva['class_date_display'] ?? '',
+                    'estudiante_name' => $reserva['estudiante_name'] ?? '',
+                    'start_time' => $reserva['start_time_formatted'] ?? '08:00',
+                    'end_time' => $reserva['end_time_formatted'] ?? '10:00',
+                    'reservation_status' => strtolower($reserva['reservation_status'] ?? 'pendiente'),
+                    'academic_level' => $reserva['academic_level'] ?? '',
+                    'hourly_rate' => $reserva['hourly_rate'] ?? '',
+                    'notes' => $reserva['notes'] ?? ''
+                ];
+            }
         }
 
         header('Content-Type: application/json');
