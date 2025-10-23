@@ -185,10 +185,10 @@ try {
             (1, 'full_access')");
 
         // Profesores
-        $pdo->exec("INSERT IGNORE INTO Profesor (user_id, personal_description) VALUES
-            (2, 'Profesora de Matemáticas y Física'),
-            (3, 'Profesor de Programación'),
-            (4, 'Profesora de Inglés')");
+        $pdo->exec("INSERT IGNORE INTO Profesor (user_id, personal_description, academic_level, hourly_rate) VALUES
+            (2, 'Profesora de Matemáticas y Física', 'Licenciatura en Matemáticas', 15.00),
+            (3, 'Profesor de Programación', 'Ingeniería en Sistemas', 20.00),
+            (4, 'Profesora de Inglés', 'Certificación TEFL', 12.00)");
 
         // Estudiantes
         $pdo->exec("INSERT IGNORE INTO Estudiante (user_id, personal_description) VALUES

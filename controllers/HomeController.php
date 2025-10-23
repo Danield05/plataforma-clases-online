@@ -1120,6 +1120,48 @@ class HomeController
         require_once 'views/views_estudiante/explorar_materias.php';
     }
 
+    public function explorar_precio_hora()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['estudiante']);
+
+        require_once 'models/ProfesorModel.php';
+        $profesorModel = new ProfesorModel();
+
+        $profesores = $profesorModel->getProfesores();
+
+        // Agrupar profesores por rangos de precio por hora
+        $precioRangos = [
+            'Menos de $10' => [],
+            '$10 - $20' => [],
+            '$20 - $30' => [],
+            '$30 - $40' => [],
+            'Más de $40' => []
+        ];
+
+        foreach ($profesores as $profesor) {
+            $rate = (float)($profesor['hourly_rate'] ?? 0);
+            if ($rate < 10) {
+                $precioRangos['Menos de $10'][] = $profesor;
+            } elseif ($rate >= 10 && $rate < 20) {
+                $precioRangos['$10 - $20'][] = $profesor;
+            } elseif ($rate >= 20 && $rate < 30) {
+                $precioRangos['$20 - $30'][] = $profesor;
+            } elseif ($rate >= 30 && $rate < 40) {
+                $precioRangos['$30 - $40'][] = $profesor;
+            } else {
+                $precioRangos['Más de $40'][] = $profesor;
+            }
+        }
+
+        $data = [
+            'precioRangos' => $precioRangos
+        ];
+
+        extract($data);
+        require_once 'views/views_estudiante/explorar_precio_hora.php';
+    }
+
     public function profesores_por_materia()
     {
         AuthController::checkAuth();
@@ -1152,6 +1194,85 @@ class HomeController
 
         extract($data);
         require_once 'views/views_estudiante/profesores_por_materia.php';
+    }
+
+    public function profesores_por_precio()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['estudiante']);
+
+        $precioRango = $_GET['precio_rango'] ?? null;
+        if (!$precioRango) {
+            header('Location: /plataforma-clases-online/home/explorar_profesores');
+            exit;
+        }
+
+        require_once 'models/ProfesorModel.php';
+        require_once 'models/ReviewModel.php';
+        require_once 'models/DisponibilidadModel.php';
+        require_once 'models/ReservaModel.php';
+
+        $profesorModel = new ProfesorModel();
+        $reviewModel = new ReviewModel();
+        $disponibilidadModel = new DisponibilidadModel();
+        $reservaModel = new ReservaModel();
+
+        $profesores = $profesorModel->getProfesores();
+
+        // Filtrar profesores por rango de precio
+        $profesores = array_filter($profesores, function($p) use ($precioRango) {
+            $rate = (float)($p['hourly_rate'] ?? 0);
+            switch ($precioRango) {
+                case 'menos-10':
+                    return $rate < 10;
+                case '10-20':
+                    return $rate >= 10 && $rate < 20;
+                case '20-30':
+                    return $rate >= 20 && $rate < 30;
+                case '30-40':
+                    return $rate >= 30 && $rate < 40;
+                case 'mas-40':
+                    return $rate >= 40;
+                default:
+                    return false;
+            }
+        });
+
+        // Obtener reseñas y disponibilidad para cada profesor
+        foreach ($profesores as &$profesor) {
+            $reviews = $reviewModel->getReviewsByProfesor($profesor['user_id']);
+            $profesor['rating'] = !empty($reviews) ? array_sum(array_column($reviews, 'rating')) / count($reviews) : 0;
+            $profesor['review_count'] = count($reviews);
+
+            // Obtener disponibilidad del profesor
+            $disponibilidades = $disponibilidadModel->getDisponibilidadesByProfesor($profesor['user_id']);
+            $profesor['disponibilidades'] = $disponibilidades;
+
+            // Obtener slots disponibles para los próximos 7 días
+            $availableSlots = $reservaModel->getAvailableSlots($profesor['user_id'], date('Y-m-d'), date('Y-m-d', strtotime('+7 days')));
+            $profesor['available_slots'] = array_filter($availableSlots, function($slot) {
+                return $slot['available'] == 1;
+            });
+        }
+
+        // Mapear el rango a un nombre legible
+        $rangoNombres = [
+            'menos-10' => 'Menos de $10',
+            '10-20' => '$10 - $20',
+            '20-30' => '$20 - $30',
+            '30-40' => '$30 - $40',
+            'mas-40' => 'Más de $40'
+        ];
+        $rangoNombre = $rangoNombres[$precioRango] ?? 'Desconocido';
+
+        $data = [
+            'precioRango' => $precioRango,
+            'rangoNombre' => $rangoNombre,
+            'profesores' => $profesores
+        ];
+
+        extract($data);
+        require_once 'views/views_estudiante/profesores_por_precio.php';
     }
 
     public function about()

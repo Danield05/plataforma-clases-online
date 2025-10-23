@@ -36,7 +36,8 @@
                     </form>
                 </div>
                 <div>
-                    <a href="/plataforma-clases-online/home/explorar_materias" class="btn btn-outline-primary">📚 Explorar Materias</a>
+                    <a href="/plataforma-clases-online/home/explorar_materias" class="btn btn-outline-primary me-2">📚 Explorar Materias</a>
+                    <a href="/plataforma-clases-online/home/explorar_precio_hora" class="btn btn-outline-success">💰 Explorar por Precio</a>
                 </div>
             </div>
         </div>
@@ -96,6 +97,11 @@
         <?php else: ?>
         <?php endif; ?>
 
+
+        <!-- Lista de todos los profesores -->
+        <div class="mb-4">
+            <h3>👨‍🏫 Todos los Profesores</h3>
+        </div>
         <div class="row">
             <?php foreach((array)$profesores as $pr): ?>
                 <div class="col-md-4 mb-4">
