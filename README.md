@@ -11,6 +11,9 @@ Una plataforma web completa para la gestión de clases en línea, desarrollada c
 - **Gestión de Clases**: Reservas, disponibilidad y pagos
 - **Sistema Seguro**: Protección de rutas y validación de permisos
 - **Sistema de Migraciones**: Mantenimiento automático de la base de datos
+- **Sistema de Reportes Avanzado**: Reportes detallados con filtros, exportación y estadísticas ⭐
+- **Exportación de Datos**: PDF, Excel, CSV y envío por email de reportes
+- **Análisis de Rendimiento**: Estadísticas de profesores, estudiantes e ingresos
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -158,6 +161,13 @@ plataforma-clases-online/
 ├── 📁 views/                  # Vistas y plantillas
 │   ├── views_profesor/        # Dashboard profesor con calendario
 │   ├── views_estudiante/      # Dashboard estudiante con reservas
+│   ├── reportes/              # Sistema de reportes avanzado ⭐
+│   │   ├── reporte_profesor.php    # Reporte detallado de profesor
+│   │   ├── reporte_estudiante.php  # Reporte de estudiante
+│   │   ├── reporte_general.php     # Reporte administrativo general
+│   │   ├── reporte_pagos.php       # Reporte de pagos
+│   │   ├── reporte_ingresos.php    # Reporte de ingresos por período
+│   │   └── reporte_reservas.php    # Reporte de reservas
 │   ├── explorar_profesores.php # Búsqueda y reserva de clases ⭐
 │   ├── disponibilidad.php     # Configuración de horarios
 │   └── nav.php               # Navegación principal
@@ -213,6 +223,51 @@ plataforma-clases-online/
 5. **Profesor** ve la reserva en su calendario
 6. **Clase** se completa y cambia de estado automáticamente
 
+## 📊 Sistema de Reportes Avanzado ⭐
+
+### Funcionalidades Principales:
+- **📈 Reportes Personalizados**: Reportes específicos por rol (Administrador, Profesor, Estudiante)
+- **🔍 Filtros Avanzados**: Filtrado por fechas, tipos de reporte y criterios específicos
+- **📤 Exportación Múltiple**: Exportar reportes en PDF, Excel, CSV
+- **📧 Envío por Email**: Enviar reportes automáticamente por email
+- **📊 Estadísticas en Tiempo Real**: Métricas actualizadas de rendimiento y actividad
+
+### Tipos de Reportes Disponibles:
+
+#### 👨‍🏫 Reporte de Profesor
+- **Estadísticas de Clases**: Total, completadas, pendientes, canceladas
+- **Ingresos Totales**: Suma de todos los pagos recibidos
+- **Calificaciones Promedio**: Rating promedio de estudiantes
+- **Top Estudiantes**: Lista de estudiantes más activos
+- **Historial de Clases**: Detalle completo de todas las clases impartidas
+
+#### 🎓 Reporte de Estudiante
+- **Historial de Clases**: Todas las clases tomadas
+- **Total Invertido**: Suma de pagos realizados
+- **Profesores Activos**: Número de profesores diferentes
+- **Estado de Reservas**: Pendientes, completadas, canceladas
+
+#### 👑 Reporte Administrativo General
+- **Estadísticas Globales**: Total profesores, estudiantes, reservas, ingresos
+- **Rendimiento por Profesor**: Clases, ingresos, estudiantes por profesor
+- **Actividad por Estudiante**: Clases tomadas, inversión, profesores utilizados
+- **Análisis de Reservas**: Tasas de completación y cancelación
+
+#### 💰 Reporte de Pagos
+- **Totales por Estado**: Pagos completados, pendientes, cancelados
+- **Métodos de Pago**: Estadísticas por método de pago utilizado
+- **Historial Completo**: Detalle de todos los pagos realizados
+
+#### 📈 Reporte de Ingresos por Período
+- **Ingresos por Mes/Año**: Evolución temporal de ingresos
+- **Promedios por Período**: Cálculos estadísticos
+- **Transacciones**: Número de transacciones por período
+
+#### 📚 Reporte de Reservas
+- **Estados de Reserva**: Completadas, pendientes, canceladas
+- **Tasa de Completación**: Porcentaje de clases finalizadas exitosamente
+- **Historial Detallado**: Todas las reservas con información completa
+
 ## 🛡️ Seguridad
 
 - **Protección de Rutas**: Verificación de permisos en cada controlador
@@ -239,10 +294,19 @@ C:\xampp\php\php.exe migrations.php
 
 ### Agregar Nuevas Funcionalidades
 1. **Crear el modelo** en `models/` (extender de clase base si aplica)
-2. **Crear el controlador** en `controllers/` (verificar permisos)
+2. **Crear el controlador** en `controllers/` (verificar permisos con AuthController)
 3. **Crear las vistas** en `views/` (responsive y accesibles)
-4. **Actualizar migraciones** si se modifica la BD
-5. **Probar la funcionalidad** completamente
+4. **Actualizar migraciones** si se modifica la BD (`php migrations.php`)
+5. **Agregar al sistema de reportes** si genera datos analíticos
+6. **Probar la funcionalidad** completamente en todos los roles
+
+### Sistema de Reportes - Desarrollo
+Para agregar nuevos tipos de reportes:
+1. **Crear método en ReportesController** con filtros y permisos
+2. **Crear vista específica** en `views/reportes/` con diseño responsive
+3. **Implementar exportación** (PDF, Excel, CSV) en el controlador
+4. **Agregar navegación** en el layout de reportes
+5. **Probar filtros y exportación** en diferentes escenarios
 
 ### Comandos de Desarrollo Útiles
 ```bash
@@ -252,11 +316,20 @@ php setup.php
 # Actualizar base de datos
 php migrations.php
 
-# Ver logs de errores (si los habilitas)
-tail -f /xampp/apache/logs/error.log
+# Ver logs de errores en tiempo real
+tail -f xampp/apache/logs/error.log
 
 # Backup de base de datos
 mysqldump -u root -p plataforma_clases > backup_$(date +%Y%m%d).sql
+
+# Acceder a reportes desde navegador
+# http://localhost/plataforma-clases-online/reportes
+
+# Ver estructura de base de datos
+mysql -u root -p plataforma_clases -e "DESCRIBE users; DESCRIBE reservations;"
+
+# Limpiar cache (si se implementa)
+# rm -rf cache/*
 ```
 
 ## 🎯 Estado del Proyecto
@@ -268,21 +341,51 @@ mysqldump -u root -p plataforma_clases > backup_$(date +%Y%m%d).sql
 - [x] Gestión de disponibilidad horaria
 - [x] Sistema de migraciones automático
 - [x] Interfaz responsive y moderna
+- [x] **Sistema de Reportes Avanzado** ⭐
+- [x] **Exportación de Reportes** (PDF, Excel, CSV, Email)
+- [x] **Análisis de Rendimiento** con estadísticas detalladas
+- [x] **Filtros y Búsqueda Avanzada** en reportes
 
 ### 🚀 Próximas Mejoras (Opcionales)
-- [ ] Notificaciones por email
-- [ ] Sistema de pagos integrado
-- [ ] Chat en tiempo real
-- [ ] API REST para móviles
-- [ ] Reportes avanzados con gráficos
+- [ ] Notificaciones por email automáticas
+- [ ] Sistema de pagos integrado (PayPal, Stripe)
+- [ ] Chat en tiempo real entre profesor-estudiante
+- [ ] API REST para aplicaciones móviles
+- [ ] Dashboard con gráficos interactivos (Chart.js avanzado)
+- [ ] Sistema de calificaciones y reseñas mejorado
+- [ ] Backup automático de base de datos
+- [ ] Logs de auditoría para acciones administrativas
 
 ## 📞 Soporte
 
 Si encuentras algún problema:
-1. Ejecuta `php setup.php` para verificar la instalación
-2. Ejecuta `php migrations.php` para actualizar la BD
-3. Revisa los logs de Apache en `xampp/apache/logs/`
-4. Verifica la configuración en `config/database.php`
+
+### 🔧 Solución de Problemas Comunes
+1. **Error de conexión a BD**: Verifica credenciales en `config/database.php`
+2. **PHP no reconocido**: Agrega PHP al PATH del sistema o usa ruta completa
+3. **Permisos de archivos**: Asegúrate que Apache tenga permisos de escritura
+4. **Migraciones fallidas**: Ejecuta `php migrations.php` para actualizar BD
+
+### 🐛 Reportar Errores
+1. Ejecuta `php setup.php` para diagnóstico automático
+2. Revisa logs de Apache en `xampp/apache/logs/error.log`
+3. Verifica configuración en `config/database.php`
+4. Para reportes: Accede a `/plataforma-clases-online/reportes` y genera un reporte de error
+
+### 📋 Comandos Útiles para Desarrollo
+```bash
+# Verificar instalación completa
+php setup.php
+
+# Ver estado de la base de datos
+mysql -u root -p plataforma_clases -e "SHOW TABLES;"
+
+# Backup de base de datos
+mysqldump -u root -p plataforma_clases > backup_$(date +%Y%m%d).sql
+
+# Ver logs de errores en tiempo real
+tail -f xampp/apache/logs/error.log
+```
 
 ---
 **¡Tu plataforma de clases online está lista para usar! 🎓✨**
