@@ -1388,48 +1388,120 @@ class HomeController
         AuthController::checkAuth();
         AuthController::checkRole(['estudiante']);
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /plataforma-clases-online/home/explorar_profesores');
-            exit;
-        }
-
+        require_once 'models/ProfesorModel.php';
+        require_once 'models/DisponibilidadModel.php';
         require_once 'models/ReservaModel.php';
+
+        $profesorModel = new ProfesorModel();
+        $disponibilidadModel = new DisponibilidadModel();
         $reservaModel = new ReservaModel();
 
-        $availabilityId = $_POST['availability_id'] ?? null;
-        $classDate = $_POST['class_date'] ?? null;
-        $profesorId = $_POST['profesor_id'] ?? null;
+        $profesorId = $_GET['profesor_id'] ?? null;
 
-        if (!$availabilityId || !$classDate || !$profesorId) {
-            header('Location: /plataforma-clases-online/home/explorar_profesores?error=missing_data');
+        if (!$profesorId) {
+            header('Location: /plataforma-clases-online/home/explorar_profesores?error=missing_profesor');
             exit;
         }
 
-        // Verificar disponibilidad
-        if (!$reservaModel->checkAvailability($profesorId, $classDate, $availabilityId)) {
-            header('Location: /plataforma-clases-online/home/explorar_profesores?error=not_available');
+        // Obtener información del profesor
+        $profesor = $profesorModel->getProfesorById($profesorId);
+        if (!$profesor) {
+            header('Location: /plataforma-clases-online/home/explorar_profesores?error=profesor_not_found');
             exit;
         }
 
-        // Crear reserva - Generar ID único numérico
-        $reservationId = time() . rand(1000, 9999); // timestamp + número aleatorio
-        $data = [
-            'reservation_id' => $reservationId,
-            'user_id' => $profesorId,
-            'student_user_id' => $_SESSION['user_id'],
-            'availability_id' => $availabilityId,
-            'reservation_status_id' => 1, // Pendiente
-            'class_date' => $classDate
-        ];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Procesar la reserva
+            $availabilityId = $_POST['availability_id'] ?? null;
+            $classDate = $_POST['class_date'] ?? null;
 
-        $success = $reservaModel->createReserva($data);
+            if (!$availabilityId || !$classDate) {
+                header('Location: /plataforma-clases-online/home/reservar_clase?profesor_id=' . $profesorId . '&error=missing_data');
+                exit;
+            }
 
-        if ($success) {
-            header('Location: /plataforma-clases-online/home/estudiante_dashboard?success=reservation_created');
+            // Verificar disponibilidad
+            if (!$reservaModel->checkAvailability($profesorId, $classDate, $availabilityId)) {
+                header('Location: /plataforma-clases-online/home/reservar_clase?profesor_id=' . $profesorId . '&error=not_available');
+                exit;
+            }
+
+            // Crear reserva - Generar ID único numérico
+            $reservationId = time() . rand(1000, 9999); // timestamp + número aleatorio
+            $data = [
+                'reservation_id' => $reservationId,
+                'user_id' => $profesorId,
+                'student_user_id' => $_SESSION['user_id'],
+                'availability_id' => $availabilityId,
+                'reservation_status_id' => 1, // Pendiente
+                'class_date' => $classDate
+            ];
+
+            $success = $reservaModel->createReserva($data);
+
+            if ($success) {
+                header('Location: /plataforma-clases-online/home/estudiante_dashboard?success=reservation_created');
+            } else {
+                header('Location: /plataforma-clases-online/home/reservar_clase?profesor_id=' . $profesorId . '&error=creation_failed');
+            }
+            exit;
         } else {
-            header('Location: /plataforma-clases-online/home/explorar_profesores?error=creation_failed');
+            // Mostrar formulario de reserva
+            // Obtener disponibilidad del profesor
+            $disponibilidades = $disponibilidadModel->getDisponibilidadesByProfesor($profesorId);
+
+            // Obtener slots disponibles para los próximos 7 días
+            $availableSlots = [];
+            for ($i = 0; $i < 7; $i++) {
+                $date = date('Y-m-d', strtotime("+$i days"));
+                $dayOfWeek = date('N', strtotime($date)); // 1=Lunes, 7=Domingo
+
+                $slotsForDay = [];
+                foreach ($disponibilidades as $disp) {
+                    if ($disp['week_day_id'] == $dayOfWeek && ($disp['reservation_status_id'] ?? 1) == 1) {
+                        // Verificar si este slot está disponible
+                        if ($reservaModel->checkAvailability($profesorId, $date, $disp['availability_id'])) {
+                            $slotsForDay[] = [
+                                'availability_id' => $disp['availability_id'],
+                                'start_time' => $disp['start_time'],
+                                'end_time' => $disp['end_time'],
+                                'day_name' => $this->getDayName($dayOfWeek)
+                            ];
+                        }
+                    }
+                }
+
+                if (!empty($slotsForDay)) {
+                    $availableSlots[$date] = [
+                        'date' => $date,
+                        'date_display' => date('d/m/Y', strtotime($date)),
+                        'day_name' => $this->getDayName($dayOfWeek),
+                        'slots' => $slotsForDay
+                    ];
+                }
+            }
+
+            $data = [
+                'profesor' => $profesor,
+                'available_slots' => $availableSlots
+            ];
+
+            extract($data);
+            require_once 'views/views_estudiante/reservar_clase.php';
         }
-        exit;
+    }
+
+    private function getDayName($dayNumber) {
+        $days = [
+            1 => 'Lunes',
+            2 => 'Martes',
+            3 => 'Miércoles',
+            4 => 'Jueves',
+            5 => 'Viernes',
+            6 => 'Sábado',
+            7 => 'Domingo'
+        ];
+        return $days[$dayNumber] ?? 'Desconocido';
     }
 
     public function cancelar_reserva()

@@ -319,11 +319,8 @@
                 <button onclick="guardarComoPDF()" class="print-button">
                     📄 Imprimir PDF
                 </button>
-                <button onclick="window.print()" class="print-button" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%);">
-                    🖨️ Imprimir Físico
-                </button>
-                <a href="/plataforma-clases-online/reportes/estudiante" class="btn btn-secondary">
-                    ← Volver a Reportes
+                <a href="/plataforma-clases-online" class="btn btn-secondary">
+                    ← Volver a Dashboard Estudiante
                 </a>
             </div>
         </div>
