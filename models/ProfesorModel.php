@@ -19,10 +19,10 @@ class ProfesorModel {
     }
 
     public function createProfesor($userId, $data) {
-        $stmt = $this->db->prepare("INSERT INTO profesor (user_id, professor_id, personal_description, academic_level, hourly_rate, meeting_link) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt = $this->db->prepare("INSERT INTO profesor (user_id, profesor_id, personal_description, academic_level, hourly_rate, meeting_link) VALUES (?, ?, ?, ?, ?, ?)");
         return $stmt->execute([
             $userId,
-            $data['professor_id'],
+            $data['profesor_id'],
             $data['personal_description'] ?? null,
             $data['academic_level'] ?? null,
             $data['hourly_rate'] ?? null,
