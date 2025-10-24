@@ -72,6 +72,12 @@
                                 <input type="number" class="form-control" id="hourly_rate" name="hourly_rate" step="0.01" value="<?php echo htmlspecialchars($profesor['hourly_rate'] ?? ''); ?>">
                             </div>
 
+                            <div class="mb-3">
+                                <label for="meeting_link" class="form-label">Enlace de Reunión (Zoom, Meet, etc.)</label>
+                                <input type="url" class="form-control" id="meeting_link" name="meeting_link" placeholder="https://meet.google.com/..." value="<?php echo htmlspecialchars($profesor['meeting_link'] ?? ''); ?>">
+                                <div class="form-text">Ingresa el enlace permanente para tus reuniones virtuales</div>
+                            </div>
+
                             <div class="d-flex gap-2">
                                 <button type="submit" class="btn btn-primary">💾 Guardar Cambios</button>
                                 <a href="/plataforma-clases-online/home" class="btn btn-secondary">❌ Cancelar</a>

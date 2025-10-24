@@ -8,7 +8,15 @@ class PagoModel {
     }
 
     public function getPagos() {
-        $stmt = $this->db->query("SELECT p.*, u.first_name, u.last_name, ep.status as payment_status FROM pagos p JOIN usuarios u ON p.user_id = u.user_id JOIN estados_pago ep ON p.payment_status_id = ep.payment_status_id");
+        $stmt = $this->db->query("
+            SELECT p.*, u.first_name, u.last_name, ep.status as payment_status, r.class_date, r.class_time, r.user_id as profesor_user_id
+            FROM pagos p
+            JOIN usuarios u ON p.user_id = u.user_id
+            JOIN estados_pago ep ON p.payment_status_id = ep.payment_status_id
+            LEFT JOIN reservas r ON r.student_user_id = p.user_id
+                AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(p.description, 'Reserva: ', -1), ' ', 1) AS UNSIGNED) = r.reservation_id
+            ORDER BY p.payment_date DESC
+        ");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -82,35 +90,30 @@ class PagoModel {
     }
     /* NUEVOS MÉTODOS PARA LOS TOTALES */
     public function getPagosByEstudiante($studentUserId) {
-        $stmt = $this->db->prepare("SELECT p.*, u.first_name, u.last_name, ep.status as payment_status FROM pagos p LEFT JOIN usuarios u ON p.user_id = u.user_id LEFT JOIN estados_pago ep ON p.payment_status_id = ep.payment_status_id WHERE p.user_id = ? ORDER BY p.payment_date DESC");
+        $stmt = $this->db->prepare("
+            SELECT p.*, u.first_name, u.last_name, ep.status as payment_status, r.class_date, r.class_time, r.reservation_id
+            FROM pagos p
+            LEFT JOIN usuarios u ON p.user_id = u.user_id
+            LEFT JOIN estados_pago ep ON p.payment_status_id = ep.payment_status_id
+            LEFT JOIN reservas r ON r.student_user_id = p.user_id
+                AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(p.description, 'Reserva: ', -1), ' ', 1) AS UNSIGNED) = r.reservation_id
+            WHERE p.user_id = ?
+            ORDER BY p.payment_date DESC, p.payment_id DESC
+        ");
         $stmt->execute([$studentUserId]);
-        $pagos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Para cada pago, intentar encontrar la reserva más cercana por fecha
-        foreach ($pagos as &$pago) {
-            $stmt2 = $this->db->prepare("SELECT reservation_id FROM reservas WHERE student_user_id = ? AND class_date <= DATE(?) ORDER BY class_date DESC LIMIT 1");
-            $stmt2->execute([$studentUserId, $pago['payment_date']]);
-            $reserva = $stmt2->fetch(PDO::FETCH_ASSOC);
-            if ($reserva) {
-                $pago['reservation_id'] = $reserva['reservation_id'];
-            } else {
-                // Si no hay reserva anterior, usar el ID del pago como referencia temporal
-                $pago['reservation_id'] = 'Pago-' . $pago['payment_id'];
-            }
-        }
-
-        return $pagos;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getPagosByProfesor($profesorUserId) {
         // Los pagos están asociados al estudiante (user_id del estudiante), pero necesitamos pagos de reservas del profesor
         // Usar GROUP BY para evitar duplicados
         $stmt = $this->db->prepare("
-            SELECT p.*, u.first_name, u.last_name, ep.status as payment_status, r.reservation_id
+            SELECT p.*, u.first_name, u.last_name, ep.status as payment_status, r.reservation_id, r.class_date, r.class_time
             FROM pagos p
             JOIN usuarios u ON p.user_id = u.user_id
             JOIN estados_pago ep ON p.payment_status_id = ep.payment_status_id
             JOIN reservas r ON r.student_user_id = p.user_id AND r.user_id = ?
+                AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(p.description, 'Reserva: ', -1), ' ', 1) AS UNSIGNED) = r.reservation_id
             WHERE p.payment_status_id IN (2, 3)
             GROUP BY p.payment_id
             ORDER BY p.payment_date DESC

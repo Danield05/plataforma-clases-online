@@ -384,8 +384,11 @@ class ReportesController
         $estudiantes = $estudianteModel->getEstudiantes();
         $reviews = $reviewModel->getReviews();
 
-        // Calcular estadísticas generales
-        $totalIngresos = array_sum(array_column($pagos, 'amount'));
+        // Calcular estadísticas generales - solo pagos completados
+        $pagosCompletados = array_filter($pagos, function($p) {
+            return in_array($p['payment_status_id'], [2, 3]); // Solo completados/pagados
+        });
+        $totalIngresos = array_sum(array_column($pagosCompletados, 'amount'));
         $reservasActivas = count(array_filter($reservas, function($r) {
             return in_array(strtolower($r['reservation_status'] ?? ''), ['pendiente', 'confirmada']);
         }));
@@ -398,7 +401,7 @@ class ReportesController
                 return $r['user_id'] == $profesor['user_id'];
             });
             $profesorPagos = array_filter($pagos, function($p) use ($profesor) {
-                return $p['user_id'] == $profesor['user_id'];
+                return $p['profesor_user_id'] == $profesor['user_id'] && in_array($p['payment_status_id'], [2, 3]); // Solo completados/pagados
             });
 
             $profesorStats[] = [
@@ -416,7 +419,7 @@ class ReportesController
                 return $r['student_user_id'] == $estudiante['user_id'];
             });
             $estudiantePagos = array_filter($pagos, function($p) use ($estudiante) {
-                return $p['user_id'] == $estudiante['user_id'];
+                return $p['user_id'] == $estudiante['user_id'] && in_array($p['payment_status_id'], [2, 3]); // Solo completados/pagados
             });
 
             $estudianteStats[] = [

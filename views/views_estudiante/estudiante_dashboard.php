@@ -812,6 +812,9 @@
                                 ${reserva.notes ? `<div class="reservation-notes">📝 ${reserva.notes}</div>` : ''}
                                 ${reserva.academic_level ? `<div class="reservation-level">🎓 ${reserva.academic_level}</div>` : ''}
                                 ${reserva.hourly_rate ? `<div class="reservation-rate">💰 $${reserva.hourly_rate}/hora</div>` : ''}
+                                <div class="reservation-link">
+                                    ${reserva.meeting_link ? `🔗 Enlace de las reuniones: <a href="${reserva.meeting_link}" target="_blank" class="btn btn-primary btn-sm">Ir a la Reunión</a>` : '🔗 Enlace no disponible'}
+                                </div>
                                 <div class="reservation-actions">
                                     ${(reserva.reservation_status === 'pendiente' || reserva.reservation_status === 'confirmada') ?
                                         `<button class="btn btn-outline-danger btn-sm" onclick="cancelarClase('${reserva.reservation_id}')">Cancelar Clase</button>`

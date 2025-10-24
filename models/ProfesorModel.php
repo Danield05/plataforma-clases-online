@@ -19,22 +19,24 @@ class ProfesorModel {
     }
 
     public function createProfesor($userId, $data) {
-        $stmt = $this->db->prepare("INSERT INTO profesor (user_id, professor_id, personal_description, academic_level, hourly_rate) VALUES (?, ?, ?, ?, ?)");
+        $stmt = $this->db->prepare("INSERT INTO profesor (user_id, professor_id, personal_description, academic_level, hourly_rate, meeting_link) VALUES (?, ?, ?, ?, ?, ?)");
         return $stmt->execute([
             $userId,
             $data['professor_id'],
             $data['personal_description'] ?? null,
             $data['academic_level'] ?? null,
-            $data['hourly_rate'] ?? null
+            $data['hourly_rate'] ?? null,
+            $data['meeting_link'] ?? null
         ]);
     }
 
     public function updateProfesor($userId, $data) {
-        $stmt = $this->db->prepare("UPDATE profesor SET personal_description = ?, academic_level = ?, hourly_rate = ? WHERE user_id = ?");
+        $stmt = $this->db->prepare("UPDATE profesor SET personal_description = ?, academic_level = ?, hourly_rate = ?, meeting_link = ? WHERE user_id = ?");
         return $stmt->execute([
             $data['personal_description'] ?? null,
             $data['academic_level'] ?? null,
             $data['hourly_rate'] ?? null,
+            $data['meeting_link'] ?? null,
             $userId
         ]);
     }
