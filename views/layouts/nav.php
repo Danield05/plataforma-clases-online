@@ -37,9 +37,26 @@ function getRoleDisplayName($role) {
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center py-2 px-3" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1);">
                     <div class="d-flex align-items-center">
-                        <div class="user-avatar-small me-3">
-                            <?php echo strtoupper(substr($_SESSION['first_name'] ?? $_SESSION['user_name'] ?? 'U', 0, 1)); ?>
-                        </div>
+                        <?php 
+                        // Incluir funciones helper para avatares
+                        require_once __DIR__ . '/../../helpers/avatar_helper.php';
+                        
+                        // Obtener foto de perfil o avatar generado
+                        $profilePhotoUrl = getProfilePhotoUrl($_SESSION['user_id']);
+                        
+                        if ($profilePhotoUrl): ?>
+                            <div class="user-avatar-small me-3">
+                                <img src="<?php echo $profilePhotoUrl; ?>" alt="Foto de perfil" class="nav-profile-photo">
+                            </div>
+                        <?php else: 
+                            // Generar avatar con color basado en user_id
+                            $avatarClass = 'nav-avatar-' . (($_SESSION['user_id'] % 8) + 1);
+                            $initials = strtoupper(substr($_SESSION['first_name'] ?? $_SESSION['user_name'] ?? 'U', 0, 1));
+                        ?>
+                            <div class="user-avatar-small me-3 <?php echo $avatarClass; ?>">
+                                <?php echo $initials; ?>
+                            </div>
+                        <?php endif; ?>
                         <div class="user-details">
                             <div class="user-name"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Usuario'); ?></div>
                             <div class="user-role"><?php echo getRoleDisplayName($_SESSION['role'] ?? ''); ?></div>

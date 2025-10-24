@@ -44,12 +44,35 @@
             text-align: center;
         }
         
+        .profile-avatar-container {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 1rem;
+            cursor: pointer;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+        
+        .profile-avatar-container:hover .profile-photo-overlay {
+            opacity: 1;
+        }
+        
+        .profile-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border: 4px solid white;
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
         .profile-avatar {
             width: 100px;
             height: 100px;
             border-radius: 50%;
             border: 4px solid white;
-            margin: 0 auto 1rem;
+            margin: 0 auto;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -57,6 +80,56 @@
             font-weight: bold;
             color: white;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .profile-photo-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 50%;
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .profile-photo-overlay i {
+            font-size: 1.5rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        /* Mejorar la accesibilidad y UX */
+        .profile-avatar-container:focus {
+            outline: 2px solid #fff;
+            outline-offset: 2px;
+        }
+        
+        .profile-avatar-container:active {
+            transform: scale(0.98);
+        }
+        
+        /* Animación suave para cambios */
+        .profile-photo, .profile-avatar {
+            transition: all 0.3s ease;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .profile-avatar-container, .profile-photo, .profile-avatar {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .profile-avatar {
+                font-size: 2rem;
+            }
         }
         
         .profile-name {
@@ -158,12 +231,29 @@
                 <div class="profile-card">
                     <div class="profile-header">
                         <?php 
+                        // Incluir funciones helper para avatares
+                        require_once __DIR__ . '/../../helpers/avatar_helper.php';
+                        
+                        // Verificar si el usuario tiene foto de perfil
+                        $profilePhotoUrl = getProfilePhotoUrl($usuario['user_id']);
+                        
                         // Generar color de avatar basado en el ID del usuario
                         $avatarClass = 'avatar-' . (($usuario['user_id'] % 8) + 1);
                         $initials = strtoupper(substr($usuario['first_name'], 0, 1) . substr($usuario['last_name'], 0, 1));
                         ?>
-                        <div class="profile-avatar <?php echo $avatarClass; ?>">
-                            <?php echo $initials; ?>
+                        <div class="profile-avatar-container">
+                            <?php if ($profilePhotoUrl): ?>
+                                <img src="<?php echo $profilePhotoUrl; ?>" alt="Foto de perfil" class="profile-photo" id="profilePhotoDisplay">
+                            <?php else: ?>
+                                <div class="profile-avatar <?php echo $avatarClass; ?>" id="profileAvatarDisplay">
+                                    <?php echo $initials; ?>
+                                </div>
+                            <?php endif; ?>
+                            <div class="profile-photo-overlay">
+                                <i class="fas fa-camera"></i>
+                                <span>Cambiar foto</span>
+                            </div>
+                            <input type="file" id="profilePhotoInput" accept="image/*" style="display: none;">
                         </div>
                         <div class="profile-name">
                             <?php echo htmlspecialchars($usuario['first_name'] . ' ' . $usuario['last_name']); ?>
@@ -174,6 +264,14 @@
                     </div>
                     
                     <div class="profile-body">
+                        <?php if (isset($_GET['status']) && $_GET['status'] === 'updated'): ?>
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fas fa-check-circle me-2"></i>
+                                ¡Perfil actualizado correctamente!
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        <?php endif; ?>
+                        
                         <!-- Información Personal -->
                         <div class="info-section">
                             <div class="info-title">
@@ -190,7 +288,7 @@
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Teléfono</span>
-                                <span class="info-value"><?php echo htmlspecialchars($usuario['phone_number'] ?? 'No especificado'); ?></span>
+                                <span class="info-value"><?php echo htmlspecialchars($usuario['phone'] ?? 'No especificado'); ?></span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Fecha de Registro</span>
@@ -232,5 +330,160 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/plataforma-clases-online/public/js/script.js"></script>
+    <script>
+        // Manejar subida de foto de perfil
+        document.addEventListener('DOMContentLoaded', function() {
+            const photoContainer = document.querySelector('.profile-avatar-container');
+            const photoInput = document.getElementById('profilePhotoInput');
+            const photoDisplay = document.getElementById('profilePhotoDisplay');
+            const avatarDisplay = document.getElementById('profileAvatarDisplay');
+
+            // Clic en el contenedor abre el selector de archivos
+            photoContainer.addEventListener('click', function() {
+                photoInput.click();
+            });
+
+            // Cuando se selecciona un archivo
+            photoInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (!file) return;
+
+                // Validar tipo de archivo
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Por favor selecciona una imagen válida (JPG, PNG, GIF o WebP)');
+                    return;
+                }
+
+                // Validar tamaño (5MB máximo)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('La imagen es demasiado grande. Máximo 5MB');
+                    return;
+                }
+
+                // Mostrar preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Si existe foto, actualizar src; si no, crear elemento img
+                    if (photoDisplay) {
+                        photoDisplay.src = e.target.result;
+                    } else if (avatarDisplay) {
+                        // Reemplazar avatar con imagen
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.alt = 'Foto de perfil';
+                        img.className = 'profile-photo';
+                        img.id = 'profilePhotoDisplay';
+                        avatarDisplay.parentNode.replaceChild(img, avatarDisplay);
+                    }
+                };
+                reader.readAsDataURL(file);
+
+                // Subir archivo
+                uploadProfilePhoto(file);
+            });
+
+            function uploadProfilePhoto(file) {
+                const formData = new FormData();
+                formData.append('profile_photo', file);
+
+                // Mostrar loading
+                const overlay = document.querySelector('.profile-photo-overlay');
+                if (overlay) {
+                    overlay.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Subiendo...</span>';
+                    overlay.style.opacity = '1';
+                }
+
+                fetch('/plataforma-clases-online/home/upload_profile_photo', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    // Verificar si la respuesta es válida
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    // Verificar el tipo de contenido
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        // Si no es JSON, probablemente es un error HTML
+                        return response.text().then(text => {
+                            console.error('Respuesta no JSON:', text);
+                            throw new Error('El servidor devolvió una respuesta no válida');
+                        });
+                    }
+                    
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Actualizar imagen con la URL del servidor
+                        const img = document.getElementById('profilePhotoDisplay');
+                        if (img) {
+                            img.src = data.photo_url;
+                        }
+                        
+                        // Actualizar también la foto en la navegación
+                        updateNavProfilePhoto(data.photo_url);
+                        
+                        // Mostrar mensaje de éxito
+                        showMessage('Foto de perfil actualizada correctamente', 'success');
+                    } else {
+                        showMessage(data.message || 'Error al subir la imagen', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showMessage('Error al subir la imagen', 'error');
+                })
+                .finally(() => {
+                    // Restaurar overlay
+                    if (overlay) {
+                        overlay.innerHTML = '<i class="fas fa-camera"></i><span>Cambiar foto</span>';
+                        overlay.style.opacity = '0';
+                    }
+                });
+            }
+
+            function showMessage(message, type) {
+                // Crear elemento de notificación
+                const notification = document.createElement('div');
+                notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+                notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+                notification.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+
+                document.body.appendChild(notification);
+
+                // Auto-remover después de 3 segundos
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 3000);
+            }
+
+            function updateNavProfilePhoto(photoUrl) {
+                // Buscar el avatar en la navegación
+                const navAvatar = document.querySelector('.user-avatar-small');
+                if (navAvatar) {
+                    // Verificar si ya hay una imagen
+                    const existingImg = navAvatar.querySelector('.nav-profile-photo');
+                    if (existingImg) {
+                        // Actualizar la imagen existente
+                        existingImg.src = photoUrl;
+                    } else {
+                        // Reemplazar el contenido del avatar con una imagen
+                        navAvatar.innerHTML = `<img src="${photoUrl}" alt="Foto de perfil" class="nav-profile-photo">`;
+                        // Remover clases de color de avatar
+                        navAvatar.className = navAvatar.className.replace(/nav-avatar-\d+/g, '');
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>

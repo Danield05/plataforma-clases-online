@@ -216,6 +216,49 @@ body {
     font-size: 1.1em;
     border: 2px solid rgba(255,255,255,0.3);
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+/* Foto de perfil en la navegación */
+.nav-profile-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+/* Avatares con colores para la navegación */
+.nav-avatar-1 { 
+    background: linear-gradient(135deg, #371783 0%, #8B5A96 100%) !important; 
+    color: white !important;
+}
+.nav-avatar-2 { 
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important; 
+    color: white !important;
+}
+.nav-avatar-3 { 
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important; 
+    color: white !important;
+}
+.nav-avatar-4 { 
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important; 
+    color: white !important;
+}
+.nav-avatar-5 { 
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%) !important; 
+    color: white !important;
+}
+.nav-avatar-6 { 
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%) !important; 
+    color: #333 !important;
+}
+.nav-avatar-7 { 
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%) !important; 
+    color: #333 !important;
+}
+.nav-avatar-8 { 
+    background: linear-gradient(135deg, #ff8a80 0%, #ffb74d 100%) !important; 
+    color: white !important;
 }
 
 .user-name {

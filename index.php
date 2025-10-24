@@ -57,6 +57,9 @@ if ($controller === 'HomeController' && isset($url[1]) && $url[1] === 'reserva_c
 if ($controller === 'HomeController' && isset($url[1]) && $url[1] === 'pagar_pendiente') {
     $action = 'pagar_pendiente';
 }
+if ($controller === 'HomeController' && isset($url[1]) && $url[1] === 'upload_profile_photo') {
+    $action = 'upload_profile_photo';
+}
 
 // Manejar rutas específicas para reportes
 if ($controller === 'ReportesController') {
