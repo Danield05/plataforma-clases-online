@@ -33,7 +33,7 @@
                         <span class="logo-icon">📝</span>
                     </div>
                     <h2>Iniciar Sesión</h2>
-                    <p>¿No tienes una cuenta? <a href="#" class="register-link">Regístrate aquí</a></p>
+                    <p>¿No tienes una cuenta? <a href="/plataforma-clases-online/register" class="register-link">Regístrate aquí</a></p>
                 </div>
 
                 <div class="form-group-modern">
