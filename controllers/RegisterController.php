@@ -3,7 +3,7 @@
 class RegisterController {
     public function index() {
         // Mostrar formulario de registro
-        require_once 'views/register.php';
+        require_once 'views/layouts/register.php';
     }
 
     public function register() {
@@ -55,7 +55,7 @@ class RegisterController {
             }
 
             // Volver a mostrar el formulario con mensaje
-            require_once 'views/register.php';
+            require_once 'views/layouts/register.php';
         } else {
             header('Location: /plataforma-clases-online/register');
             exit;

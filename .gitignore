@@ -17,6 +17,7 @@ cache/
 .DS_Store
 Thumbs.db
 plataforma_clases.sql
+debug.log
 
 # Archivos de IDE
 .vscode/
