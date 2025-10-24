@@ -267,7 +267,11 @@ class HomeController
         $clasesReservadas = count($reservas);
         $clasesCompletadas = count(array_filter($reservas, function($r) { return $r['reservation_status'] === 'completada'; }));
         $profesoresActivos = count(array_unique(array_column($reservas, 'user_id')));
-        $totalInvertido = array_sum(array_column($pagos, 'amount'));
+
+        // Calcular total invertido solo de pagos completados
+        $totalInvertido = array_sum(array_filter(array_column($pagos, 'amount'), function($amount, $index) use ($pagos) {
+            return in_array(strtolower($pagos[$index]['payment_status'] ?? ''), ['completado', 'pagado']);
+        }, ARRAY_FILTER_USE_BOTH));
 
         // Obtener profesores disponibles
         $profesores = $profesorModel->getProfesores();
@@ -1572,6 +1576,38 @@ class HomeController
             $reservationId = $reservaModel->createReserva($data);
 
             if ($reservationId) {
+                // Crear pago pendiente automáticamente solo si no existe uno
+                require_once 'models/PagoModel.php';
+                $pagoModel = new PagoModel();
+
+                // Verificar si ya existe un pago pendiente para esta reserva
+                global $pdo;
+                $stmt = $pdo->prepare("
+                    SELECT payment_id FROM pagos
+                    WHERE user_id = ? AND payment_status_id = 1
+                    AND description LIKE CONCAT('%Reserva: ', ?, '%')
+                ");
+                $stmt->execute([$_SESSION['user_id'], $reservationId]);
+                $pagoExistente = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if (!$pagoExistente) {
+                    // Obtener tarifa del profesor
+                    $profesor = $profesorModel->getProfesorById($profesorId);
+                    $amount = $profesor['hourly_rate'] ?? 25.00;
+
+                    // Crear registro de pago pendiente
+                    $pagoData = [
+                        'user_id' => $_SESSION['user_id'],
+                        'payment_status_id' => 1, // Pendiente
+                        'amount' => $amount,
+                        'payment_method' => 'PayPal',
+                        'description' => "Pago pendiente - Clase con {$profesor['first_name']} {$profesor['last_name']} - Reserva: {$reservationId}",
+                        'transaction_id' => null
+                    ];
+
+                    $pagoModel->createPago($pagoData);
+                }
+
                 // Redirigir a la página de confirmación y pago
                 header('Location: /plataforma-clases-online/home/confirmar_reserva?reservation_id=' . $reservationId);
             } else {
@@ -1713,7 +1749,21 @@ class HomeController
                     global $pdo;
                     $stmt = $pdo->prepare("UPDATE pagos SET transaction_id = ? WHERE payment_id = ?");
                     $stmt->execute([$transactionId, $paymentId]);
-                    
+
+                    // Buscar y actualizar la reserva asociada a "Confirmada" (estado 2)
+                    $stmt2 = $pdo->prepare("
+                        SELECT reservation_id FROM reservas
+                        WHERE student_user_id = ? AND reservation_status_id = 1
+                        AND class_date >= DATE(?)
+                        ORDER BY class_date ASC LIMIT 1
+                    ");
+                    $stmt2->execute([$_SESSION['user_id'], date('Y-m-d')]);
+                    $reservaAsociada = $stmt2->fetch(PDO::FETCH_ASSOC);
+
+                    if ($reservaAsociada) {
+                        $reservaModel->updateReservaStatus($reservaAsociada['reservation_id'], 2); // 2 = Confirmada
+                    }
+
                     echo json_encode(['success' => true, 'message' => 'Pago completado exitosamente', 'payment_id' => $paymentId]);
                 } else {
                     echo json_encode(['success' => false, 'message' => 'Error al actualizar el pago']);
@@ -1759,7 +1809,7 @@ class HomeController
             }
 
         } elseif ($action === 'pay_later') {
-            // Pagar más tarde - crear pago pendiente
+            // Pagar más tarde - crear pago pendiente solo si no existe uno
             $reservationId = $_POST['reservation_id'] ?? null;
 
             if (!$reservationId) {
@@ -1774,26 +1824,41 @@ class HomeController
                 exit;
             }
 
-            // Usar la tarifa correcta del profesor o disponibilidad
-            $amount = $reserva['hourly_rate'] ?? $reserva['availability_price'] ?? 25.00;
+            // Verificar si ya existe un pago pendiente para esta reserva
+            global $pdo;
+            $stmt = $pdo->prepare("
+                SELECT payment_id FROM pagos
+                WHERE user_id = ? AND payment_status_id = 1
+                AND description LIKE CONCAT('%Reserva: ', ?, '%')
+            ");
+            $stmt->execute([$_SESSION['user_id'], $reservationId]);
+            $pagoExistente = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // Crear registro de pago pendiente con descripción mejorada
-            $pagoData = [
-                'user_id' => $_SESSION['user_id'],
-                'payment_status_id' => 1, // Pendiente
-                'amount' => $amount,
-                'payment_method' => 'PayPal',
-                'description' => "Pago pendiente - Clase de {$reserva['subject_name']} con {$reserva['profesor_name']} {$reserva['profesor_last_name']} - Reserva: {$reservationId}",
-                'transaction_id' => null
-            ];
-
-            $pagoSuccess = $pagoModel->createPago($pagoData);
-
-            if ($pagoSuccess) {
-                // La reserva mantiene estado "Pendiente" hasta que se pague
-                echo json_encode(['success' => true, 'message' => 'Reserva confirmada para pagar más tarde', 'reservation_id' => $reservationId]);
+            if ($pagoExistente) {
+                // Ya existe un pago pendiente, no crear otro
+                echo json_encode(['success' => true, 'message' => 'Ya existe un pago pendiente para esta reserva', 'reservation_id' => $reservationId]);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Error al crear pago pendiente']);
+                // Usar la tarifa correcta del profesor o disponibilidad
+                $amount = $reserva['hourly_rate'] ?? $reserva['availability_price'] ?? 25.00;
+
+                // Crear registro de pago pendiente con descripción mejorada
+                $pagoData = [
+                    'user_id' => $_SESSION['user_id'],
+                    'payment_status_id' => 1, // Pendiente
+                    'amount' => $amount,
+                    'payment_method' => 'PayPal',
+                    'description' => "Pago pendiente - Clase de {$reserva['subject_name']} con {$reserva['profesor_name']} {$reserva['profesor_last_name']} - Reserva: {$reservationId}",
+                    'transaction_id' => null
+                ];
+
+                $pagoSuccess = $pagoModel->createPago($pagoData);
+
+                if ($pagoSuccess) {
+                    // La reserva mantiene estado "Pendiente" hasta que se pague
+                    echo json_encode(['success' => true, 'message' => 'Reserva confirmada para pagar más tarde', 'reservation_id' => $reservationId]);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Error al crear pago pendiente']);
+                }
             }
 
         } else {

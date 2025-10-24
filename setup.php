@@ -167,9 +167,9 @@ try {
 
         // Insertar pagos de prueba (solo PayPal)
         $pdo->exec("INSERT IGNORE INTO Pagos (payment_id, user_id, amount, payment_status_id, payment_date, transaction_id, payment_method, description) VALUES
-            (1, 5, 15.00, 2, DATE_SUB(CURDATE(), INTERVAL 1 DAY), 'TXN_001', 'paypal', 'Pago por clase de Matemáticas'),
-            (2, 5, 18.00, 2, DATE_SUB(CURDATE(), INTERVAL 2 DAY), 'TXN_002', 'paypal', 'Pago por clase de Física'),
-            (3, 6, 20.00, 1, CURDATE(), 'TXN_003', 'paypal', 'Pago pendiente por clase de Programación')");
+            (1, 5, 15.00, 1, DATE_SUB(CURDATE(), INTERVAL 1 DAY), 'TXN_001', 'PayPal', 'Pago pendiente por clase de Matemáticas - Reserva: 1'),
+            (2, 5, 18.00, 2, DATE_SUB(CURDATE(), INTERVAL 2 DAY), 'TXN_002', 'PayPal', 'Pago completado por clase de Física - Reserva: 2'),
+            (3, 6, 20.00, 1, CURDATE(), 'TXN_003', 'PayPal', 'Pago pendiente por clase de Programación - Reserva: 3')");
 
         // Insertar reviews de prueba
         $pdo->exec("INSERT IGNORE INTO Reviews (review_id, reservation_id, reviewer_user_id, reviewed_user_id, rating, comment) VALUES
