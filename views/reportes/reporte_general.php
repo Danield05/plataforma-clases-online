@@ -382,6 +382,27 @@
     </div>
     </main>
 
+    <!-- Footer moderno -->
+    <footer class="modern-footer">
+        <div class="footer-content">
+            <div class="footer-info">
+                <div class="footer-brand">
+                    <span>📚</span>
+                    <span>Plataforma de Clases Online</span>
+                </div>
+                <div class="footer-links">
+                    <a href="/plataforma-clases-online/home" class="footer-link">Inicio</a>
+                    <a href="/plataforma-clases-online/about" class="footer-link">Acerca de</a>
+                    <a href="#" class="footer-link">Contacto</a>
+                    <a href="#" class="footer-link">Soporte</a>
+                </div>
+            </div>
+            <div class="footer-copy">
+                © <?= date('Y'); ?> Plataforma de Clases Online. Todos los derechos reservados.
+            </div>
+        </div>
+    </footer>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/plataforma-clases-online/public/js/script.js"></script>
 </body>
