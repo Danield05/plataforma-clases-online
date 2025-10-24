@@ -432,11 +432,9 @@
             <!-- Estudiantes -->
             <div class="col-lg-8" id="estudiantes-section">
                 <div class="dashboard-card">
-                    <div class="card-header bg-gradient-success text-white">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h3 class="mb-0">🎓 Mis Estudiantes</h3>
-                            <span class="badge bg-light text-success"><?php echo count($estudiantes); ?> activos</span>
-                        </div>
+                    <div class="card-header bg-gradient-success text-white position-relative">
+                        <h3 class="mb-0">🎓 Mis Estudiantes</h3>
+                        <span class="badge bg-light text-success position-absolute top-50 end-0 translate-middle-y me-3"><?php echo count($estudiantes); ?> activos</span>
                     </div>
                     <div class="card-body p-0">
                         <?php if (!empty($estudiantes)): ?>
@@ -501,11 +499,9 @@
             <!-- Mis Pagos -->
             <div class="col-lg-4">
                 <div class="dashboard-card">
-                    <div class="card-header bg-gradient-warning text-white">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h3 class="mb-0">💰 Mis Pagos</h3>
-                            <span class="badge bg-light text-warning"><?php echo count($pagos); ?> ingresos</span>
-                        </div>
+                    <div class="card-header bg-gradient-warning text-white position-relative">
+                        <h3 class="mb-0">💰 Mis Pagos</h3>
+                        <span class="badge bg-light text-warning position-absolute top-50 end-0 translate-middle-y me-3"><?php echo count($pagos); ?> ingresos</span>
                     </div>
                     <div class="card-body p-0">
                         <?php if (!empty($pagos)): ?>
