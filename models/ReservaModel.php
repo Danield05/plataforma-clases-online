@@ -14,25 +14,26 @@ class ReservaModel {
 
     public function getReservaById($id) {
         $stmt = $this->db->prepare("
-            SELECT 
+            SELECT
                 r.*,
-                u_profesor.first_name as profesor_name, 
+                u_profesor.first_name as profesor_name,
                 u_profesor.last_name as profesor_last_name,
                 u_profesor.email as profesor_email,
-                u_estudiante.first_name as estudiante_name, 
+                u_estudiante.first_name as estudiante_name,
                 u_estudiante.last_name as estudiante_last_name,
                 er.status as reservation_status,
                 prof.hourly_rate,
                 prof.academic_level,
                 prof.personal_description,
+                prof.meeting_link,
                 d.start_time,
                 d.end_time,
                 d.price_per_hour as availability_price,
                 ds.day as day_name,
                 mat.subject_name
-            FROM reservas r 
-            JOIN usuarios u_profesor ON r.user_id = u_profesor.user_id 
-            JOIN usuarios u_estudiante ON r.student_user_id = u_estudiante.user_id 
+            FROM reservas r
+            JOIN usuarios u_profesor ON r.user_id = u_profesor.user_id
+            JOIN usuarios u_estudiante ON r.student_user_id = u_estudiante.user_id
             JOIN estados_reserva er ON r.reservation_status_id = er.reservation_status_id
             LEFT JOIN profesor prof ON r.user_id = prof.user_id
             LEFT JOIN disponibilidad_profesores d ON r.availability_id = d.availability_id
@@ -68,6 +69,7 @@ class ReservaModel {
                    (SELECT MAX(prof.personal_description) FROM profesor prof WHERE prof.user_id = r.user_id) as personal_description,
                    (SELECT MAX(prof.academic_level) FROM profesor prof WHERE prof.user_id = r.user_id) as academic_level,
                    (SELECT MAX(prof.hourly_rate) FROM profesor prof WHERE prof.user_id = r.user_id) as hourly_rate,
+                   (SELECT MAX(prof.meeting_link) FROM profesor prof WHERE prof.user_id = r.user_id) as meeting_link,
                    (SELECT MAX(r2.class_date) FROM reservas r2 WHERE r2.reservation_id = r.reservation_id) as class_date,
                    (SELECT MAX(r2.class_time) FROM reservas r2 WHERE r2.reservation_id = r.reservation_id) as class_time,
                    (SELECT MAX(r2.notes) FROM reservas r2 WHERE r2.reservation_id = r.reservation_id) as notes,
@@ -84,7 +86,7 @@ class ReservaModel {
     }
 
     public function getReservasByProfesor($profesorUserId, $fechaInicio = null, $fechaFin = null) {
-        $query = "SELECT r.*, s.first_name as estudiante_name, s.last_name as estudiante_last_name, er.status as reservation_status, d.start_time, d.end_time, prof.academic_level, prof.hourly_rate, m.subject_name as subject_name FROM reservas r JOIN usuarios s ON r.student_user_id = s.user_id JOIN estados_reserva er ON r.reservation_status_id = er.reservation_status_id LEFT JOIN disponibilidad_profesores d ON r.availability_id = d.availability_id LEFT JOIN profesor prof ON r.user_id = prof.user_id LEFT JOIN materias m ON d.subject_id = m.subject_id WHERE r.user_id = ?";
+        $query = "SELECT r.*, s.first_name as estudiante_name, s.last_name as estudiante_last_name, er.status as reservation_status, d.start_time, d.end_time, prof.academic_level, prof.hourly_rate, prof.meeting_link, m.subject_name as subject_name FROM reservas r JOIN usuarios s ON r.student_user_id = s.user_id JOIN estados_reserva er ON r.reservation_status_id = er.reservation_status_id LEFT JOIN disponibilidad_profesores d ON r.availability_id = d.availability_id LEFT JOIN profesor prof ON r.user_id = prof.user_id LEFT JOIN materias m ON d.subject_id = m.subject_id WHERE r.user_id = ?";
 
         $params = [$profesorUserId];
 

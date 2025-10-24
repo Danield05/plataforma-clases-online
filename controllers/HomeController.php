@@ -692,6 +692,7 @@ class HomeController
                     'reservation_status' => strtolower($reserva['reservation_status'] ?? 'pendiente'),
                     'academic_level' => $reserva['academic_level'] ?? '',
                     'hourly_rate' => $reserva['hourly_rate'] ?? '',
+                    'meeting_link' => $reserva['meeting_link'] ?? '',
                     'notes' => $reserva['notes'] ?? ''
                 ];
             } elseif ($role === 'profesor') {
@@ -705,6 +706,7 @@ class HomeController
                     'reservation_status' => strtolower($reserva['reservation_status'] ?? 'pendiente'),
                     'academic_level' => $reserva['academic_level'] ?? '',
                     'hourly_rate' => $reserva['hourly_rate'] ?? '',
+                    'meeting_link' => $reserva['meeting_link'] ?? '',
                     'notes' => $reserva['notes'] ?? ''
                 ];
             }
@@ -1097,6 +1099,7 @@ class HomeController
                 'personal_description' => $_POST['personal_description'] ?? null,
                 'academic_level' => $_POST['academic_level'] ?? null,
                 'hourly_rate' => $_POST['hourly_rate'] ?? null,
+                'meeting_link' => $_POST['meeting_link'] ?? null,
             ];
             $ok2 = $profesorModel->updateProfesor($_SESSION['user_id'], $profData);
         } elseif ($role === 'estudiante') {
