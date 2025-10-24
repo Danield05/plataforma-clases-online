@@ -1576,37 +1576,8 @@ class HomeController
             $reservationId = $reservaModel->createReserva($data);
 
             if ($reservationId) {
-                // Crear pago pendiente automáticamente solo si no existe uno
-                require_once 'models/PagoModel.php';
-                $pagoModel = new PagoModel();
-
-                // Verificar si ya existe un pago pendiente para esta reserva
-                global $pdo;
-                $stmt = $pdo->prepare("
-                    SELECT payment_id FROM pagos
-                    WHERE user_id = ? AND payment_status_id = 1
-                    AND description LIKE CONCAT('%Reserva: ', ?, '%')
-                ");
-                $stmt->execute([$_SESSION['user_id'], $reservationId]);
-                $pagoExistente = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                if (!$pagoExistente) {
-                    // Obtener tarifa del profesor
-                    $profesor = $profesorModel->getProfesorById($profesorId);
-                    $amount = $profesor['hourly_rate'] ?? 25.00;
-
-                    // Crear registro de pago pendiente
-                    $pagoData = [
-                        'user_id' => $_SESSION['user_id'],
-                        'payment_status_id' => 1, // Pendiente
-                        'amount' => $amount,
-                        'payment_method' => 'PayPal',
-                        'description' => "Pago pendiente - Clase con {$profesor['first_name']} {$profesor['last_name']} - Reserva: {$reservationId}",
-                        'transaction_id' => null
-                    ];
-
-                    $pagoModel->createPago($pagoData);
-                }
+                // NO crear pago pendiente automáticamente aquí
+                // El pago se creará solo cuando el estudiante elija "Pagar más tarde" o pague inmediatamente
 
                 // Redirigir a la página de confirmación y pago
                 header('Location: /plataforma-clases-online/home/confirmar_reserva?reservation_id=' . $reservationId);
@@ -1674,15 +1645,33 @@ class HomeController
         require_once 'models/ReservaModel.php';
         require_once 'models/ProfesorModel.php';
         require_once 'models/DisponibilidadModel.php';
+        require_once 'models/PagoModel.php';
 
         $reservaModel = new ReservaModel();
         $profesorModel = new ProfesorModel();
         $disponibilidadModel = new DisponibilidadModel();
+        $pagoModel = new PagoModel();
 
         // Obtener datos de la reserva con toda la información necesaria
         $reserva = $reservaModel->getReservaById($reservationId);
         if (!$reserva || $reserva['student_user_id'] != $_SESSION['user_id']) {
             header('Location: /plataforma-clases-online/home/estudiante_dashboard?error=reservation_not_found');
+            exit;
+        }
+
+        // Verificar si ya existe un pago pendiente para esta reserva
+        global $pdo;
+        $stmt = $pdo->prepare("
+            SELECT payment_id FROM pagos
+            WHERE user_id = ? AND payment_status_id = 1
+            AND description LIKE CONCAT('%Reserva: ', ?, '%')
+        ");
+        $stmt->execute([$_SESSION['user_id'], $reservationId]);
+        $pagoExistente = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Si existe un pago pendiente, redirigir a pagar_pendiente
+        if ($pagoExistente) {
+            header('Location: /plataforma-clases-online/home/pagar_pendiente?payment_id=' . $pagoExistente['payment_id']);
             exit;
         }
 
@@ -1700,7 +1689,7 @@ class HomeController
             'subject_name' => $reserva['subject_name'],
             'day_name' => $reserva['day_name']
         ];
-        
+
         // Variable para compatibilidad con ambos flujos (nueva reserva y pago pendiente)
         $amount = $reservaData['hourly_rate'];
 
