@@ -1543,6 +1543,8 @@ class HomeController
             // Procesar la reserva
             $availabilityId = $_POST['availability_id'] ?? null;
             $classDate = $_POST['class_date'] ?? null;
+            $classTime = $_POST['class_time'] ?? null;
+            $notes = $_POST['notes'] ?? null;
 
             if (!$availabilityId || !$classDate) {
                 header('Location: /plataforma-clases-online/home/reservar_clase?profesor_id=' . $profesorId . '&error=missing_data');
