@@ -19,10 +19,10 @@ class EstudianteModel {
     }
 
     public function createEstudiante($userId, $data) {
-        $stmt = $this->db->prepare("INSERT INTO estudiante (user_id, student_id, personal_description) VALUES (?, ?, ?)");
+        $stmt = $this->db->prepare("INSERT INTO estudiante (user_id, estudiante_id, personal_description) VALUES (?, ?, ?)");
         return $stmt->execute([
             $userId,
-            $data['student_id'],
+            $data['estudiante_id'],
             $data['personal_description'] ?? null
         ]);
     }
