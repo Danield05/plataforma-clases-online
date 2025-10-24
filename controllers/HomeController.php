@@ -2271,4 +2271,31 @@ class HomeController
         extract($data);
         require_once 'views/layouts/ver_estudiante.php';
     }
+
+    public function perfil_view() {
+        // Verificar que el usuario esté logueado y sea estudiante
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'estudiante') {
+            header('Location: /plataforma-clases-online/auth/login');
+            exit;
+        }
+
+        require_once 'models/UserModel.php';
+
+        $userModel = new UserModel();
+        $userId = $_SESSION['user_id'];
+
+        // Obtener información del usuario (sin tocar la base de datos)
+        $usuario = $userModel->getUserById($userId);
+        if (!$usuario) {
+            header('Location: /plataforma-clases-online/auth/login');
+            exit;
+        }
+
+        $data = [
+            'usuario' => $usuario
+        ];
+
+        extract($data);
+        require_once 'views/views_estudiante/perfil_view.php';
+    }
 }

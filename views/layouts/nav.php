@@ -137,7 +137,7 @@ function getRoleDisplayName($role) {
                 <span class="nav-icon">🔍</span>
                 <span class="nav-text">Buscar Profesores</span>
             </a>
-            <a href="/plataforma-clases-online/home/perfil_edit" class="nav-link <?= isActive('perfil_edit', $currentUrl, $currentPage); ?>">
+            <a href="/plataforma-clases-online/home/perfil_view" class="nav-link <?= isActive('perfil_view', $currentUrl, $currentPage); ?>">
                 <span class="nav-icon">👤</span>
                 <span class="nav-text">Mi Perfil</span>
             </a>
