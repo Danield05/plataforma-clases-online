@@ -17,33 +17,21 @@ $password = '1234';             // Contraseña XAMPP
 
 ## 📄 Scripts Disponibles
 
-### 1. `database_schema.sql` - Base de Datos Nueva
-**Para crear la base de datos desde cero** con estructura perfecta.
-
-### 2. `database_migration.sql` - Migración de BD Existente
-**Para corregir la base de datos actual** sin perder datos.
+### 1. `plataforma_clases.sql` - Base de Datos Completa
+**Script principal para crear la base de datos desde cero** con toda la estructura y datos iniciales.
 
 ## 🚀 Cómo Usar los Scripts
 
-### Opción A: Base de Datos Nueva (Recomendada)
+### Instalación de Base de Datos
 
 1. **Abrir phpMyAdmin** (http://localhost/phpmyadmin)
 2. **Crear nueva base de datos:**
    ```sql
-   CREATE DATABASE plataforma_clases_online CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   CREATE DATABASE plataforma_clases CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
    ```
 3. **Ejecutar el script completo:**
    ```sql
-   SOURCE database_schema.sql;
-   ```
-
-### Opción B: Migrar Base de Datos Existente
-
-1. **Abrir phpMyAdmin**
-2. **Seleccionar tu base de datos actual** (`plataforma_clases`)
-3. **Ejecutar el script de migración:**
-   ```sql
-   SOURCE database_migration.sql;
+   SOURCE plataforma_clases.sql;
    ```
 
 ## 👤 Usuarios y Permisos
@@ -61,13 +49,13 @@ Si quieres crear un usuario específico para la aplicación:
 CREATE USER 'app_user'@'localhost' IDENTIFIED BY 'tu_password_segura_aqui';
 
 -- Dar permisos
-GRANT ALL PRIVILEGES ON plataforma_clases_online.* TO 'app_user'@'localhost';
+GRANT ALL PRIVILEGES ON plataforma_clases.* TO 'app_user'@'localhost';
 
 -- Aplicar cambios
 FLUSH PRIVILEGES;
 ```
 
-Luego actualiza tu `config/database.php`:
+Luego actualiza tu `config/config.php`:
 ```php
 $username = 'app_user';
 $password = 'tu_password_segura_aqui';
@@ -141,7 +129,7 @@ DESCRIBE Disponibilidad_Profesores;
 - O elimina la base de datos y vuelve a crearla
 
 ### Error: "Access denied for user"
-- Verifica las credenciales en `config/database.php`
+- Verifica las credenciales en `config/config.php`
 - Asegúrate de que XAMPP esté ejecutándose
 - Revisa permisos del usuario en phpMyAdmin
 

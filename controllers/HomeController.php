@@ -267,7 +267,11 @@ class HomeController
         $clasesReservadas = count($reservas);
         $clasesCompletadas = count(array_filter($reservas, function($r) { return $r['reservation_status'] === 'completada'; }));
         $profesoresActivos = count(array_unique(array_column($reservas, 'user_id')));
-        $totalInvertido = array_sum(array_column($pagos, 'amount'));
+
+        // Calcular total invertido solo de pagos completados
+        $totalInvertido = array_sum(array_filter(array_column($pagos, 'amount'), function($amount, $index) use ($pagos) {
+            return in_array(strtolower($pagos[$index]['payment_status'] ?? ''), ['completado', 'pagado']);
+        }, ARRAY_FILTER_USE_BOTH));
 
         // Obtener profesores disponibles
         $profesores = $profesorModel->getProfesores();
@@ -688,6 +692,7 @@ class HomeController
                     'reservation_status' => strtolower($reserva['reservation_status'] ?? 'pendiente'),
                     'academic_level' => $reserva['academic_level'] ?? '',
                     'hourly_rate' => $reserva['hourly_rate'] ?? '',
+                    'meeting_link' => $reserva['meeting_link'] ?? '',
                     'notes' => $reserva['notes'] ?? ''
                 ];
             } elseif ($role === 'profesor') {
@@ -701,6 +706,7 @@ class HomeController
                     'reservation_status' => strtolower($reserva['reservation_status'] ?? 'pendiente'),
                     'academic_level' => $reserva['academic_level'] ?? '',
                     'hourly_rate' => $reserva['hourly_rate'] ?? '',
+                    'meeting_link' => $reserva['meeting_link'] ?? '',
                     'notes' => $reserva['notes'] ?? ''
                 ];
             }
@@ -1093,6 +1099,7 @@ class HomeController
                 'personal_description' => $_POST['personal_description'] ?? null,
                 'academic_level' => $_POST['academic_level'] ?? null,
                 'hourly_rate' => $_POST['hourly_rate'] ?? null,
+                'meeting_link' => $_POST['meeting_link'] ?? null,
             ];
             $ok2 = $profesorModel->updateProfesor($_SESSION['user_id'], $profData);
         } elseif ($role === 'estudiante') {
@@ -1572,6 +1579,9 @@ class HomeController
             $reservationId = $reservaModel->createReserva($data);
 
             if ($reservationId) {
+                // NO crear pago pendiente automáticamente aquí
+                // El pago se creará solo cuando el estudiante elija "Pagar más tarde" o pague inmediatamente
+
                 // Redirigir a la página de confirmación y pago
                 header('Location: /plataforma-clases-online/home/confirmar_reserva?reservation_id=' . $reservationId);
             } else {
@@ -1583,9 +1593,9 @@ class HomeController
             // Obtener disponibilidad del profesor
             $disponibilidades = $disponibilidadModel->getDisponibilidadesByProfesor($profesorId);
 
-            // Obtener slots disponibles para los próximos 7 días
+            // Obtener slots disponibles para los próximos 90 días (aproximadamente 3 meses)
             $availableSlots = [];
-            for ($i = 0; $i < 7; $i++) {
+            for ($i = 0; $i < 90; $i++) {
                 $date = date('Y-m-d', strtotime("+$i days"));
                 $dayOfWeek = date('N', strtotime($date)); // 1=Lunes, 7=Domingo
 
@@ -1638,15 +1648,33 @@ class HomeController
         require_once 'models/ReservaModel.php';
         require_once 'models/ProfesorModel.php';
         require_once 'models/DisponibilidadModel.php';
+        require_once 'models/PagoModel.php';
 
         $reservaModel = new ReservaModel();
         $profesorModel = new ProfesorModel();
         $disponibilidadModel = new DisponibilidadModel();
+        $pagoModel = new PagoModel();
 
         // Obtener datos de la reserva con toda la información necesaria
         $reserva = $reservaModel->getReservaById($reservationId);
         if (!$reserva || $reserva['student_user_id'] != $_SESSION['user_id']) {
             header('Location: /plataforma-clases-online/home/estudiante_dashboard?error=reservation_not_found');
+            exit;
+        }
+
+        // Verificar si ya existe un pago pendiente para esta reserva
+        global $pdo;
+        $stmt = $pdo->prepare("
+            SELECT payment_id FROM pagos
+            WHERE user_id = ? AND payment_status_id = 1
+            AND description LIKE CONCAT('%Reserva: ', ?, '%')
+        ");
+        $stmt->execute([$_SESSION['user_id'], $reservationId]);
+        $pagoExistente = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Si existe un pago pendiente, redirigir a pagar_pendiente
+        if ($pagoExistente) {
+            header('Location: /plataforma-clases-online/home/pagar_pendiente?payment_id=' . $pagoExistente['payment_id']);
             exit;
         }
 
@@ -1664,7 +1692,7 @@ class HomeController
             'subject_name' => $reserva['subject_name'],
             'day_name' => $reserva['day_name']
         ];
-        
+
         // Variable para compatibilidad con ambos flujos (nueva reserva y pago pendiente)
         $amount = $reservaData['hourly_rate'];
 
@@ -1713,7 +1741,21 @@ class HomeController
                     global $pdo;
                     $stmt = $pdo->prepare("UPDATE pagos SET transaction_id = ? WHERE payment_id = ?");
                     $stmt->execute([$transactionId, $paymentId]);
-                    
+
+                    // Buscar y actualizar la reserva asociada a "Confirmada" (estado 2)
+                    $stmt2 = $pdo->prepare("
+                        SELECT reservation_id FROM reservas
+                        WHERE student_user_id = ? AND reservation_status_id = 1
+                        AND class_date >= DATE(?)
+                        ORDER BY class_date ASC LIMIT 1
+                    ");
+                    $stmt2->execute([$_SESSION['user_id'], date('Y-m-d')]);
+                    $reservaAsociada = $stmt2->fetch(PDO::FETCH_ASSOC);
+
+                    if ($reservaAsociada) {
+                        $reservaModel->updateReservaStatus($reservaAsociada['reservation_id'], 2); // 2 = Confirmada
+                    }
+
                     echo json_encode(['success' => true, 'message' => 'Pago completado exitosamente', 'payment_id' => $paymentId]);
                 } else {
                     echo json_encode(['success' => false, 'message' => 'Error al actualizar el pago']);
@@ -1759,7 +1801,7 @@ class HomeController
             }
 
         } elseif ($action === 'pay_later') {
-            // Pagar más tarde - crear pago pendiente
+            // Pagar más tarde - crear pago pendiente solo si no existe uno
             $reservationId = $_POST['reservation_id'] ?? null;
 
             if (!$reservationId) {
@@ -1774,26 +1816,41 @@ class HomeController
                 exit;
             }
 
-            // Usar la tarifa correcta del profesor o disponibilidad
-            $amount = $reserva['hourly_rate'] ?? $reserva['availability_price'] ?? 25.00;
+            // Verificar si ya existe un pago pendiente para esta reserva
+            global $pdo;
+            $stmt = $pdo->prepare("
+                SELECT payment_id FROM pagos
+                WHERE user_id = ? AND payment_status_id = 1
+                AND description LIKE CONCAT('%Reserva: ', ?, '%')
+            ");
+            $stmt->execute([$_SESSION['user_id'], $reservationId]);
+            $pagoExistente = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // Crear registro de pago pendiente con descripción mejorada
-            $pagoData = [
-                'user_id' => $_SESSION['user_id'],
-                'payment_status_id' => 1, // Pendiente
-                'amount' => $amount,
-                'payment_method' => 'PayPal',
-                'description' => "Pago pendiente - Clase de {$reserva['subject_name']} con {$reserva['profesor_name']} {$reserva['profesor_last_name']} - Reserva: {$reservationId}",
-                'transaction_id' => null
-            ];
-
-            $pagoSuccess = $pagoModel->createPago($pagoData);
-
-            if ($pagoSuccess) {
-                // La reserva mantiene estado "Pendiente" hasta que se pague
-                echo json_encode(['success' => true, 'message' => 'Reserva confirmada para pagar más tarde', 'reservation_id' => $reservationId]);
+            if ($pagoExistente) {
+                // Ya existe un pago pendiente, no crear otro
+                echo json_encode(['success' => true, 'message' => 'Ya existe un pago pendiente para esta reserva', 'reservation_id' => $reservationId]);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Error al crear pago pendiente']);
+                // Usar la tarifa correcta del profesor o disponibilidad
+                $amount = $reserva['hourly_rate'] ?? $reserva['availability_price'] ?? 25.00;
+
+                // Crear registro de pago pendiente con descripción mejorada
+                $pagoData = [
+                    'user_id' => $_SESSION['user_id'],
+                    'payment_status_id' => 1, // Pendiente
+                    'amount' => $amount,
+                    'payment_method' => 'PayPal',
+                    'description' => "Pago pendiente - Clase de {$reserva['subject_name']} con {$reserva['profesor_name']} {$reserva['profesor_last_name']} - Reserva: {$reservationId}",
+                    'transaction_id' => null
+                ];
+
+                $pagoSuccess = $pagoModel->createPago($pagoData);
+
+                if ($pagoSuccess) {
+                    // La reserva mantiene estado "Pendiente" hasta que se pague
+                    echo json_encode(['success' => true, 'message' => 'Reserva confirmada para pagar más tarde', 'reservation_id' => $reservationId]);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Error al crear pago pendiente']);
+                }
             }
 
         } else {
@@ -1968,6 +2025,79 @@ class HomeController
         } else {
             header('Location: /plataforma-clases-online/home/reservas?error=reschedule_failed&debug=slot_not_available');
         }
+        exit;
+    }
+
+    public function get_available_slots_profesor()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['profesor']);
+
+        $fecha = $_GET['fecha'] ?? null;
+
+        if (!$fecha) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Fecha requerida']);
+            exit;
+        }
+
+        require_once 'models/DisponibilidadModel.php';
+        require_once 'models/ReservaModel.php';
+
+        $disponibilidadModel = new DisponibilidadModel();
+        $reservaModel = new ReservaModel();
+
+        // Obtener disponibilidad del profesor para esa fecha
+        $diaSemana = date('N', strtotime($fecha)); // 1=Lunes, 7=Domingo
+
+        $disponibilidades = $disponibilidadModel->getDisponibilidadesByProfesor($_SESSION['user_id']);
+
+        $slotsDisponibles = [];
+        $diasTrabajo = [];
+        $horariosTrabajo = [];
+
+        foreach ($disponibilidades as $disp) {
+            // Solo mostrar slots que estén marcados como "Disponible" (ID 1)
+            if ($disp['week_day_id'] == $diaSemana && $disp['availability_status_id'] == 1) {
+                // Verificar si este slot específico está disponible (no reservado)
+                if ($reservaModel->checkAvailability($_SESSION['user_id'], $fecha, $disp['availability_id'])) {
+                    $slotsDisponibles[] = [
+                        'availability_id' => $disp['availability_id'],
+                        'start_time' => $disp['start_time'],
+                        'end_time' => $disp['end_time'],
+                        'day' => $disp['day']
+                    ];
+                }
+            }
+
+            // Recopilar días de trabajo únicos y sus horarios
+            if ($disp['availability_status_id'] == 1) {
+                $diaNombre = $disp['day'];
+                if (!isset($diasTrabajo[$disp['week_day_id']])) {
+                    $diasTrabajo[$disp['week_day_id']] = $diaNombre;
+                    $horariosTrabajo[$disp['week_day_id']] = [];
+                }
+                $horariosTrabajo[$disp['week_day_id']][] = $disp['start_time'] . ' - ' . $disp['end_time'];
+            }
+        }
+
+        // Ordenar días de trabajo
+        ksort($diasTrabajo);
+        $diasTrabajoList = array_values($diasTrabajo);
+
+        // Crear lista de horarios por día
+        $horariosPorDia = [];
+        foreach ($diasTrabajo as $weekDayId => $diaNombre) {
+            $horariosPorDia[] = $diaNombre . ': ' . implode(', ', $horariosTrabajo[$weekDayId]);
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'slots' => $slotsDisponibles,
+            'dias_trabajo' => $diasTrabajoList,
+            'horarios_trabajo' => $horariosPorDia
+        ]);
         exit;
     }
 

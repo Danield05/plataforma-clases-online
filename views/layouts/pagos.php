@@ -168,7 +168,8 @@
                             <th>👤 Usuario</th>
                             <th>💰 Monto</th>
                             <th>💳 Método</th>
-                            <th>📅 Fecha</th>
+                            <th>📅 Fecha Pago</th>
+                            <th>📅 Fecha Clase</th>
                             <th>📊 Estado</th>
                             <th>⚙️ Acciones</th>
                         </tr>
@@ -192,17 +193,33 @@
                                 <td><?= htmlspecialchars($pago['payment_method']); ?></td>
                                 <td><?= htmlspecialchars($pago['payment_date']); ?></td>
                                 <td>
+                                    <?php
+                                    // Mostrar fecha y hora de clase si están disponibles
+                                    if (isset($pago['class_date']) && !empty($pago['class_date'])) {
+                                        $fechaClase = date('d/m/Y', strtotime($pago['class_date']));
+                                        if (isset($pago['class_time']) && !empty($pago['class_time'])) {
+                                            $horaClase = date('H:i', strtotime($pago['class_time']));
+                                            echo htmlspecialchars($fechaClase . ' ' . $horaClase);
+                                        } else {
+                                            echo htmlspecialchars($fechaClase);
+                                        }
+                                    } else {
+                                        echo '<span class="text-muted">N/A</span>';
+                                    }
+                                    ?>
+                                </td>
+                                <td>
                                     <span class="status-badge-pagos <?= $statusClass; ?>">
                                         <?= ucfirst($estado); ?>
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="/plataforma-clases-online/home/verPago?id=<?= $pago['payment_id']; ?>" 
+                                    <a href="/plataforma-clases-online/home/verPago?id=<?= $pago['payment_id']; ?>"
                                        class="btn-detalle">
                                         👁️ Ver Detalle
                                     </a>
                                     <?php if ($estado === 'pendiente' && $userRole === 'estudiante'): ?>
-                                        <a href="/plataforma-clases-online/home/pagar_pendiente?payment_id=<?= $pago['payment_id']; ?>" 
+                                        <a href="/plataforma-clases-online/home/pagar_pendiente?payment_id=<?= $pago['payment_id']; ?>"
                                            class="btn btn-warning btn-sm ms-2">
                                             💳 Pagar Ahora
                                         </a>

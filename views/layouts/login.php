@@ -1,3 +1,9 @@
+
+<?php
+// Incluir configuración desde la raíz del proyecto
+require_once __DIR__ . '/../../config/config.php';
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -27,7 +33,7 @@
         <!-- Panel izquierdo con el formulario -->
         <div class="login-panel">
             <!-- Formulario de login moderno -->
-            <form action="http://localhost/plataforma-clases-online/auth/login" method="POST" id="loginForm" class="modern-login-form">
+            <form action="<?php echo BASE_URL; ?>/auth/login" method="POST" id="loginForm" class="modern-login-form">
                 <div class="form-header">
                     <div class="logo-container">
                         <span class="logo-icon">📝</span>
