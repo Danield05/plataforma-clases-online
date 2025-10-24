@@ -40,7 +40,7 @@ class ProfesorModel {
     }
 
     public function getMateriasByProfesor($userId) {
-        $stmt = $this->db->prepare("SELECT m.* FROM materias m JOIN profesor_materias pm ON m.subject_id = pm.subject_id WHERE pm.user_id = ?");
+        $stmt = $this->db->prepare("SELECT m.* FROM materias m JOIN profesor_materias pm ON m.materia_id = pm.materia_id WHERE pm.user_id = ?");
         $stmt->execute([$userId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

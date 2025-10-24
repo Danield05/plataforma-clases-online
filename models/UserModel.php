@@ -9,19 +9,19 @@ class UserModel {
     }
 
     public function getUsers() {
-        $stmt = $this->db->query("SELECT * FROM usuarios");
+        $stmt = $this->db->query("SELECT * FROM Usuarios");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getUserById($id) {
-        $stmt = $this->db->prepare("SELECT * FROM usuarios WHERE user_id = ?");
+        $stmt = $this->db->prepare("SELECT * FROM Usuarios WHERE user_id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function createUser($data) {
-        // Insertar en usuarios
-        $stmt = $this->db->prepare("INSERT INTO usuarios (role_id, user_status_id, first_name, last_name, email, password, photo_url) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        // Insertar en Usuarios
+        $stmt = $this->db->prepare("INSERT INTO Usuarios (role_id, user_status_id, first_name, last_name, email, password, profile_image) VALUES (?, ?, ?, ?, ?, ?, ?)");
         $result = $stmt->execute([
             $data['role_id'],
             $data['user_status_id'],
@@ -29,7 +29,7 @@ class UserModel {
             $data['last_name'],
             $data['email'],
             password_hash($data['password'], PASSWORD_DEFAULT),
-            $data['photo_url'] ?? null
+            $data['profile_image'] ?? null
         ]);
 
         if ($result) {
@@ -75,8 +75,8 @@ class UserModel {
     }
 
     public function updateUser($id, $data) {
-        $fields = ['first_name', 'last_name', 'email', 'photo_url'];
-        $values = [$data['first_name'], $data['last_name'], $data['email'], $data['photo_url'] ?? null];
+        $fields = ['first_name', 'last_name', 'email', 'profile_image'];
+        $values = [$data['first_name'], $data['last_name'], $data['email'], $data['profile_image'] ?? null];
 
         if (!empty($data['password'])) {
             $fields[] = 'password';
@@ -84,18 +84,18 @@ class UserModel {
         }
 
         $setClause = implode(' = ?, ', $fields) . ' = ?';
-        $stmt = $this->db->prepare("UPDATE usuarios SET $setClause WHERE user_id = ?");
+        $stmt = $this->db->prepare("UPDATE Usuarios SET $setClause WHERE user_id = ?");
         $values[] = $id;
         return $stmt->execute($values);
     }
 
     public function deleteUser($id) {
-        $stmt = $this->db->prepare("DELETE FROM usuarios WHERE user_id = ?");
+        $stmt = $this->db->prepare("DELETE FROM Usuarios WHERE user_id = ?");
         return $stmt->execute([$id]);
     }
 
     public function authenticate($email, $password) {
-        $stmt = $this->db->prepare("SELECT * FROM usuarios WHERE email = ?");
+        $stmt = $this->db->prepare("SELECT * FROM Usuarios WHERE email = ?");
         $stmt->execute([$email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($user && password_verify($password, $user['password'])) {

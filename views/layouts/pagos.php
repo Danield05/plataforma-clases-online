@@ -15,7 +15,7 @@
     <header class="modern-header">
         <div class="header-content">
             <h1 class="header-title">💰 Gestión de Pagos</h1>
-            <?php include 'nav.php'; ?>
+            <?php include __DIR__ . '/nav.php'; ?>
         </div>
     </header>
 
@@ -24,21 +24,36 @@
         <div class="pagos-container">
             <!-- Título y botones exportar -->
             <div class="pagos-header">
-                <h2 class="pagos-title">📊 Historial de Pagos</h2>
+                <h2 class="pagos-title">
+                    <?php
+                    if ($userRole === 'administrador') {
+                        echo '📊 Historial de Pagos';
+                    } elseif ($userRole === 'estudiante') {
+                        echo '💰 Mis Pagos';
+                    } elseif ($userRole === 'profesor') {
+                        echo '💵 Pagos de Mis Estudiantes';
+                    } else {
+                        echo ' Historial de Pagos';
+                    }
+                    ?>
+                </h2>
+                <?php if ($userRole === 'administrador'): ?>
                 <div class="export-buttons">
-                    <a href="/plataforma-clases-online/reportes/exportarPagos" 
+                    <a href="/plataforma-clases-online/reportes/exportarPagos"
                        class="btn btn-export-csv">
                        📄 Exportar CSV
                     </a>
-                    <a href="/plataforma-clases-online/reportes/exportarPagosPDF" 
+                    <a href="/plataforma-clases-online/reportes/exportarPagosPDF"
                        class="btn btn-export-pdf" target="_blank">
                        📋 Ver Reporte
                     </a>
                 </div>
+                <?php endif; ?>
             </div>
 
             <!-- Resumen de totales con nuevo diseño -->
             <div class="totales-pagos">
+                <?php if ($userRole === 'administrador'): ?>
                 <div class="total-card-pagos success">
                     <div class="card-icon">💵</div>
                     <h4>Total Recaudado</h4>
@@ -59,6 +74,49 @@
                     <h4>Pagos Cancelados</h4>
                     <div class="amount"><?= $totalCancelados ?? 0; ?></div>
                 </div>
+                <?php elseif ($userRole === 'estudiante'): ?>
+                <div class="total-card-pagos success">
+                    <div class="card-icon">💰</div>
+                    <h4>Total Invertido</h4>
+                    <div class="amount">$<?= number_format($totalPagados ?? 0, 2); ?></div>
+                </div>
+                <div class="total-card-pagos warning">
+                    <div class="card-icon">⏳</div>
+                    <h4>Clases Pendientes</h4>
+                    <div class="amount"><?php echo $clasesStats['pendientes']; ?></div>
+                </div>
+                <div class="total-card-pagos info">
+                    <div class="card-icon">✅</div>
+                    <h4>Clases Completadas</h4>
+                    <div class="amount"><?php echo $clasesStats['completadas']; ?></div>
+                </div>
+                <div class="total-card-pagos danger">
+                    <div class="card-icon">❌</div>
+                    <h4>Clases Canceladas</h4>
+                    <div class="amount"><?php echo $clasesStats['canceladas']; ?></div>
+                </div>
+                <?php elseif ($userRole === 'profesor'): ?>
+                <div class="total-card-pagos success">
+                    <div class="card-icon">💵</div>
+                    <h4>Ingresos Totales</h4>
+                    <div class="amount">$<?= number_format($totalRecaudado ?? 0, 2); ?></div>
+                </div>
+                <div class="total-card-pagos warning">
+                    <div class="card-icon">⏳</div>
+                    <h4>Clases Pendientes</h4>
+                    <div class="amount"><?php echo $clasesStats['pendientes']; ?></div>
+                </div>
+                <div class="total-card-pagos info">
+                    <div class="card-icon">✅</div>
+                    <h4>Clases Completadas</h4>
+                    <div class="amount"><?php echo $clasesStats['completadas']; ?></div>
+                </div>
+                <div class="total-card-pagos danger">
+                    <div class="card-icon">❌</div>
+                    <h4>Clases Canceladas</h4>
+                    <div class="amount"><?php echo $clasesStats['canceladas']; ?></div>
+                </div>
+                <?php endif; ?>
             </div>
 
             <!-- Tabla de pagos con nuevo diseño -->
@@ -67,7 +125,7 @@
                     <thead>
                         <tr>
                             <th>🆔 ID Pago</th>
-                            <th>📋 ID Reserva</th>
+                            <th>👤 Usuario</th>
                             <th>💰 Monto</th>
                             <th>💳 Método</th>
                             <th>📅 Fecha</th>
@@ -78,9 +136,10 @@
                     <tbody>
                         <?php foreach($pagos as $pago): ?>
                             <?php
-                                $estado = strtolower($pago['payment_status']);
+                                $estado = strtolower($pago['payment_status'] ?? 'pendiente');
                                 $statusClass = match($estado) {
                                     'pendiente' => 'status-pendiente',
+                                    'completado' => 'status-pagado',
                                     'pagado' => 'status-pagado',
                                     'cancelado' => 'status-cancelado',
                                     default => 'status-pendiente'
@@ -88,13 +147,13 @@
                             ?>
                             <tr>
                                 <td><?= htmlspecialchars($pago['payment_id']); ?></td>
-                                <td><?= htmlspecialchars($pago['reservation_id']); ?></td>
+                                <td><?= htmlspecialchars($pago['first_name'] . ' ' . $pago['last_name']); ?></td>
                                 <td><strong>$<?= number_format($pago['amount'], 2); ?></strong></td>
                                 <td><?= htmlspecialchars($pago['payment_method']); ?></td>
                                 <td><?= htmlspecialchars($pago['payment_date']); ?></td>
                                 <td>
                                     <span class="status-badge-pagos <?= $statusClass; ?>">
-                                        <?= ucfirst($pago['payment_status']); ?>
+                                        <?= ucfirst($estado); ?>
                                     </span>
                                 </td>
                                 <td>
