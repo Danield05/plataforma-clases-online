@@ -2036,6 +2036,79 @@ class HomeController
         exit;
     }
 
+    public function get_available_slots_profesor()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['profesor']);
+
+        $fecha = $_GET['fecha'] ?? null;
+
+        if (!$fecha) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Fecha requerida']);
+            exit;
+        }
+
+        require_once 'models/DisponibilidadModel.php';
+        require_once 'models/ReservaModel.php';
+
+        $disponibilidadModel = new DisponibilidadModel();
+        $reservaModel = new ReservaModel();
+
+        // Obtener disponibilidad del profesor para esa fecha
+        $diaSemana = date('N', strtotime($fecha)); // 1=Lunes, 7=Domingo
+
+        $disponibilidades = $disponibilidadModel->getDisponibilidadesByProfesor($_SESSION['user_id']);
+
+        $slotsDisponibles = [];
+        $diasTrabajo = [];
+        $horariosTrabajo = [];
+
+        foreach ($disponibilidades as $disp) {
+            // Solo mostrar slots que estén marcados como "Disponible" (ID 1)
+            if ($disp['week_day_id'] == $diaSemana && $disp['availability_status_id'] == 1) {
+                // Verificar si este slot específico está disponible (no reservado)
+                if ($reservaModel->checkAvailability($_SESSION['user_id'], $fecha, $disp['availability_id'])) {
+                    $slotsDisponibles[] = [
+                        'availability_id' => $disp['availability_id'],
+                        'start_time' => $disp['start_time'],
+                        'end_time' => $disp['end_time'],
+                        'day' => $disp['day']
+                    ];
+                }
+            }
+
+            // Recopilar días de trabajo únicos y sus horarios
+            if ($disp['availability_status_id'] == 1) {
+                $diaNombre = $disp['day'];
+                if (!isset($diasTrabajo[$disp['week_day_id']])) {
+                    $diasTrabajo[$disp['week_day_id']] = $diaNombre;
+                    $horariosTrabajo[$disp['week_day_id']] = [];
+                }
+                $horariosTrabajo[$disp['week_day_id']][] = $disp['start_time'] . ' - ' . $disp['end_time'];
+            }
+        }
+
+        // Ordenar días de trabajo
+        ksort($diasTrabajo);
+        $diasTrabajoList = array_values($diasTrabajo);
+
+        // Crear lista de horarios por día
+        $horariosPorDia = [];
+        foreach ($diasTrabajo as $weekDayId => $diaNombre) {
+            $horariosPorDia[] = $diaNombre . ': ' . implode(', ', $horariosTrabajo[$weekDayId]);
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'slots' => $slotsDisponibles,
+            'dias_trabajo' => $diasTrabajoList,
+            'horarios_trabajo' => $horariosPorDia
+        ]);
+        exit;
+    }
+
     public function fix_estado_reserva()
     {
         AuthController::checkAuth();
