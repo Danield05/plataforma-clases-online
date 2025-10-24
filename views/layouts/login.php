@@ -27,7 +27,7 @@
         <!-- Panel izquierdo con el formulario -->
         <div class="login-panel">
             <!-- Formulario de login moderno -->
-            <form action="http://localhost:8080/plataforma-clases-online/auth/login" method="POST" id="loginForm" class="modern-login-form">
+            <form action="http://localhost/plataforma-clases-online/auth/login" method="POST" id="loginForm" class="modern-login-form">
                 <div class="form-header">
                     <div class="logo-container">
                         <span class="logo-icon">📝</span>
