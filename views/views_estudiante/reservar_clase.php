@@ -110,10 +110,11 @@
                 <a href="/plataforma-clases-online/home/explorar_profesores" class="btn btn-primary">← Volver a Explorar Profesores</a>
             </div>
         <?php else: ?>
-            <form id="reservationForm" method="post" action="/plataforma-clases-online/home/reservar_clase">
+            <form id="reservationForm" method="post" action="/plataforma-clases-online/home/reservar_clase?profesor_id=<?php echo htmlspecialchars($profesor['user_id']); ?>">
                 <input type="hidden" name="profesor_id" value="<?php echo htmlspecialchars($profesor['user_id']); ?>">
                 <input type="hidden" id="selectedAvailabilityId" name="availability_id" value="">
                 <input type="hidden" id="selectedClassDate" name="class_date" value="">
+                <input type="hidden" id="selectedClassTime" name="class_time" value="">
 
                 <?php foreach ($available_slots as $date => $dayData): ?>
                     <div class="date-section">
@@ -124,7 +125,10 @@
                         <div class="row">
                             <?php foreach ($dayData['slots'] as $slot): ?>
                                 <div class="col-md-4 mb-3">
-                                    <div class="slot-card" data-availability-id="<?php echo $slot['availability_id']; ?>" data-date="<?php echo $date; ?>">
+                                    <div class="slot-card" 
+                                         data-availability-id="<?php echo $slot['availability_id']; ?>" 
+                                         data-date="<?php echo $date; ?>"
+                                         data-start-time="<?php echo $slot['start_time']; ?>">
                                         <div class="slot-time">
                                             🕒 <?php echo date('H:i', strtotime($slot['start_time'])) . ' - ' . date('H:i', strtotime($slot['end_time'])); ?>
                                         </div>
@@ -137,6 +141,24 @@
                         </div>
                     </div>
                 <?php endforeach; ?>
+
+                <!-- Campos adicionales para la reserva -->
+                <div class="row mt-4" id="additionalFields" style="display: none;">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>📝 Detalles Adicionales de la Reserva</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="notes" class="form-label">Notas o comentarios especiales (opcional):</label>
+                                    <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                              placeholder="Ejemplo: Enfoque en álgebra, necesito ayuda con ejercicios específicos, etc."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="text-center mt-4">
                     <button type="submit" id="submitBtn" class="btn btn-success btn-lg px-5 py-3" disabled>
@@ -178,6 +200,9 @@
             const submitBtn = document.getElementById('submitBtn');
             const selectedAvailabilityId = document.getElementById('selectedAvailabilityId');
             const selectedClassDate = document.getElementById('selectedClassDate');
+            const selectedClassTime = document.getElementById('selectedClassTime');
+            const additionalFields = document.getElementById('additionalFields');
+            const form = document.getElementById('reservationForm');
             let selectedCard = null;
 
             slotCards.forEach(card => {
@@ -187,27 +212,58 @@
                         selectedCard.classList.remove('selected');
                     }
 
-                    // Seleccionar nueva
-                    this.classList.add('selected');
+                    // Seleccionar nueva tarjeta
                     selectedCard = this;
+                    this.classList.add('selected');
 
-                    // Actualizar campos ocultos
-                    selectedAvailabilityId.value = this.dataset.availabilityId;
-                    selectedClassDate.value = this.dataset.date;
+                    // Llenar campos hidden
+                    const availabilityId = this.dataset.availabilityId;
+                    const classDate = this.dataset.date;
+                    const startTime = this.dataset.startTime;
 
-                    // Habilitar botón
+                    selectedAvailabilityId.value = availabilityId;
+                    selectedClassDate.value = classDate;
+                    selectedClassTime.value = startTime;
+
+                    // Mostrar campos adicionales y habilitar botón
+                    additionalFields.style.display = 'block';
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '✅ Confirmar Reserva - ' + this.querySelector('.slot-time').textContent.trim();
-                });
-            });
 
-            // Mejorar accesibilidad
-            slotCards.forEach(card => {
+                    console.log('Seleccionado:', {
+                        availabilityId: availabilityId,
+                        classDate: classDate,
+                        startTime: startTime
+                    });
+                });
+
+                // Mejorar accesibilidad
                 const timeText = card.querySelector('.slot-time').textContent.trim();
                 const dayText = card.querySelector('.slot-day').textContent.trim();
                 card.setAttribute('aria-label', `Seleccionar horario ${timeText} del ${dayText}`);
                 card.setAttribute('role', 'button');
                 card.setAttribute('tabindex', '0');
+            });
+
+            // Debug del envío del formulario
+            form.addEventListener('submit', function(e) {
+                console.log('Enviando formulario con:', {
+                    availability_id: selectedAvailabilityId.value,
+                    class_date: selectedClassDate.value,
+                    class_time: selectedClassTime.value,
+                    notes: document.getElementById('notes').value
+                });
+
+                // Validar que los datos están presentes
+                if (!selectedAvailabilityId.value || !selectedClassDate.value) {
+                    e.preventDefault();
+                    alert('Por favor selecciona un horario antes de continuar');
+                    return false;
+                }
+
+                // Mostrar loading
+                submitBtn.innerHTML = '⏳ Procesando...';
+                submitBtn.disabled = true;
             });
         });
     </script>

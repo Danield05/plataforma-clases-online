@@ -13,9 +13,41 @@ class ReservaModel {
     }
 
     public function getReservaById($id) {
-        $stmt = $this->db->prepare("SELECT r.*, u.first_name as profesor_name, s.first_name as estudiante_name, er.status as reservation_status FROM reservas r JOIN usuarios u ON r.user_id = u.user_id JOIN usuarios s ON r.student_user_id = s.user_id JOIN estados_reserva er ON r.reservation_status_id = er.reservation_status_id WHERE r.reservation_id = ?");
+        $stmt = $this->db->prepare("
+            SELECT 
+                r.*,
+                u_profesor.first_name as profesor_name, 
+                u_profesor.last_name as profesor_last_name,
+                u_profesor.email as profesor_email,
+                u_estudiante.first_name as estudiante_name, 
+                u_estudiante.last_name as estudiante_last_name,
+                er.status as reservation_status,
+                prof.hourly_rate,
+                prof.academic_level,
+                prof.personal_description,
+                d.start_time,
+                d.end_time,
+                d.price_per_hour as availability_price,
+                ds.day as day_name,
+                mat.subject_name
+            FROM reservas r 
+            JOIN usuarios u_profesor ON r.user_id = u_profesor.user_id 
+            JOIN usuarios u_estudiante ON r.student_user_id = u_estudiante.user_id 
+            JOIN estados_reserva er ON r.reservation_status_id = er.reservation_status_id
+            LEFT JOIN profesor prof ON r.user_id = prof.user_id
+            LEFT JOIN disponibilidad_profesores d ON r.availability_id = d.availability_id
+            LEFT JOIN dias_semana ds ON d.week_day_id = ds.week_day_id
+            LEFT JOIN materias mat ON d.subject_id = mat.subject_id
+            WHERE r.reservation_id = ?
+        ");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function reservaExists($id) {
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM reservas WHERE reservation_id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetchColumn() > 0;
     }
 
     public function getReservasByEstudiante($studentUserId) {
@@ -81,15 +113,36 @@ class ReservaModel {
     }
 
     public function createReserva($data) {
-        $stmt = $this->db->prepare("INSERT INTO reservas (reservation_id, user_id, student_user_id, availability_id, reservation_status_id, class_date) VALUES (?, ?, ?, ?, ?, ?)");
-        return $stmt->execute([
-            $data['reservation_id'],
+        // No incluimos reservation_id porque es AUTO_INCREMENT
+        // Guardamos TODOS los campos disponibles (reservation_date, created_at, updated_at se generan automáticamente)
+        $stmt = $this->db->prepare("
+            INSERT INTO reservas (
+                user_id, 
+                student_user_id, 
+                availability_id, 
+                reservation_status_id, 
+                class_date, 
+                class_time, 
+                notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        ");
+        
+        $result = $stmt->execute([
             $data['user_id'],
             $data['student_user_id'],
             $data['availability_id'],
-            $data['reservation_status_id'],
-            $data['class_date']
+            $data['reservation_status_id'] ?? 1, // Default: Pendiente
+            $data['class_date'],
+            $data['class_time'] ?? null,
+            $data['notes'] ?? null
         ]);
+        
+        // Retornar el ID de la reserva creada
+        if ($result) {
+            return $this->db->lastInsertId();
+        }
+        
+        return false;
     }
 
     public function checkAvailability($profesorId, $date, $availabilityId = null) {
