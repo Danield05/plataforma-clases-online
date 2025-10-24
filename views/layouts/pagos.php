@@ -138,6 +138,26 @@
                 </div>
             </div>
             <?php endif; ?>
+            
+            <!-- Mensaje informativo para administradores -->
+            <?php if ($userRole === 'administrador'): ?>
+            <div class="alert alert-secondary mt-3 mb-4">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <h6 class="alert-heading mb-1">👨‍💼 Panel de Administración</h6>
+                        <p class="mb-0 small">
+                            Como administrador, puedes ver todos los pagos del sistema y sus detalles, pero no procesar pagos. 
+                            Solo los estudiantes pueden realizar pagos a través de la plataforma.
+                        </p>
+                    </div>
+                    <div class="col-lg-4 text-end">
+                        <small class="text-muted">
+                            <i class="fas fa-shield-alt"></i> Vista de solo lectura
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <!-- Tabla de pagos con nuevo diseño -->
             <div class="table-container-pagos">
@@ -181,7 +201,7 @@
                                        class="btn-detalle">
                                         👁️ Ver Detalle
                                     </a>
-                                    <?php if ($estado === 'pendiente'): ?>
+                                    <?php if ($estado === 'pendiente' && $userRole === 'estudiante'): ?>
                                         <a href="/plataforma-clases-online/home/pagar_pendiente?payment_id=<?= $pago['payment_id']; ?>" 
                                            class="btn btn-warning btn-sm ms-2">
                                             💳 Pagar Ahora

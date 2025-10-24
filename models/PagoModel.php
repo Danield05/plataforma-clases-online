@@ -46,15 +46,34 @@ class PagoModel {
     }
 
     public function createPago($data) {
-        $stmt = $this->db->prepare("INSERT INTO pagos (user_id, payment_status_id, amount, payment_method, description, transaction_id) VALUES (?, ?, ?, ?, ?, ?)");
-        return $stmt->execute([
+        // No incluimos payment_id porque es AUTO_INCREMENT
+        // Guardamos TODOS los campos disponibles (payment_date y created_at se generan automáticamente)
+        $stmt = $this->db->prepare("
+            INSERT INTO pagos (
+                user_id, 
+                amount, 
+                payment_status_id, 
+                transaction_id, 
+                payment_method, 
+                description
+            ) VALUES (?, ?, ?, ?, ?, ?)
+        ");
+        
+        $result = $stmt->execute([
             $data['user_id'],
-            $data['payment_status_id'],
             $data['amount'],
-            $data['payment_method'],
-            $data['description'] ?? null,
-            $data['transaction_id'] ?? null
+            $data['payment_status_id'] ?? 1, // Default: Pendiente
+            $data['transaction_id'] ?? null,
+            $data['payment_method'] ?? 'PayPal',
+            $data['description'] ?? null
         ]);
+        
+        // Retornar el ID del pago creado
+        if ($result) {
+            return $this->db->lastInsertId();
+        }
+        
+        return false;
     }
 
     public function updatePagoStatus($id, $statusId) {

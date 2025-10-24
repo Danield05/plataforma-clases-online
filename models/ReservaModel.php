@@ -113,15 +113,36 @@ class ReservaModel {
     }
 
     public function createReserva($data) {
-        $stmt = $this->db->prepare("INSERT INTO reservas (reservation_id, user_id, student_user_id, availability_id, reservation_status_id, class_date) VALUES (?, ?, ?, ?, ?, ?)");
-        return $stmt->execute([
-            $data['reservation_id'],
+        // No incluimos reservation_id porque es AUTO_INCREMENT
+        // Guardamos TODOS los campos disponibles (reservation_date, created_at, updated_at se generan automáticamente)
+        $stmt = $this->db->prepare("
+            INSERT INTO reservas (
+                user_id, 
+                student_user_id, 
+                availability_id, 
+                reservation_status_id, 
+                class_date, 
+                class_time, 
+                notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        ");
+        
+        $result = $stmt->execute([
             $data['user_id'],
             $data['student_user_id'],
             $data['availability_id'],
-            $data['reservation_status_id'],
-            $data['class_date']
+            $data['reservation_status_id'] ?? 1, // Default: Pendiente
+            $data['class_date'],
+            $data['class_time'] ?? null,
+            $data['notes'] ?? null
         ]);
+        
+        // Retornar el ID de la reserva creada
+        if ($result) {
+            return $this->db->lastInsertId();
+        }
+        
+        return false;
     }
 
     public function checkAvailability($profesorId, $date, $availabilityId = null) {

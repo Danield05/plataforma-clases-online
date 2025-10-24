@@ -1475,18 +1475,19 @@ class HomeController
         require_once 'models/ReservaModel.php';
         $reservaModel = new ReservaModel();
 
-        $reservationId = time() . rand(1000, 9999); // timestamp + número aleatorio
+        // No generamos reservation_id, será AUTO_INCREMENT
         $data = [
-            'reservation_id' => $reservationId,
             'user_id' => $_SESSION['user_id'],
             'student_user_id' => $_POST['student_user_id'] ?? null,
             'availability_id' => null, // Se puede asignar después
             'reservation_status_id' => 1, // Pendiente
-            'class_date' => $_POST['class_date'] ?? null
+            'class_date' => $_POST['class_date'] ?? null,
+            'class_time' => $_POST['class_time'] ?? null,
+            'notes' => $_POST['notes'] ?? null
         ];
 
-        $ok = $reservaModel->createReserva($data);
-        $msg = $ok ? 'created' : 'error';
+        $reservationId = $reservaModel->createReserva($data);
+        $msg = $reservationId ? 'created' : 'error';
         header('Location: /plataforma-clases-online/home/profesor_dashboard?status=' . $msg);
         exit;
     }
@@ -1555,36 +1556,20 @@ class HomeController
             }
 
             // Crear reserva en estado "Pendiente de Pago"
-            // Generar ID único más pequeño para campo INT
-            $reservationId = rand(100000, 999999); // ID de 6 dígitos
-            
-            // Verificar que no exista ya este ID (método simplificado)
-            $attempts = 0;
-            while ($attempts < 5) { // Máximo 5 intentos
-                try {
-                    $existing = $reservaModel->reservaExists($reservationId);
-                    if (!$existing) {
-                        break;
-                    }
-                    $reservationId = rand(100000, 999999);
-                    $attempts++;
-                } catch (Exception $e) {
-                    break; // Si hay error, usar el ID actual
-                }
-            }
-            
+            // No generamos reservation_id, será AUTO_INCREMENT
             $data = [
-                'reservation_id' => $reservationId,
                 'user_id' => $profesorId,
                 'student_user_id' => $_SESSION['user_id'],
                 'availability_id' => $availabilityId,
                 'reservation_status_id' => 1, // Pendiente
-                'class_date' => $classDate
+                'class_date' => $classDate,
+                'class_time' => $classTime ?? null,
+                'notes' => $notes ?? null
             ];
 
-            $success = $reservaModel->createReserva($data);
+            $reservationId = $reservaModel->createReserva($data);
 
-            if ($success) {
+            if ($reservationId) {
                 // Redirigir a la página de confirmación y pago
                 header('Location: /plataforma-clases-online/home/confirmar_reserva?reservation_id=' . $reservationId);
             } else {
