@@ -351,7 +351,7 @@
 
                     <!-- Botones de Acción -->
                     <div class="text-center mt-4">
-                        <a href="/plataforma-clases-online/home/reservar_clase?profesor_id=<?php echo $reservaData['profesor_id']; ?>" 
+                        <a href="/plataforma-clases-online/home/reservar_clase?profesor_id=<?php echo (isset($reservaData) && is_array($reservaData) && isset($reservaData['profesor_id'])) ? $reservaData['profesor_id'] : ''; ?>" 
                            class="btn btn-outline-secondary btn-lg me-3">
                             ← Volver a Seleccionar Horario
                         </a>
@@ -429,10 +429,10 @@
                         return actions.order.create({
                             purchase_units: [{
                                 amount: {
-                                    value: '<?php echo number_format($reservaData['hourly_rate'], 2, '.', ''); ?>',
+                                    value: '<?php echo (isset($reservaData) && is_array($reservaData) && isset($reservaData['hourly_rate'])) ? number_format($reservaData['hourly_rate'], 2, '.', '') : '50.00'; ?>',
                                     currency_code: 'USD'
                                 },
-                                description: 'Clase con <?php echo addslashes($reservaData['profesor_nombre']); ?> - <?php echo date('d/m/Y H:i', strtotime($reservaData['class_date'] . ' ' . $reservaData['start_time'])); ?>'
+                                description: 'Clase online'
                             }]
                         });
                     },
@@ -441,10 +441,10 @@
                             // Enviar datos del pago completado al servidor
                             const formData = new FormData();
                             formData.append('action', 'process_payment');
-                            formData.append('reservation_id', '<?php echo $reservaData['reservation_id']; ?>');
+                            formData.append('reservation_id', '<?php echo (isset($reservaData) && is_array($reservaData) && isset($reservaData['reservation_id'])) ? $reservaData['reservation_id'] : ''; ?>');
                             formData.append('paypal_transaction_id', details.id);
                             formData.append('payment_method', 'paypal');
-                            formData.append('amount', '<?php echo $reservaData['hourly_rate']; ?>');
+                            formData.append('amount', '<?php echo (isset($reservaData) && is_array($reservaData) && isset($reservaData['hourly_rate'])) ? $reservaData['hourly_rate'] : '50.00'; ?>');
                             formData.append('payer_email', details.payer.email_address);
 
                             fetch('/plataforma-clases-online/home/procesar_pago', {
@@ -454,7 +454,7 @@
                             .then(response => response.json())
                             .then(data => {
                                 if (data.success) {
-                                    window.location.href = '/plataforma-clases-online/home/pago_exitoso?reservation_id=<?php echo $reservaData['reservation_id']; ?>';
+                                    window.location.href = '/plataforma-clases-online/home/pago_exitoso?reservation_id=<?php echo (isset($reservaData) && is_array($reservaData) && isset($reservaData['reservation_id'])) ? $reservaData['reservation_id'] : ''; ?>';
                                 } else {
                                     alert('Error al procesar el pago: ' + data.message);
                                 }
@@ -477,7 +477,7 @@
                 if (confirm('¿Confirmas que quieres reservar esta clase y pagar más tarde?')) {
                     const formData = new FormData();
                     formData.append('action', 'confirm_later');
-                    formData.append('reservation_id', '<?php echo $reservaData['reservation_id']; ?>');
+                    formData.append('reservation_id', '<?php echo (isset($reservaData) && is_array($reservaData) && isset($reservaData['reservation_id'])) ? $reservaData['reservation_id'] : ''; ?>');
 
                     fetch('/plataforma-clases-online/home/procesar_pago', {
                         method: 'POST',
@@ -486,7 +486,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            window.location.href = '/plataforma-clases-online/home/reserva_confirmada?reservation_id=<?php echo $reservaData['reservation_id']; ?>';
+                            window.location.href = '/plataforma-clases-online/home/reserva_confirmada?reservation_id=<?php echo (isset($reservaData) && is_array($reservaData) && isset($reservaData['reservation_id'])) ? $reservaData['reservation_id'] : ''; ?>';
                         } else {
                             alert('Error al confirmar la reserva: ' + data.message);
                         }

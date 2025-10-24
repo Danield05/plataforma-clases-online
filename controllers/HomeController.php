@@ -974,22 +974,13 @@ class HomeController
 
         // Calcular totales específicos para administradores
         if ($_SESSION['role'] === 'administrador') {
-            // Obtener conteos actualizados desde la base de datos
-            global $pdo;
-            $stmt = $pdo->query("
-                SELECT 
-                    COUNT(CASE WHEN payment_status_id = 1 THEN 1 END) as pendientes,
-                    COUNT(CASE WHEN payment_status_id = 2 THEN 1 END) as completados,
-                    COUNT(CASE WHEN payment_status_id = 3 THEN 1 END) as cancelados,
-                    SUM(CASE WHEN payment_status_id = 2 THEN amount ELSE 0 END) as total_recaudado
-                FROM pagos
-            ");
-            $estadisticas = $stmt->fetch(PDO::FETCH_ASSOC);
+            // Obtener estadísticas desde el método existente
+            $estadisticasAdmin = $pagoModel->getTotales();
             
-            $totalPendientes = $estadisticas['pendientes'] ?? 0;
-            $totalPagados = $estadisticas['completados'] ?? 0;
-            $totalCancelados = $estadisticas['cancelados'] ?? 0;
-            $totalRecaudado = $estadisticas['total_recaudado'] ?? 0;
+            $totalPendientes = $estadisticasAdmin['totalPendientes'] ?? 0;
+            $totalPagados = $estadisticasAdmin['totalPagados'] ?? 0;
+            $totalCancelados = $estadisticasAdmin['totalCancelados'] ?? 0;
+            $totalRecaudado = $estadisticasAdmin['totalRecaudado'] ?? 0;
         } else {
             // Para usuarios específicos, usar los conteos calculados arriba
             $totalPendientes = $clasesPendientes;
