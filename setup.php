@@ -270,15 +270,18 @@ if (!empty($permission_errors)) {
 
 echo "\n🎉 Instalación completada!\n";
 echo "========================\n";
-echo "Tu plataforma está lista. Accede a: http://localhost/plataforma-clases-online\n\n";
+echo "Tu plataforma está lista para ser utilizada.\n\n";
+echo "URLs de acceso (ajusta el puerto según tu configuración de XAMPP):\n";
+echo "- Página principal: http://localhost:[PUERTO]/plataforma-clases-online\n";
+echo "- Registrar nuevos usuarios: http://localhost:[PUERTO]/plataforma-clases-online/register\n";
+echo "- Iniciar sesión: http://localhost:[PUERTO]/plataforma-clases-online/auth/login\n\n";
 
 echo "Usuarios de prueba:\n";
 echo "- Admin: admin@plataforma.com / admin123\n";
 echo "- Profesores: maria.profesor@plataforma.com, carlos.profesor@plataforma.com, ana.profesor@plataforma.com / prof123\n";
 echo "- Estudiantes: juan.estudiante@plataforma.com, maria.estudiante@plataforma.com, pedro.estudiante@plataforma.com / estu123\n\n";
 
-echo "Para registrar nuevos usuarios: http://localhost:8080/plataforma-clases-online/register\n";
-echo "Para iniciar sesión: http://localhost/plataforma-clases-online/auth/login\n\n";
+
 
 echo "¡Disfruta tu plataforma de clases online! 📚\n";
 ?>
