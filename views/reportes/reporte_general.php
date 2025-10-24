@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reporte General Administrativo - <?= date('d/m/Y H:i'); ?></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/plataforma-clases-online/public/css/style.css?v=<?php echo time(); ?>">
     <style>
         * {
             margin: 0;
@@ -16,6 +18,11 @@
             line-height: 1.6;
             color: #333;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        main {
             padding: 20px;
         }
 
@@ -242,10 +249,22 @@
     </style>
 </head>
 <body>
-    <div class="reporte-container">
-        <div class="header">
-            <h1>📊 Reporte General Administrativo</h1>
-            <h3>Plataforma de Clases Online</h3>
+    <?php
+    // Definir la página actual para el header
+    $currentPage = 'reportes';
+    ?>
+    <header class="modern-header">
+        <div class="header-content">
+            <h1 class="header-title">📊 Reportes</h1>
+            <?php include __DIR__ . '/../layouts/nav.php'; ?>
+        </div>
+    </header>
+
+    <main>
+        <div class="reporte-container" style="margin-top: 2rem;">
+        <div class="reporte-header" style="background: linear-gradient(135deg, #371783 0%, #8B5A96 100%); color: white; text-align: center; padding: 40px 20px; position: relative; border-radius: 15px; overflow: hidden;">
+            <h1 style="font-size: 2.5em; margin-bottom: 10px;">📊 Reporte General Administrativo</h1>
+            <h3 style="font-size: 1.2em; font-weight: 300;">Plataforma de Clases Online</h3>
         </div>
 
         <div class="fecha-reporte">
@@ -336,9 +355,6 @@
                 <button onclick="window.print()" class="print-button" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%);">
                     🖨️ Imprimir Físico
                 </button>
-                <a href="/plataforma-clases-online/reportes/general" class="btn btn-secondary">
-                    ← Volver a Reportes
-                </a>
             </div>
         </div>
 
@@ -364,5 +380,30 @@
         });
         </script>
     </div>
+    </main>
+
+    <!-- Footer moderno -->
+    <footer class="modern-footer">
+        <div class="footer-content">
+            <div class="footer-info">
+                <div class="footer-brand">
+                    <span>📚</span>
+                    <span>Plataforma de Clases Online</span>
+                </div>
+                <div class="footer-links">
+                    <a href="/plataforma-clases-online/home" class="footer-link">Inicio</a>
+                    <a href="/plataforma-clases-online/about" class="footer-link">Acerca de</a>
+                    <a href="#" class="footer-link">Contacto</a>
+                    <a href="#" class="footer-link">Soporte</a>
+                </div>
+            </div>
+            <div class="footer-copy">
+                © <?= date('Y'); ?> Plataforma de Clases Online. Todos los derechos reservados.
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/plataforma-clases-online/public/js/script.js"></script>
 </body>
 </html>

@@ -112,20 +112,33 @@
         .profesor-info {
             display: flex;
             align-items: center;
+            background: rgba(55, 23, 131, 0.05);
+            padding: 1rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(55, 23, 131, 0.1);
+        }
+
+        .profesor-info:hover {
+            background: rgba(55, 23, 131, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(55, 23, 131, 0.15);
         }
 
         .profesor-details {
             flex: 1;
+            margin-left: 0.75rem;
         }
 
         .profesor-name {
             font-weight: 600;
             color: #333;
             margin: 0;
+            font-size: 0.9rem;
         }
 
         .profesor-level {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #666;
             margin: 0;
         }
@@ -174,9 +187,23 @@
 
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .two-column-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 2rem;
             margin-bottom: 2rem;
+        }
+
+        .three-column-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
         }
 
         .metric-card {
@@ -298,6 +325,18 @@
             margin-bottom: 1.5rem;
         }
 
+        @media (max-width: 968px) {
+            .three-column-layout {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .two-column-layout {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+        }
+
         @media (max-width: 768px) {
             .dashboard-hero {
                 padding: 2rem 1.5rem;
@@ -359,8 +398,8 @@
             </div>
         </div>
 
+        <!-- Estadísticas en 3 columnas balanceadas -->
         <div class="dashboard-grid">
-            <!-- Estadísticas Principales -->
             <div class="metric-card">
                 <div class="metric-icon">👨‍🏫</div>
                 <div class="metric-value"><?php echo $data['estadisticas']['totalProfesores'] ?? 0; ?></div>
@@ -380,90 +419,91 @@
             </div>
         </div>
 
-        <div class="row">
-            <!-- Panel Principal: Actividad Reciente -->
-            <div class="col-12 col-lg-8">
-                <div class="activity-feed">
-                    <h3 class="activity-title">🕐 Actividad Reciente</h3>
-                    <div class="activity-timeline">
-                        <div class="activity-item">
-                            <div class="activity-time">Hace 2 horas</div>
-                            <div class="activity-text">Nueva reserva creada por Juan Pérez con María González</div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-time">Hace 4 horas</div>
-                            <div class="activity-text">Carlos Rodríguez actualizó su horario de disponibilidad</div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-time">Hace 1 día</div>
-                            <div class="activity-text">Ana Martínez recibió una nueva calificación (5⭐)</div>
-                        </div>
+        <!-- Layout principal en 3 columnas: Actividad + Acciones + Finanzas -->
+        <div class="three-column-layout">
+            <!-- Columna Principal: Actividad Reciente -->
+            <div class="activity-feed">
+                <h3 class="activity-title">🕐 Actividad Reciente</h3>
+                <div class="activity-timeline">
+                    <div class="activity-item">
+                        <div class="activity-time">Hace 2 horas</div>
+                        <div class="activity-text">Nueva reserva creada por Juan Pérez con María González</div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-time">Hace 4 horas</div>
+                        <div class="activity-text">Carlos Rodríguez actualizó su horario de disponibilidad</div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-time">Hace 1 día</div>
+                        <div class="activity-text">Ana Martínez recibió una nueva calificación (5⭐)</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Panel Lateral: Acciones y Información -->
-            <div class="col-12 col-lg-4">
-                <!-- Acciones Rápidas -->
-                <div class="quick-actions">
-                    <h3 class="activity-title">⚡ Acciones Rápidas</h3>
-                    <a href="/plataforma-clases-online/home/profesores" class="action-button">
-                        👨‍🏫 Gestionar Profesores
-                    </a>
-                    <a href="/plataforma-clases-online/home/estudiantes" class="action-button">
-                        👨‍🎓 Gestionar Estudiantes
-                    </a>
-                    <a href="/plataforma-clases-online/home/reservas" class="action-button">
-                        📅 Ver Reservas
-                    </a>
-                    <a href="/plataforma-clases-online/home/disponibilidad" class="action-button">
-                        🕒 Gestionar Horarios
-                    </a>
-                </div>
+            <!-- Columna Lateral 1: Acciones Rápidas -->
+            <div class="quick-actions">
+                <h3 class="activity-title">⚡ Acciones Rápidas</h3>
+                <a href="/plataforma-clases-online/home/profesores" class="action-button">
+                    👨‍🏫 Gestionar Profesores
+                </a>
+                <a href="/plataforma-clases-online/home/estudiantes" class="action-button">
+                    👨‍🎓 Gestionar Estudiantes
+                </a>
+                <a href="/plataforma-clases-online/home/reservas" class="action-button">
+                    📅 Ver Reservas
+                </a>
+                <a href="/plataforma-clases-online/home/disponibilidad" class="action-button">
+                    🕒 Gestionar Horarios
+                </a>
+            </div>
 
-                <!-- Profesores Recientes -->
-                <div class="quick-actions">
-                    <h3 class="activity-title">👨‍🏫 Profesores Recientes</h3>
-                    <?php if (!empty($data['estadisticas']['profesoresRecientes'])): ?>
-                        <?php foreach($data['estadisticas']['profesoresRecientes'] as $profesor): ?>
-                            <div class="profesor-info mb-3">
-                                <div class="profesor-avatar">
-                                    <?php
-                                    $nombres = explode(' ', htmlspecialchars($profesor['first_name'] . ' ' . $profesor['last_name']));
-                                    echo strtoupper(substr($nombres[0], 0, 1) . (isset($nombres[1]) ? substr($nombres[1], 0, 1) : ''));
-                                    ?>
-                                </div>
-                                <div class="profesor-details">
-                                    <p class="profesor-name mb-0"><?php echo htmlspecialchars($profesor['first_name'] . ' ' . $profesor['last_name']); ?></p>
-                                    <p class="profesor-level mb-0"><?php echo htmlspecialchars($profesor['academic_level'] ?? 'Sin nivel académico'); ?></p>
+            <!-- Columna Lateral 2: Resumen Financiero -->
+            <div class="quick-actions">
+                <h3 class="activity-title">💰 Resumen Financiero</h3>
+                <div class="stats-highlight mb-3">
+                    <p class="highlight-number">$<?php echo number_format($data['estadisticas']['ingresosMensuales'] ?? 0, 2); ?></p>
+                    <p class="highlight-label">Ingresos del Mes</p>
+                </div>
+                <div class="stats-highlight">
+                    <p class="highlight-number"><?php echo $data['estadisticas']['reservasActivas'] ?? 0; ?></p>
+                    <p class="highlight-label">Clases Programadas</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fila inferior: Profesores Recientes en ancho completo -->
+        <div class="quick-actions">
+            <h3 class="activity-title">👨‍🏫 Profesores Recientes</h3>
+            <?php if (!empty($data['estadisticas']['profesoresRecientes'])): ?>
+                <div class="row">
+                    <?php foreach($data['estadisticas']['profesoresRecientes'] as $index => $profesor): ?>
+                        <?php if($index < 6): // Mostrar máximo 6 profesores ?>
+                            <div class="col-md-4 col-lg-2 mb-3">
+                                <div class="profesor-info">
+                                    <div class="profesor-avatar">
+                                        <?php
+                                        $nombres = explode(' ', htmlspecialchars($profesor['first_name'] . ' ' . $profesor['last_name']));
+                                        echo strtoupper(substr($nombres[0], 0, 1) . (isset($nombres[1]) ? substr($nombres[1], 0, 1) : ''));
+                                        ?>
+                                    </div>
+                                    <div class="profesor-details">
+                                        <p class="profesor-name mb-0"><?php echo htmlspecialchars($profesor['first_name'] . ' ' . $profesor['last_name']); ?></p>
+                                        <p class="profesor-level mb-0"><?php echo htmlspecialchars($profesor['academic_level'] ?? 'Sin nivel académico'); ?></p>
+                                    </div>
                                 </div>
                             </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="empty-state">
-                            <div class="empty-icon">👨‍🏫</div>
-                            <p>No hay profesores registrados aún.</p>
-                            <a href="/plataforma-clases-online/home/profesores_create" class="action-button">
-                                ➕ Agregar Primer Profesor
-                            </a>
-                        </div>
-                    <?php endif; ?>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
                 </div>
-
-                <!-- Resumen Financiero -->
-                <div class="quick-actions">
-                    <h3 class="activity-title">💰 Resumen Financiero</h3>
-                    <div class="stats-highlight">
-                        <p class="highlight-number">$<?php echo number_format($data['estadisticas']['ingresosMensuales'] ?? 0, 2); ?></p>
-                        <p class="highlight-label">Ingresos del Mes</p>
-                    </div>
-                    <hr>
-                    <div class="stats-highlight">
-                        <p class="highlight-number"><?php echo $data['estadisticas']['reservasActivas'] ?? 0; ?></p>
-                        <p class="highlight-label">Clases Programadas</p>
-                    </div>
+            <?php else: ?>
+                <div class="empty-state">
+                    <div class="empty-icon">👨‍🏫</div>
+                    <p>No hay profesores registrados aún.</p>
+                    <a href="/plataforma-clases-online/home/profesores_create" class="action-button">
+                        ➕ Agregar Primer Profesor
+                    </a>
                 </div>
-            </div>
+            <?php endif; ?>
         </div>
     </main>
 

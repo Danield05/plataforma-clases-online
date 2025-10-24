@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reporte de Ingresos por Período - <?= date('d/m/Y H:i'); ?></title>
+    <link rel="stylesheet" href="/plataforma-clases-online/public/css/style.css?v=<?php echo time(); ?>">
     <style>
         * {
             margin: 0;
@@ -379,5 +380,27 @@
         });
         </script>
     </div>
+
+    <!-- Footer moderno -->
+    <footer class="modern-footer">
+        <div class="footer-content">
+            <div class="footer-info">
+                <div class="footer-brand">
+                    <span>📚</span>
+                    <span>Plataforma de Clases Online</span>
+                </div>
+                <div class="footer-links">
+                    <a href="/plataforma-clases-online/home" class="footer-link">Inicio</a>
+                    <a href="/plataforma-clases-online/about" class="footer-link">Acerca de</a>
+                    <a href="#" class="footer-link">Contacto</a>
+                    <a href="#" class="footer-link">Soporte</a>
+                </div>
+            </div>
+            <div class="footer-copy">
+                © <?= date('Y'); ?> Plataforma de Clases Online. Todos los derechos reservados.
+            </div>
+        </div>
+    </footer>
+
 </body>
 </html>

@@ -6,6 +6,28 @@
     <title>Editar Perfil - Plataforma de Clases Online</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/plataforma-clases-online/public/css/style.css?v=<?php echo time(); ?>">
+    <style>
+        /* Asegurar que el footer sea visible */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        main {
+            flex: 1;
+        }
+        
+        .modern-footer {
+            margin-top: auto;
+            background: linear-gradient(135deg, #371783 0%, #8B5A96 100%);
+            color: white;
+            padding: 2rem 1rem;
+            width: 100%;
+            position: relative;
+            z-index: 10;
+        }
+    </style>
 </head>
 <body>
     <?php
