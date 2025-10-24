@@ -42,6 +42,21 @@ if ($controller === 'HomeController' && isset($url[1]) && $url[1] === 'get_avail
 if ($controller === 'HomeController' && isset($url[1]) && $url[1] === 'reservar_clase') {
     $action = 'reservar_clase';
 }
+if ($controller === 'HomeController' && isset($url[1]) && $url[1] === 'confirmar_reserva') {
+    $action = 'confirmar_reserva';
+}
+if ($controller === 'HomeController' && isset($url[1]) && $url[1] === 'procesar_pago') {
+    $action = 'procesar_pago';
+}
+if ($controller === 'HomeController' && isset($url[1]) && $url[1] === 'pago_exitoso') {
+    $action = 'pago_exitoso';
+}
+if ($controller === 'HomeController' && isset($url[1]) && $url[1] === 'reserva_confirmada') {
+    $action = 'reserva_confirmada';
+}
+if ($controller === 'HomeController' && isset($url[1]) && $url[1] === 'pagar_pendiente') {
+    $action = 'pagar_pendiente';
+}
 
 // Manejar rutas específicas para reportes
 if ($controller === 'ReportesController') {

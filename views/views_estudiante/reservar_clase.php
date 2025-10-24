@@ -110,7 +110,7 @@
                 <a href="/plataforma-clases-online/home/explorar_profesores" class="btn btn-primary">← Volver a Explorar Profesores</a>
             </div>
         <?php else: ?>
-            <form id="reservationForm" method="post" action="/plataforma-clases-online/home/reservar_clase">
+            <form id="reservationForm" method="post" action="/plataforma-clases-online/home/reservar_clase?profesor_id=<?php echo htmlspecialchars($profesor['user_id']); ?>">
                 <input type="hidden" name="profesor_id" value="<?php echo htmlspecialchars($profesor['user_id']); ?>">
                 <input type="hidden" id="selectedAvailabilityId" name="availability_id" value="">
                 <input type="hidden" id="selectedClassDate" name="class_date" value="">
@@ -178,6 +178,7 @@
             const submitBtn = document.getElementById('submitBtn');
             const selectedAvailabilityId = document.getElementById('selectedAvailabilityId');
             const selectedClassDate = document.getElementById('selectedClassDate');
+            const form = document.getElementById('reservationForm');
             let selectedCard = null;
 
             slotCards.forEach(card => {
@@ -198,7 +199,33 @@
                     // Habilitar botón
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '✅ Confirmar Reserva - ' + this.querySelector('.slot-time').textContent.trim();
+                    
+                    console.log('Slot seleccionado:', {
+                        availabilityId: this.dataset.availabilityId,
+                        date: this.dataset.date
+                    });
                 });
+            });
+
+            // Debug del envío del formulario
+            form.addEventListener('submit', function(e) {
+                console.log('Formulario enviándose...');
+                console.log('Datos a enviar:', {
+                    availability_id: selectedAvailabilityId.value,
+                    class_date: selectedClassDate.value,
+                    profesor_id: document.querySelector('input[name="profesor_id"]').value
+                });
+                
+                // Validar que los datos están presentes
+                if (!selectedAvailabilityId.value || !selectedClassDate.value) {
+                    e.preventDefault();
+                    alert('Por favor selecciona un horario antes de continuar');
+                    return false;
+                }
+                
+                // Mostrar loading
+                submitBtn.innerHTML = '⏳ Procesando...';
+                submitBtn.disabled = true;
             });
 
             // Mejorar accesibilidad

@@ -78,46 +78,66 @@
                 <div class="total-card-pagos success">
                     <div class="card-icon">💰</div>
                     <h4>Total Invertido</h4>
-                    <div class="amount">$<?= number_format($totalPagados ?? 0, 2); ?></div>
+                    <div class="amount">$<?= number_format($totalPagadosUsuario ?? 0, 2); ?></div>
                 </div>
                 <div class="total-card-pagos warning">
                     <div class="card-icon">⏳</div>
-                    <h4>Clases Pendientes</h4>
+                    <h4>Pagos Pendientes</h4>
                     <div class="amount"><?php echo $clasesStats['pendientes']; ?></div>
                 </div>
                 <div class="total-card-pagos info">
                     <div class="card-icon">✅</div>
-                    <h4>Clases Completadas</h4>
+                    <h4>Pagos Completados</h4>
                     <div class="amount"><?php echo $clasesStats['completadas']; ?></div>
                 </div>
                 <div class="total-card-pagos danger">
                     <div class="card-icon">❌</div>
-                    <h4>Clases Canceladas</h4>
+                    <h4>Pagos Cancelados</h4>
                     <div class="amount"><?php echo $clasesStats['canceladas']; ?></div>
                 </div>
                 <?php elseif ($userRole === 'profesor'): ?>
                 <div class="total-card-pagos success">
                     <div class="card-icon">💵</div>
                     <h4>Ingresos Totales</h4>
-                    <div class="amount">$<?= number_format($totalRecaudado ?? 0, 2); ?></div>
+                    <div class="amount">$<?= number_format($totalPagadosUsuario ?? 0, 2); ?></div>
                 </div>
                 <div class="total-card-pagos warning">
                     <div class="card-icon">⏳</div>
-                    <h4>Clases Pendientes</h4>
+                    <h4>Pagos Pendientes</h4>
                     <div class="amount"><?php echo $clasesStats['pendientes']; ?></div>
                 </div>
                 <div class="total-card-pagos info">
                     <div class="card-icon">✅</div>
-                    <h4>Clases Completadas</h4>
+                    <h4>Pagos Completados</h4>
                     <div class="amount"><?php echo $clasesStats['completadas']; ?></div>
                 </div>
                 <div class="total-card-pagos danger">
                     <div class="card-icon">❌</div>
-                    <h4>Clases Canceladas</h4>
+                    <h4>Pagos Cancelados</h4>
                     <div class="amount"><?php echo $clasesStats['canceladas']; ?></div>
                 </div>
                 <?php endif; ?>
             </div>
+            
+            <!-- Mensaje informativo para estudiantes con pagos pendientes -->
+            <?php if ($userRole === 'estudiante' && $clasesStats['pendientes'] > 0): ?>
+            <div class="alert alert-info mt-3 mb-4">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <h6 class="alert-heading mb-1">💡 Información sobre Pagos Pendientes</h6>
+                        <p class="mb-0 small">
+                            Los pagos pendientes aparecen cuando seleccionas "Pagar más tarde" al reservar una clase. 
+                            Puedes completar el pago haciendo clic en "💳 Pagar Ahora" en la tabla de abajo.
+                        </p>
+                    </div>
+                    <div class="col-lg-4 text-end">
+                        <small class="text-muted">
+                            <i class="fas fa-lightbulb"></i> Completa tus pagos para confirmar tus clases
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <!-- Tabla de pagos con nuevo diseño -->
             <div class="table-container-pagos">
@@ -161,6 +181,12 @@
                                        class="btn-detalle">
                                         👁️ Ver Detalle
                                     </a>
+                                    <?php if ($estado === 'pendiente'): ?>
+                                        <a href="/plataforma-clases-online/home/pagar_pendiente?payment_id=<?= $pago['payment_id']; ?>" 
+                                           class="btn btn-warning btn-sm ms-2">
+                                            💳 Pagar Ahora
+                                        </a>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

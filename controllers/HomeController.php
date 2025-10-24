@@ -299,6 +299,11 @@ class HomeController
         require_once 'views/layouts/profesores.php';
     }
 
+    // Información sobre métodos de pago de prueba
+    public function info_pagos_prueba() {
+        require_once 'views/info_pagos_prueba.php';
+    }
+
     // Mostrar formulario para crear profesor
     public function profesores_create() {
         AuthController::checkAuth();
@@ -943,29 +948,59 @@ class HomeController
             $reservas = $reservaModel->getReservas();
         }
 
-        $totales = $pagoModel->getTotales();
-
-        // Calcular estadísticas de clases según el rol
+        // Calcular totales específicos del usuario según su rol
+        $totalUsuarioEspecifico = 0;
+        
+        // Calcular estadísticas de clases según el rol del usuario
+        // Para estudiantes y profesores, contamos por estados de PAGOS, no de reservas
         $clasesPendientes = 0;
         $clasesCompletadas = 0;
         $clasesCanceladas = 0;
 
         if ($_SESSION['role'] === 'estudiante' || $_SESSION['role'] === 'profesor') {
-            foreach ($reservas as $reserva) {
-                $status = strtolower($reserva['reservation_status'] ?? 'pendiente');
-                if ($status === 'pendiente' || $status === 'confirmada') {
+            foreach ($pagos as $pago) {
+                $status = strtolower($pago['payment_status'] ?? 'pendiente');
+                if ($status === 'pendiente') {
                     $clasesPendientes++;
-                } elseif ($status === 'completada') {
+                } elseif ($status === 'completado' || $status === 'pagado') {
                     $clasesCompletadas++;
-                } elseif ($status === 'cancelada') {
+                    // Sumar al total específico del usuario solo los pagos completados
+                    $totalUsuarioEspecifico += floatval($pago['amount']);
+                } elseif ($status === 'cancelado') {
                     $clasesCanceladas++;
                 }
             }
         }
 
-        extract($totales);
+        // Calcular totales específicos para administradores
+        if ($_SESSION['role'] === 'administrador') {
+            // Obtener conteos actualizados desde la base de datos
+            global $pdo;
+            $stmt = $pdo->query("
+                SELECT 
+                    COUNT(CASE WHEN payment_status_id = 1 THEN 1 END) as pendientes,
+                    COUNT(CASE WHEN payment_status_id = 2 THEN 1 END) as completados,
+                    COUNT(CASE WHEN payment_status_id = 3 THEN 1 END) as cancelados,
+                    SUM(CASE WHEN payment_status_id = 2 THEN amount ELSE 0 END) as total_recaudado
+                FROM pagos
+            ");
+            $estadisticas = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            $totalPendientes = $estadisticas['pendientes'] ?? 0;
+            $totalPagados = $estadisticas['completados'] ?? 0;
+            $totalCancelados = $estadisticas['cancelados'] ?? 0;
+            $totalRecaudado = $estadisticas['total_recaudado'] ?? 0;
+        } else {
+            // Para usuarios específicos, usar los conteos calculados arriba
+            $totalPendientes = $clasesPendientes;
+            $totalPagados = $clasesCompletadas;
+            $totalCancelados = $clasesCanceladas;
+            $totalRecaudado = $totalUsuarioEspecifico;
+        }
+
         // Pasar el rol del usuario y estadísticas de clases a la vista
         $userRole = $_SESSION['role'];
+        $totalPagadosUsuario = $totalUsuarioEspecifico; // Total específico del usuario actual
         $clasesStats = [
             'pendientes' => $clasesPendientes,
             'completadas' => $clasesCompletadas,
@@ -1134,6 +1169,108 @@ class HomeController
 
         extract($data);
         require_once 'views/views_estudiante/explorar_profesores.php';
+    }
+    
+    public function pagar_pendiente()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['estudiante']);
+
+        global $pdo;
+        $paymentId = $_GET['payment_id'] ?? null;
+        
+        if (!$paymentId) {
+            header('Location: /plataforma-clases-online/home/pagos?error=payment_not_found');
+            exit;
+        }
+
+        require_once 'models/PagoModel.php';
+        require_once 'models/ReservaModel.php';
+        
+        $pagoModel = new PagoModel();
+        $reservaModel = new ReservaModel();
+        
+        // Obtener el pago con información completa
+        $pago = $pagoModel->getPagoById($paymentId);
+        
+        if (!$pago) {
+            header('Location: /plataforma-clases-online/home/pagos?error=payment_not_found');
+            exit;
+        }
+        
+        // Verificar que el pago pertenece al usuario actual
+        if ($pago['user_id'] != $_SESSION['user_id']) {
+            header('Location: /plataforma-clases-online/home/pagos?error=access_denied');
+            exit;
+        }
+        
+        // Verificar que el pago está pendiente
+        if (strtolower($pago['payment_status']) !== 'pendiente') {
+            header('Location: /plataforma-clases-online/home/pagos?error=payment_already_processed');
+            exit;
+        }
+
+        // Si hay reserva asociada, usar esos datos
+        $reservaData = null;
+        $reservaAsociada = null;
+        
+        if ($pago['reservation_id']) {
+            // Hay una reserva asociada, obtener sus datos completos
+            $reservaAsociada = $reservaModel->getReservaById($pago['reservation_id']);
+            
+            if ($reservaAsociada) {
+                $reservaData = [
+                    'reservation_id' => $reservaAsociada['reservation_id'],
+                    'profesor_id' => $reservaAsociada['user_id'],
+                    'profesor_nombre' => $reservaAsociada['profesor_name'] . ' ' . $reservaAsociada['profesor_last_name'],
+                    'profesor_email' => $reservaAsociada['profesor_email'],
+                    'academic_level' => $reservaAsociada['academic_level'],
+                    'hourly_rate' => $reservaAsociada['hourly_rate'] ?? $pago['amount'],
+                    'class_date' => $reservaAsociada['class_date'],
+                    'start_time' => $reservaAsociada['start_time'],
+                    'end_time' => $reservaAsociada['end_time'],
+                    'subject_name' => $reservaAsociada['subject_name'],
+                    'day_name' => $reservaAsociada['day_name']
+                ];
+            }
+        } else {
+            // No hay reserva directamente asociada, buscar por fecha y usuario
+            $stmt = $pdo->prepare("
+                SELECT 
+                    r.*,
+                    u_profesor.first_name as profesor_name, 
+                    u_profesor.last_name as profesor_last_name,
+                    u_profesor.email as profesor_email,
+                    prof.hourly_rate,
+                    prof.academic_level,
+                    d.start_time,
+                    d.end_time,
+                    mat.subject_name,
+                    ds.day as day_name
+                FROM reservas r 
+                JOIN usuarios u_profesor ON r.user_id = u_profesor.user_id 
+                LEFT JOIN profesor prof ON r.user_id = prof.user_id
+                LEFT JOIN disponibilidad_profesores d ON r.availability_id = d.availability_id
+                LEFT JOIN materias mat ON d.subject_id = mat.subject_id
+                LEFT JOIN dias_semana ds ON d.week_day_id = ds.week_day_id
+                WHERE r.student_user_id = ? 
+                AND DATE(r.class_date) >= DATE(?)
+                AND r.reservation_status_id = 1
+                ORDER BY r.class_date ASC
+                LIMIT 1
+            ");
+            $stmt->execute([$_SESSION['user_id'], $pago['payment_date']]);
+            $reservaAsociada = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+        
+        // Pasar datos a la vista de confirmación de pago
+        $amount = $pago['amount'];
+        $description = $pago['description'] ?? 'Pago de clase pendiente';
+        $paymentMethod = $pago['payment_method'] ?? 'PayPal';
+        
+        // Variables adicionales para la vista
+        $payment_id = $pago['payment_id']; // Para identificar que es un pago pendiente        // Usar la misma vista de confirmación pero con datos del pago existente
+        require_once 'views/views_estudiante/confirmar_reserva.php';
     }
 
     public function explorar_materias()
@@ -1426,8 +1563,25 @@ class HomeController
                 exit;
             }
 
-            // Crear reserva - Generar ID único numérico
-            $reservationId = time() . rand(1000, 9999); // timestamp + número aleatorio
+            // Crear reserva en estado "Pendiente de Pago"
+            // Generar ID único más pequeño para campo INT
+            $reservationId = rand(100000, 999999); // ID de 6 dígitos
+            
+            // Verificar que no exista ya este ID (método simplificado)
+            $attempts = 0;
+            while ($attempts < 5) { // Máximo 5 intentos
+                try {
+                    $existing = $reservaModel->reservaExists($reservationId);
+                    if (!$existing) {
+                        break;
+                    }
+                    $reservationId = rand(100000, 999999);
+                    $attempts++;
+                } catch (Exception $e) {
+                    break; // Si hay error, usar el ID actual
+                }
+            }
+            
             $data = [
                 'reservation_id' => $reservationId,
                 'user_id' => $profesorId,
@@ -1440,7 +1594,8 @@ class HomeController
             $success = $reservaModel->createReserva($data);
 
             if ($success) {
-                header('Location: /plataforma-clases-online/home/estudiante_dashboard?success=reservation_created');
+                // Redirigir a la página de confirmación y pago
+                header('Location: /plataforma-clases-online/home/confirmar_reserva?reservation_id=' . $reservationId);
             } else {
                 header('Location: /plataforma-clases-online/home/reservar_clase?profesor_id=' . $profesorId . '&error=creation_failed');
             }
@@ -1489,6 +1644,221 @@ class HomeController
             extract($data);
             require_once 'views/views_estudiante/reservar_clase.php';
         }
+    }
+
+    public function confirmar_reserva()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['estudiante']);
+
+        $reservationId = $_GET['reservation_id'] ?? null;
+        if (!$reservationId) {
+            header('Location: /plataforma-clases-online/home/estudiante_dashboard?error=missing_reservation');
+            exit;
+        }
+
+        require_once 'models/ReservaModel.php';
+        require_once 'models/ProfesorModel.php';
+        require_once 'models/DisponibilidadModel.php';
+
+        $reservaModel = new ReservaModel();
+        $profesorModel = new ProfesorModel();
+        $disponibilidadModel = new DisponibilidadModel();
+
+        // Obtener datos de la reserva con toda la información necesaria
+        $reserva = $reservaModel->getReservaById($reservationId);
+        if (!$reserva || $reserva['student_user_id'] != $_SESSION['user_id']) {
+            header('Location: /plataforma-clases-online/home/estudiante_dashboard?error=reservation_not_found');
+            exit;
+        }
+
+        // Los datos ya vienen completos de la consulta mejorada
+        $reservaData = [
+            'reservation_id' => $reserva['reservation_id'],
+            'profesor_id' => $reserva['user_id'],
+            'profesor_nombre' => $reserva['profesor_name'] . ' ' . $reserva['profesor_last_name'],
+            'profesor_email' => $reserva['profesor_email'],
+            'academic_level' => $reserva['academic_level'],
+            'hourly_rate' => $reserva['hourly_rate'] ?? $reserva['availability_price'] ?? 25.00,
+            'class_date' => $reserva['class_date'],
+            'start_time' => $reserva['start_time'],
+            'end_time' => $reserva['end_time'],
+            'subject_name' => $reserva['subject_name'],
+            'day_name' => $reserva['day_name']
+        ];
+        
+        // Variable para compatibilidad con ambos flujos (nueva reserva y pago pendiente)
+        $amount = $reservaData['hourly_rate'];
+
+        require_once 'views/views_estudiante/confirmar_reserva.php';
+    }
+
+    public function procesar_pago()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['estudiante']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            exit;
+        }
+
+        $action = $_POST['action'] ?? null;
+        
+        require_once 'models/ReservaModel.php';
+        require_once 'models/PagoModel.php';
+        require_once 'models/ProfesorModel.php';
+
+        $reservaModel = new ReservaModel();
+        $pagoModel = new PagoModel();
+        $profesorModel = new ProfesorModel();
+
+        if ($action === 'complete_payment') {
+            // Pago completado con PayPal - puede ser para reserva nueva o pago pendiente
+            $transactionId = $_POST['transaction_id'] ?? null;
+            $paypalOrderId = $_POST['paypal_order_id'] ?? null;
+            $reservationId = $_POST['reservation_id'] ?? null;
+            $paymentId = $_POST['payment_id'] ?? null; // Para pagos pendientes
+            $amount = $_POST['amount'] ?? null;
+
+            if (!$transactionId) {
+                echo json_encode(['success' => false, 'message' => 'Transaction ID requerido']);
+                exit;
+            }
+
+            if ($paymentId) {
+                // Actualizar pago pendiente existente
+                $success = $pagoModel->updatePagoStatus($paymentId, 2); // 2 = Completado
+                if ($success) {
+                    // También actualizar transaction_id si es necesario
+                    global $pdo;
+                    $stmt = $pdo->prepare("UPDATE pagos SET transaction_id = ? WHERE payment_id = ?");
+                    $stmt->execute([$transactionId, $paymentId]);
+                    
+                    echo json_encode(['success' => true, 'message' => 'Pago completado exitosamente', 'payment_id' => $paymentId]);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Error al actualizar el pago']);
+                }
+            } elseif ($reservationId) {
+                // Crear nuevo pago para reserva
+                if (!$amount) {
+                    echo json_encode(['success' => false, 'message' => 'Monto requerido']);
+                    exit;
+                }
+
+                // Verificar que la reserva pertenece al estudiante y obtener datos completos
+                $reserva = $reservaModel->getReservaById($reservationId);
+                if (!$reserva || $reserva['student_user_id'] != $_SESSION['user_id']) {
+                    echo json_encode(['success' => false, 'message' => 'Reserva no encontrada']);
+                    exit;
+                }
+
+                // Usar la tarifa correcta del profesor o disponibilidad
+                $tarifaReal = $reserva['hourly_rate'] ?? $reserva['availability_price'] ?? $amount;
+
+                // Crear registro de pago con descripción mejorada
+                $pagoData = [
+                    'user_id' => $_SESSION['user_id'],
+                    'payment_status_id' => 2, // Completado
+                    'amount' => $tarifaReal,
+                    'payment_method' => 'PayPal',
+                    'description' => "Clase de {$reserva['subject_name']} con {$reserva['profesor_name']} {$reserva['profesor_last_name']} - Reserva: {$reservationId}",
+                    'transaction_id' => $transactionId
+                ];
+
+                $pagoSuccess = $pagoModel->createPago($pagoData);
+
+                if ($pagoSuccess) {
+                    // Actualizar estado de reserva a "Confirmada"
+                    $reservaModel->updateReservaStatus($reservationId, 2); // 2 = Confirmada
+                    echo json_encode(['success' => true, 'message' => 'Pago procesado exitosamente', 'reservation_id' => $reservationId]);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Error al registrar el pago']);
+                }
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Datos de pago incompletos']);
+            }
+
+        } elseif ($action === 'pay_later') {
+            // Pagar más tarde - crear pago pendiente
+            $reservationId = $_POST['reservation_id'] ?? null;
+
+            if (!$reservationId) {
+                echo json_encode(['success' => false, 'message' => 'ID de reserva requerido']);
+                exit;
+            }
+
+            // Verificar que la reserva pertenece al estudiante y obtener datos completos
+            $reserva = $reservaModel->getReservaById($reservationId);
+            if (!$reserva || $reserva['student_user_id'] != $_SESSION['user_id']) {
+                echo json_encode(['success' => false, 'message' => 'Reserva no encontrada']);
+                exit;
+            }
+
+            // Usar la tarifa correcta del profesor o disponibilidad
+            $amount = $reserva['hourly_rate'] ?? $reserva['availability_price'] ?? 25.00;
+
+            // Crear registro de pago pendiente con descripción mejorada
+            $pagoData = [
+                'user_id' => $_SESSION['user_id'],
+                'payment_status_id' => 1, // Pendiente
+                'amount' => $amount,
+                'payment_method' => 'PayPal',
+                'description' => "Pago pendiente - Clase de {$reserva['subject_name']} con {$reserva['profesor_name']} {$reserva['profesor_last_name']} - Reserva: {$reservationId}",
+                'transaction_id' => null
+            ];
+
+            $pagoSuccess = $pagoModel->createPago($pagoData);
+
+            if ($pagoSuccess) {
+                // La reserva mantiene estado "Pendiente" hasta que se pague
+                echo json_encode(['success' => true, 'message' => 'Reserva confirmada para pagar más tarde', 'reservation_id' => $reservationId]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al crear pago pendiente']);
+            }
+
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Acción no válida']);
+        }
+
+        exit;
+    }
+
+    public function pago_exitoso()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['estudiante']);
+
+        $reservationId = $_GET['reservation_id'] ?? null;
+        if (!$reservationId) {
+            header('Location: /plataforma-clases-online/home/estudiante_dashboard');
+            exit;
+        }
+
+        require_once 'models/ReservaModel.php';
+        $reservaModel = new ReservaModel();
+        $reserva = $reservaModel->getReservaById($reservationId);
+
+        require_once 'views/views_estudiante/pago_exitoso.php';
+    }
+
+    public function reserva_confirmada()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['estudiante']);
+
+        $reservationId = $_GET['reservation_id'] ?? null;
+        if (!$reservationId) {
+            header('Location: /plataforma-clases-online/home/estudiante_dashboard');
+            exit;
+        }
+
+        require_once 'models/ReservaModel.php';
+        $reservaModel = new ReservaModel();
+        $reserva = $reservaModel->getReservaById($reservationId);
+
+        require_once 'views/views_estudiante/reserva_confirmada.php';
     }
 
     private function getDayName($dayNumber) {
