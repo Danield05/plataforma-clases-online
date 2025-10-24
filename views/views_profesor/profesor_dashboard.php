@@ -201,6 +201,63 @@
             text-align: center;
         }
 
+        /* Mejoras para las tablas del dashboard */
+        .table {
+            border-radius: 0;
+        }
+
+        .table th {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            padding: 15px 12px !important;
+            white-space: nowrap;
+        }
+
+        .table td {
+            vertical-align: middle;
+            padding: 12px !important;
+        }
+
+        .avatar-sm {
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .btn-group .btn {
+            margin: 0 1px;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+        }
+
+        .bg-gradient-success {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important;
+        }
+
+        .bg-gradient-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%) !important;
+        }
+
+        .card-footer {
+            border-top: 1px solid rgba(0,0,0,0.1);
+            background-color: #f8f9fa !important;
+        }
+
+        .btn-outline-primary:hover,
+        .btn-outline-success:hover,
+        .btn-outline-warning:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
         @media (max-width: 768px) {
             .calendar-cell {
                 min-height: 60px;
@@ -208,6 +265,16 @@
 
             .next-class-card {
                 margin-bottom: 10px;
+            }
+
+            .table-responsive {
+                font-size: 0.85rem;
+            }
+
+            .avatar-sm {
+                width: 30px !important;
+                height: 30px !important;
+                font-size: 0.7rem;
             }
         }
     </style>
@@ -228,42 +295,43 @@
         <!-- Bienvenida del Profesor -->
         <div class="dashboard-welcome mb-4">
             <div class="row align-items-center">
-                <div class="col-lg-8">
+                <div class="col-lg-6">
                     <h2 class="welcome-title">¡Hola, <?php echo htmlspecialchars($_SESSION['user_name']); ?>! 👋</h2>
                     <p class="welcome-subtitle">Gestiona tus clases y estudiantes desde aquí</p>
+                    <div class="mt-3">
+                        <a href="/plataforma-clases-online/home/perfil_edit" class="btn btn-outline-primary me-2">
+                            👤 Editar Perfil
+                        </a>
+                        <a href="/plataforma-clases-online/auth/logout" class="btn btn-outline-danger">
+                            🚪 Cerrar Sesión
+                        </a>
+                    </div>
                 </div>
-                <div class="col-lg-4 text-end">
-                    <a href="/plataforma-clases-online/home/perfil_edit" class="btn btn-outline-primary me-2">
-                        👤 Editar Perfil
-                    </a>
-                    <a href="/plataforma-clases-online/auth/logout" class="btn btn-outline-danger">
-                        🚪 Cerrar Sesión
-                    </a>
+                <div class="col-lg-6">
+                    <!-- Estadísticas del Profesor -->
+                    <div class="modern-stats-grid">
+                        <div class="modern-stat-card">
+                            <div class="stat-icon">📅</div>
+                            <div class="stat-value text-primary"><?php echo $stats['reservasActivas']; ?></div>
+                            <p class="stat-label">Reservas Activas</p>
+                        </div>
+                        <div class="modern-stat-card">
+                            <div class="stat-icon">🎓</div>
+                            <div class="stat-value text-success"><?php echo $stats['estudiantesTotales']; ?></div>
+                            <p class="stat-label">Estudiantes Totales</p>
+                        </div>
+                        <div class="modern-stat-card">
+                            <div class="stat-icon">⭐</div>
+                            <div class="stat-value text-warning"><?php echo $stats['calificacionPromedio']; ?></div>
+                            <p class="stat-label">Calificación Promedio</p>
+                        </div>
+                        <div class="modern-stat-card">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-value text-info">$<?php echo number_format($stats['ingresosMes'], 2); ?></div>
+                            <p class="stat-label">Ingresos del Mes</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Estadísticas del Profesor -->
-        <div class="modern-stats-grid mb-5">
-            <div class="modern-stat-card">
-                <div class="stat-icon">📅</div>
-                <div class="stat-value text-primary"><?php echo $stats['reservasActivas']; ?></div>
-                <p class="stat-label">Reservas Activas</p>
-            </div>
-            <div class="modern-stat-card">
-                <div class="stat-icon">🎓</div>
-                <div class="stat-value text-success"><?php echo $stats['estudiantesTotales']; ?></div>
-                <p class="stat-label">Estudiantes Totales</p>
-            </div>
-            <div class="modern-stat-card">
-                <div class="stat-icon">⭐</div>
-                <div class="stat-value text-warning"><?php echo $stats['calificacionPromedio']; ?></div>
-                <p class="stat-label">Calificación Promedio</p>
-            </div>
-            <div class="modern-stat-card">
-                <div class="stat-icon">💰</div>
-                <div class="stat-value text-info">$<?php echo number_format($stats['ingresosMes'], 2); ?></div>
-                <p class="stat-label">Ingresos del Mes</p>
             </div>
         </div>
 
@@ -347,8 +415,10 @@
                             </div>
                         </div>
 
-                        <div class="text-center mt-3">
-                            <a href="/plataforma-clases-online/home/reservas" class="btn btn-outline-primary btn-sm">Ver Todas las Reservas</a>
+                        <div class="text-center mt-4">
+                            <a href="/plataforma-clases-online/home/reservas" class="btn btn-outline-primary btn-sm">
+                                Ver Todas las Reservas <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
                         </div>
                         <?php endif; ?>
                     </div>
@@ -357,105 +427,71 @@
         </div>
 
         <!-- Otras Secciones del Dashboard -->
-        <div class="row g-4">
-            <!-- Mis Reservas -->
-            <div class="col-lg-6">
-                <div class="dashboard-card">
-                    <div class="card-header">
-                        <h3>📅 Mis Reservas</h3>
-                        <span class="badge bg-primary">Clases Programadas</span>
-                    </div>
-                    <div class="card-body">
-                            <?php if (!empty($reservas)): ?>
-                                <div class="table-responsive">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Reserva</th>
-                                                <th>Estudiante</th>
-                                                <th>Fecha</th>
-                                                <th>Estado</th>
-                                                <th>Acciones</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach((array)$reservas as $r): ?>
-                                                <tr>
-                                                    <td><?php echo htmlspecialchars($r['reservation_id'] ?? ''); ?></td>
-                                                    <td><?php echo htmlspecialchars($r['estudiante_name'] ?? ''); ?></td>
-                                                    <td><?php echo date('d/m/Y', strtotime($r['class_date'] ?? '')); ?> (<?php echo $r['start_time'] ?? 'N/A'; ?> - <?php echo $r['end_time'] ?? 'N/A'; ?>)</td>
-                                                    <td>
-                                                        <span class="badge bg-<?php echo $r['reservation_status'] === 'confirmada' ? 'success' : ($r['reservation_status'] === 'pendiente' ? 'warning' : 'secondary'); ?>">
-                                                            <?php echo htmlspecialchars($r['reservation_status'] ?? ''); ?>
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <div class="btn-group" role="group">
-                                                            <button type="button" class="btn btn-sm btn-outline-info" onclick="verDetallesReserva('<?php echo htmlspecialchars($r['reservation_id'] ?? ''); ?>')" title="Ver Detalles">
-                                                                👁️
-                                                            </button>
-                                                            <?php if (in_array($r['reservation_status'], ['pendiente', 'confirmada'])): ?>
-                                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="cancelarClaseProfesor('<?php echo htmlspecialchars($r['reservation_id'] ?? ''); ?>')" title="Cancelar">
-                                                                ❌
-                                                            </button>
-                                                            <?php endif; ?>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            <?php else: ?>
-                                <div class="empty-state">
-                                    <div class="empty-icon">📚</div>
-                                    <p>No tienes reservas asignadas</p>
-                                    <a href="/plataforma-clases-online/home/disponibilidad_create" class="btn btn-primary btn-sm">Configurar Disponibilidad</a>
-                                </div>
-                            <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-
+        <!-- Estudiantes y Pagos -->
+        <div class="row g-4 mt-2">
             <!-- Estudiantes -->
-            <div class="col-lg-6" id="estudiantes-section">
+            <div class="col-lg-8" id="estudiantes-section">
                 <div class="dashboard-card">
-                    <div class="card-header">
-                        <h3>🎓 Mis Estudiantes</h3>
-                        <span class="badge bg-success">Activos</span>
+                    <div class="card-header bg-gradient-success text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3 class="mb-0">🎓 Mis Estudiantes</h3>
+                            <span class="badge bg-light text-success"><?php echo count($estudiantes); ?> activos</span>
+                        </div>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         <?php if (!empty($estudiantes)): ?>
                             <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
                                         <tr>
-                                            <th>Estudiante</th>
-                                            <th>Email</th>
-                                            <th>Acciones</th>
+                                            <th class="border-0 fw-bold" style="width: 40%; padding: 15px 12px;">ESTUDIANTE</th>
+                                            <th class="border-0 fw-bold" style="width: 35%; padding: 15px 12px;">EMAIL</th>
+                                            <th class="border-0 fw-bold" style="width: 25%; padding: 15px 12px;">ACCIÓN</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php foreach($estudiantes as $est): ?>
-                                            <tr>
-                                                <td><?php echo htmlspecialchars($est['first_name'] . ' ' . $est['last_name']); ?></td>
-                                                <td><?php echo htmlspecialchars($est['email']); ?></td>
-                                                <td>
-                                                    <a href="/plataforma-clases-online/home/ver_estudiante?id=<?php echo $est['user_id']; ?>" class="btn btn-sm btn-outline-primary">Ver Perfil</a>
+                                            <tr class="align-middle">
+                                                <td class="py-3">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="avatar-sm bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                                            <?php echo strtoupper(substr($est['first_name'] ?? 'E', 0, 1) . substr($est['last_name'] ?? 'S', 0, 1)); ?>
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-bold text-dark"><?php echo htmlspecialchars($est['first_name'] . ' ' . $est['last_name']); ?></div>
+                                                            <small class="text-muted">Estudiante</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="py-3">
+                                                    <div class="text-muted">
+                                                        <i class="fas fa-envelope me-1"></i><?php echo htmlspecialchars($est['email']); ?>
+                                                    </div>
+                                                </td>
+                                                <td class="py-3">
+                                                    <a href="/plataforma-clases-online/home/ver_estudiante?id=<?php echo $est['user_id']; ?>" 
+                                                       class="btn btn-sm btn-outline-success">
+                                                        <i class="fas fa-user me-1"></i>Ver Perfil
+                                                    </a>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="text-center mt-3">
-                                <a href="/plataforma-clases-online/home/estudiantes" class="btn btn-success btn-sm">Ver Todos los Estudiantes</a>
+                            <div class="text-center mt-4">
+                                <a href="/plataforma-clases-online/home/estudiantes" class="btn btn-outline-success btn-sm">
+                                    Ver Todos los Estudiantes <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
                             </div>
                         <?php else: ?>
-                            <div class="empty-state">
-                                <div class="empty-icon">👥</div>
-                                <p>Aún no tienes estudiantes registrados contigo</p>
-                                <a href="/plataforma-clases-online/home/estudiantes" class="btn btn-success btn-sm">Ver Todos</a>
+                            <div class="text-center py-5">
+                                <div class="text-muted fs-1 mb-3">👥</div>
+                                <h5 class="text-muted">Aún no tienes estudiantes</h5>
+                                <p class="text-muted mb-3">Los estudiantes aparecerán aquí cuando reserven clases contigo</p>
+                                <a href="/plataforma-clases-online/home/estudiantes" class="btn btn-success">
+                                    <i class="fas fa-users me-2"></i>Ver Todos los Estudiantes
+                                </a>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -463,50 +499,65 @@
             </div>
 
             <!-- Mis Pagos -->
-            <div class="col-lg-6">
+            <div class="col-lg-4">
                 <div class="dashboard-card">
-                    <div class="card-header">
-                        <h3>💰 Mis Pagos</h3>
-                        <span class="badge bg-warning">Ingresos</span>
+                    <div class="card-header bg-gradient-warning text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3 class="mb-0">💰 Mis Pagos</h3>
+                            <span class="badge bg-light text-warning"><?php echo count($pagos); ?> ingresos</span>
+                        </div>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         <?php if (!empty($pagos)): ?>
                             <div class="table-responsive">
-                                <table class="table table-hover">
+                                <table class="table table-hover mb-0">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>💳 Pago</th>
-                                            <th>📋 Reserva</th>
-                                            <th>💵 Monto</th>
-                                            <th>📅 Fecha</th>
-                                            <th>📊 Estado</th>
+                                            <th class="border-0 fw-bold" style="padding: 15px 12px;">PAGO</th>
+                                            <th class="border-0 fw-bold" style="padding: 15px 12px;">MONTO</th>
+                                            <th class="border-0 fw-bold" style="padding: 15px 12px;">ESTADO</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php foreach(array_slice($pagos, 0, 5) as $pago): ?>
-                                            <tr>
-                                                <td><?php echo htmlspecialchars($pago['payment_id']); ?></td>
-                                                <td><?php echo htmlspecialchars($pago['reservation_id']); ?></td>
-                                                <td class="fw-bold text-success">$<?php echo number_format($pago['amount'], 2); ?></td>
-                                                <td><?php echo date('d/m/Y', strtotime($pago['payment_date'])); ?></td>
-                                                <td>
-                                                    <span class="badge bg-success">
-                                                        <?php echo htmlspecialchars($pago['payment_status']); ?>
-                                                    </span>
+                                            <tr class="align-middle">
+                                                <td class="py-3">
+                                                    <div class="text-center">
+                                                        <span class="badge bg-light text-dark fs-6">#<?php echo htmlspecialchars($pago['payment_id']); ?></span>
+                                                        <br><small class="text-muted">Res. #<?php echo htmlspecialchars($pago['reservation_id']); ?></small>
+                                                    </div>
+                                                </td>
+                                                <td class="py-3">
+                                                    <div class="text-center">
+                                                        <div class="fw-bold text-success">$<?php echo number_format($pago['amount'], 2); ?></div>
+                                                        <small class="text-muted"><?php echo date('d/m/Y', strtotime($pago['payment_date'])); ?></small>
+                                                    </div>
+                                                </td>
+                                                <td class="py-3">
+                                                    <div class="text-center">
+                                                        <span class="badge bg-success px-2 py-1">
+                                                            <i class="fas fa-check-circle"></i>
+                                                        </span>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="text-center mt-3">
-                                <a href="/plataforma-clases-online/home/pagos" class="btn btn-outline-warning btn-sm">Ver Todos los Pagos</a>
+                            <div class="text-center mt-4">
+                                <a href="/plataforma-clases-online/home/pagos" class="btn btn-outline-warning btn-sm">
+                                    Ver Todos los Pagos <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
                             </div>
                         <?php else: ?>
-                            <div class="empty-state">
-                                <div class="empty-icon">💸</div>
-                                <p>No hay pagos registrados</p>
-                                <a href="/plataforma-clases-online/home/pagos" class="btn btn-warning btn-sm">Ver Historial</a>
+                            <div class="text-center py-5">
+                                <div class="text-muted fs-1 mb-3">💸</div>
+                                <h5 class="text-muted">No hay pagos registrados</h5>
+                                <p class="text-muted mb-3">Los pagos aparecerán aquí cuando los estudiantes completen sus reservas</p>
+                                <a href="/plataforma-clases-online/home/pagos" class="btn btn-warning">
+                                    <i class="fas fa-chart-line me-2"></i>Ver Historial de Pagos
+                                </a>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -947,92 +998,6 @@
                     document.body.removeChild(modal);
                 }
             });
-        }
-
-        async function verDetallesReserva(reservationId) {
-            try {
-                const response = await fetch('/plataforma-clases-online/home/calendario');
-                const data = await response.json();
-
-                if (data.success) {
-                    const reservasData = data.reservas;
-                    const reserva = reservasData.find(r => r.reservation_id === reservationId);
-
-                    if (!reserva) {
-                        alert('Reserva no encontrada.');
-                        return;
-                    }
-
-                    const horaInicio = reserva.start_time !== 'N/A' ? reserva.start_time : '08:00';
-                    const horaFin = reserva.end_time !== 'N/A' ? reserva.end_time : '10:00';
-
-                    let detalle = `
-                        <div class="day-detail-header">
-                            <h5>📅 Detalles de la Reserva</h5>
-                        </div>
-                        <div class="day-reservations">
-                            <div class="reservation-detail-card">
-                                <div class="reservation-header">
-                                    <h6 class="reservation-teacher">👨‍🎓 ${reserva.estudiante_name}</h6>
-                                    <span class="badge bg-${obtenerClaseEstadoProfesor(reserva.reservation_status).replace('reservation-', '')}">
-                                        ${reserva.reservation_status.charAt(0).toUpperCase() + reserva.reservation_status.slice(1)}
-                                    </span>
-                                </div>
-                                <div class="reservation-time">
-                                    🕐 ${horaInicio} - ${horaFin}
-                                </div>
-                                <div class="reservation-time">
-                                    📅 ${reserva.fecha_display}
-                                </div>
-                                ${reserva.notes ? `<div class="reservation-notes">📝 ${reserva.notes}</div>` : ''}
-                                ${reserva.academic_level ? `<div class="reservation-level">🎓 ${reserva.academic_level}</div>` : ''}
-                                ${reserva.hourly_rate ? `<div class="reservation-rate">💰 $${reserva.hourly_rate}/hora</div>` : ''}
-                                <div class="reservation-link">
-                                    ${reserva.meeting_link ? `🔗 Enlace de las reuniones: <a href="${reserva.meeting_link}" target="_blank" class="btn btn-primary btn-sm">Ir a la Reunión</a>` : '🔗 Enlace no disponible'}
-                                </div>
-                                <div class="reservation-actions">
-                                    ${(reserva.reservation_status === 'pendiente' || reserva.reservation_status === 'confirmada') ?
-                                        `<button class="btn btn-outline-danger btn-sm" onclick="cancelarClaseProfesor('${reserva.reservation_id}')">Cancelar Clase</button>`
-                                        : ''
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                    `;
-
-                    // Crear y mostrar modal
-                    const modal = document.createElement('div');
-                    modal.className = 'modal fade show';
-                    modal.innerHTML = `
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Detalles de la Reserva</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    ${detalle}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-
-                    modal.style.display = 'block';
-                    modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
-                    document.body.appendChild(modal);
-
-                    // Cerrar modal al hacer clic fuera o en el botón de cerrar
-                    modal.addEventListener('click', function(e) {
-                        if (e.target === modal || e.target.classList.contains('btn-close')) {
-                            document.body.removeChild(modal);
-                        }
-                    });
-                } else {
-                    throw new Error('Error al obtener datos del calendario');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
         }
 
         function cancelarClaseProfesor(reservationId) {
