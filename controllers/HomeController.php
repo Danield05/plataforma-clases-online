@@ -1590,9 +1590,9 @@ class HomeController
             // Obtener disponibilidad del profesor
             $disponibilidades = $disponibilidadModel->getDisponibilidadesByProfesor($profesorId);
 
-            // Obtener slots disponibles para los próximos 7 días
+            // Obtener slots disponibles para los próximos 90 días (aproximadamente 3 meses)
             $availableSlots = [];
-            for ($i = 0; $i < 7; $i++) {
+            for ($i = 0; $i < 90; $i++) {
                 $date = date('Y-m-d', strtotime("+$i days"));
                 $dayOfWeek = date('N', strtotime($date)); // 1=Lunes, 7=Domingo
 

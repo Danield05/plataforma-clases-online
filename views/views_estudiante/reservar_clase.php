@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/plataforma-clases-online/public/css/style.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="/plataforma-clases-online/public/css/explorar_profesores.css?v=<?php echo time(); ?>">
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
     <style>
         .slot-card {
             border: 1px solid #e0e0e0;
@@ -22,7 +23,9 @@
         }
         .slot-card.selected {
             border-color: #28a745;
-            background-color: #f8fff9;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
         }
         .slot-time {
             font-size: 1.1rem;
@@ -49,6 +52,166 @@
             border-radius: 8px;
             margin-bottom: 30px;
         }
+        /* Estilos personalizados para FullCalendar */
+        #calendar {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+        }
+
+        .fc {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .fc-header-toolbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            margin-bottom: 0 !important;
+        }
+
+        .fc-toolbar-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white !important;
+        }
+
+        .fc-button {
+            background: rgba(255,255,255,0.2) !important;
+            border: 1px solid rgba(255,255,255,0.3) !important;
+            color: white !important;
+            border-radius: 6px !important;
+            font-weight: 500 !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .fc-button:hover {
+            background: rgba(255,255,255,0.3) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .fc-button-active {
+            background: white !important;
+            color: #667eea !important;
+            font-weight: 600 !important;
+        }
+
+        .fc-daygrid-day {
+            transition: all 0.3s ease;
+        }
+
+        .fc-daygrid-day:hover {
+            background-color: #f8f9fa !important;
+            transform: scale(1.02);
+        }
+
+        .fc-daygrid-day:has(.available-day) {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%) !important;
+            border: 2px solid #28a745 !important;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .fc-daygrid-day:has(.available-day):hover {
+            background: linear-gradient(135deg, #c3e6cb 0%, #a8d5ba 100%) !important;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .fc-daygrid-day:has(.available-day)::before {
+            content: "✓";
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #28a745;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .available-day {
+            cursor: pointer !important;
+            font-weight: 600 !important;
+            color: #155724 !important;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .available-day:hover {
+            color: #0f5132 !important;
+        }
+
+        .fc-day-today {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%) !important;
+            border: 2px solid #ffc107 !important;
+        }
+
+        .fc-daygrid-day-number {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .fc-col-header {
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .fc-col-header-cell {
+            font-weight: 600;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* Estilos para el panel lateral */
+        #time-slots .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        #time-slots .card-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            border-bottom: none;
+        }
+
+        /* Animaciones */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #time-slots {
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .slot-card {
+            animation: fadeInUp 0.3s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .slot-card:nth-child(1) { animation-delay: 0.1s; }
+        .slot-card:nth-child(2) { animation-delay: 0.2s; }
+        .slot-card:nth-child(3) { animation-delay: 0.3s; }
+        .slot-card:nth-child(4) { animation-delay: 0.4s; }
     </style>
 </head>
 <body>
@@ -106,44 +269,35 @@
         <?php if (empty($available_slots)): ?>
             <div class="alert alert-warning">
                 <h5>⚠️ No hay horarios disponibles</h5>
-                <p>Este profesor no tiene horarios disponibles en los próximos 7 días. Intenta contactarlo directamente o revisa más tarde.</p>
+                <p>Este profesor no tiene horarios disponibles en los próximos 90 días. Intenta contactarlo directamente o revisa más tarde.</p>
                 <a href="/plataforma-clases-online/home/explorar_profesores" class="btn btn-primary">← Volver a Explorar Profesores</a>
             </div>
         <?php else: ?>
-            <form id="reservationForm" method="post" action="/plataforma-clases-online/home/reservar_clase?profesor_id=<?php echo htmlspecialchars($profesor['user_id']); ?>">
+            <div class="row">
+                <div class="col-md-8">
+                    <div id="calendar"></div>
+                </div>
+                <div class="col-md-4">
+                    <div id="time-slots" class="card" style="display: none;">
+                        <div class="card-header">
+                            <h5>🕒 Horarios Disponibles</h5>
+                            <div id="selected-date-display"></div>
+                        </div>
+                        <div class="card-body" id="slots-container">
+                            <!-- Los slots se cargarán aquí dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form id="reservationForm" method="post" action="/plataforma-clases-online/home/reservar_clase?profesor_id=<?php echo htmlspecialchars($profesor['user_id']); ?>" style="display: none;">
                 <input type="hidden" name="profesor_id" value="<?php echo htmlspecialchars($profesor['user_id']); ?>">
                 <input type="hidden" id="selectedAvailabilityId" name="availability_id" value="">
                 <input type="hidden" id="selectedClassDate" name="class_date" value="">
                 <input type="hidden" id="selectedClassTime" name="class_time" value="">
 
-                <?php foreach ($available_slots as $date => $dayData): ?>
-                    <div class="date-section">
-                        <div class="date-header">
-                            <h4><?php echo htmlspecialchars($dayData['day_name'] . ' ' . $dayData['date_display']); ?></h4>
-                        </div>
-
-                        <div class="row">
-                            <?php foreach ($dayData['slots'] as $slot): ?>
-                                <div class="col-md-4 mb-3">
-                                    <div class="slot-card" 
-                                         data-availability-id="<?php echo $slot['availability_id']; ?>" 
-                                         data-date="<?php echo $date; ?>"
-                                         data-start-time="<?php echo $slot['start_time']; ?>">
-                                        <div class="slot-time">
-                                            🕒 <?php echo date('H:i', strtotime($slot['start_time'])) . ' - ' . date('H:i', strtotime($slot['end_time'])); ?>
-                                        </div>
-                                        <div class="slot-day">
-                                            <?php echo htmlspecialchars($dayData['day_name']); ?>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-
                 <!-- Campos adicionales para la reserva -->
-                <div class="row mt-4" id="additionalFields" style="display: none;">
+                <div class="row mt-4" id="additionalFields">
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">
@@ -152,7 +306,7 @@
                             <div class="card-body">
                                 <div class="mb-3">
                                     <label for="notes" class="form-label">Notas o comentarios especiales (opcional):</label>
-                                    <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                    <textarea class="form-control" id="notes" name="notes" rows="3"
                                               placeholder="Ejemplo: Enfoque en álgebra, necesito ayuda con ejercicios específicos, etc."></textarea>
                                 </div>
                             </div>
@@ -194,56 +348,198 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/plataforma-clases-online/public/js/script.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const slotCards = document.querySelectorAll('.slot-card');
             const submitBtn = document.getElementById('submitBtn');
             const selectedAvailabilityId = document.getElementById('selectedAvailabilityId');
             const selectedClassDate = document.getElementById('selectedClassDate');
             const selectedClassTime = document.getElementById('selectedClassTime');
-            const additionalFields = document.getElementById('additionalFields');
             const form = document.getElementById('reservationForm');
-            let selectedCard = null;
+            const timeSlotsCard = document.getElementById('time-slots');
+            const selectedDateDisplay = document.getElementById('selected-date-display');
+            const slotsContainer = document.getElementById('slots-container');
 
-            slotCards.forEach(card => {
-                card.addEventListener('click', function() {
-                    // Remover selección anterior
-                    if (selectedCard) {
-                        selectedCard.classList.remove('selected');
-                    }
+            // Datos de slots disponibles desde PHP
+            const availableSlots = <?php echo json_encode($available_slots); ?>;
 
-                    // Seleccionar nueva tarjeta
-                    selectedCard = this;
-                    this.classList.add('selected');
+            // Inicializar FullCalendar
+            const calendarEl = document.getElementById('calendar');
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'es',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek'
+                },
+                buttonText: {
+                    today: 'Hoy',
+                    month: 'Mes',
+                    week: 'Semana'
+                },
+                dayMaxEvents: true,
+                height: 'auto',
+                contentHeight: 600,
+                aspectRatio: 1.5,
+                eventDisplay: 'block',
+                eventMouseEnter: function(info) {
+                    info.el.style.transform = 'scale(1.05)';
+                    info.el.style.transition = 'transform 0.2s ease';
+                },
+                eventMouseLeave: function(info) {
+                    info.el.style.transform = 'scale(1)';
+                },
+                events: function(fetchInfo, successCallback, failureCallback) {
+                    // Crear eventos para el calendario basados en slots disponibles
+                    const events = [];
 
-                    // Llenar campos hidden
-                    const availabilityId = this.dataset.availabilityId;
-                    const classDate = this.dataset.date;
-                    const startTime = this.dataset.startTime;
+                    console.log('Available slots:', availableSlots);
 
-                    selectedAvailabilityId.value = availabilityId;
-                    selectedClassDate.value = classDate;
-                    selectedClassTime.value = startTime;
-
-                    // Mostrar campos adicionales y habilitar botón
-                    additionalFields.style.display = 'block';
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '✅ Confirmar Reserva - ' + this.querySelector('.slot-time').textContent.trim();
-
-                    console.log('Seleccionado:', {
-                        availabilityId: availabilityId,
-                        classDate: classDate,
-                        startTime: startTime
+                    Object.keys(availableSlots).forEach(date => {
+                        const dayData = availableSlots[date];
+                        if (dayData.slots && dayData.slots.length > 0) {
+                            events.push({
+                                title: `${dayData.slots.length} horario(s) disponible(s)`,
+                                start: date,
+                                allDay: true,
+                                backgroundColor: '#28a745',
+                                borderColor: '#28a745',
+                                className: 'available-day',
+                                extendedProps: {
+                                    date: date,
+                                    slots: dayData.slots,
+                                    dayName: dayData.day_name,
+                                    dateDisplay: dayData.date_display
+                                }
+                            });
+                        }
                     });
-                });
 
-                // Mejorar accesibilidad
-                const timeText = card.querySelector('.slot-time').textContent.trim();
-                const dayText = card.querySelector('.slot-day').textContent.trim();
-                card.setAttribute('aria-label', `Seleccionar horario ${timeText} del ${dayText}`);
-                card.setAttribute('role', 'button');
-                card.setAttribute('tabindex', '0');
+                    console.log('Calendar events:', events);
+                    successCallback(events);
+                },
+                dateClick: function(info) {
+                    console.log('Date clicked:', info.dateStr);
+                    // Cuando se hace clic en una fecha, mostrar los slots disponibles
+                    const dateStr = info.dateStr;
+                    const dayData = availableSlots[dateStr];
+
+                    console.log('Day data for', dateStr, ':', dayData);
+
+                    if (dayData && dayData.slots && dayData.slots.length > 0) {
+                        selectedDateDisplay.innerHTML = `<strong>${dayData.day_name} ${dayData.date_display}</strong>`;
+                        slotsContainer.innerHTML = '';
+
+                        dayData.slots.forEach(slot => {
+                            console.log('Creating slot:', slot);
+                            const slotDiv = document.createElement('div');
+                            slotDiv.className = 'slot-card mb-2';
+                            slotDiv.setAttribute('data-availability-id', slot.availability_id);
+                            slotDiv.setAttribute('data-date', dateStr);
+                            slotDiv.setAttribute('data-start-time', slot.start_time);
+
+                            slotDiv.innerHTML = `
+                                <div class="slot-time">
+                                    🕒 ${new Date('1970-01-01T' + slot.start_time).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})} -
+                                    ${new Date('1970-01-01T' + slot.end_time).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}
+                                </div>
+                                <div class="slot-duration">
+                                    <small class="text-muted">2 horas de clase</small>
+                                </div>
+                            `;
+
+                            slotDiv.addEventListener('click', function() {
+                                console.log('Slot clicked:', slot);
+                                // Remover selección anterior
+                                document.querySelectorAll('.slot-card').forEach(card => {
+                                    card.classList.remove('selected');
+                                });
+
+                                // Seleccionar nueva
+                                this.classList.add('selected');
+
+                                // Llenar campos del formulario
+                                selectedAvailabilityId.value = slot.availability_id;
+                                selectedClassDate.value = dateStr;
+                                selectedClassTime.value = slot.start_time;
+
+                                // Mostrar formulario y habilitar botón
+                                form.style.display = 'block';
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = `✅ Confirmar Reserva - ${this.querySelector('.slot-time').textContent.trim()}`;
+
+                                // Scroll al formulario
+                                form.scrollIntoView({ behavior: 'smooth' });
+                            });
+
+                            slotsContainer.appendChild(slotDiv);
+                        });
+
+                        timeSlotsCard.style.display = 'block';
+                    } else {
+                        console.log('No slots available for', dateStr);
+                        selectedDateDisplay.innerHTML = `<strong>No hay horarios disponibles para esta fecha</strong>`;
+                        slotsContainer.innerHTML = '<p class="text-muted">Selecciona una fecha con indicador verde.</p>';
+                        timeSlotsCard.style.display = 'block';
+                    }
+                },
+                eventClick: function(info) {
+                    console.log('Event clicked:', info.event);
+                    // También permitir hacer clic en los eventos del calendario
+                    const dateStr = info.event.startStr;
+                    const dayData = availableSlots[dateStr];
+
+                    if (dayData && dayData.slots && dayData.slots.length > 0) {
+                        selectedDateDisplay.innerHTML = `<strong>${dayData.day_name} ${dayData.date_display}</strong>`;
+                        slotsContainer.innerHTML = '';
+
+                        dayData.slots.forEach(slot => {
+                            const slotDiv = document.createElement('div');
+                            slotDiv.className = 'slot-card mb-2';
+                            slotDiv.setAttribute('data-availability-id', slot.availability_id);
+                            slotDiv.setAttribute('data-date', dateStr);
+                            slotDiv.setAttribute('data-start-time', slot.start_time);
+
+                            slotDiv.innerHTML = `
+                                <div class="slot-time">
+                                    🕒 ${new Date('1970-01-01T' + slot.start_time).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})} -
+                                    ${new Date('1970-01-01T' + slot.end_time).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}
+                                </div>
+                            `;
+
+                            slotDiv.addEventListener('click', function() {
+                                // Remover selección anterior
+                                document.querySelectorAll('.slot-card').forEach(card => {
+                                    card.classList.remove('selected');
+                                });
+
+                                // Seleccionar nueva
+                                this.classList.add('selected');
+
+                                // Llenar campos del formulario
+                                selectedAvailabilityId.value = slot.availability_id;
+                                selectedClassDate.value = dateStr;
+                                selectedClassTime.value = slot.start_time;
+
+                                // Mostrar formulario y habilitar botón
+                                form.style.display = 'block';
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = `✅ Confirmar Reserva - ${this.querySelector('.slot-time').textContent.trim()}`;
+
+                                // Scroll al formulario
+                                form.scrollIntoView({ behavior: 'smooth' });
+                            });
+
+                            slotsContainer.appendChild(slotDiv);
+                        });
+
+                        timeSlotsCard.style.display = 'block';
+                    }
+                }
             });
+
+            calendar.render();
 
             // Debug del envío del formulario
             form.addEventListener('submit', function(e) {
