@@ -1054,12 +1054,14 @@ class HomeController
             $profesorModel = new ProfesorModel();
             $profesor = $profesorModel->getProfesorById($_SESSION['user_id']);
             $data = ['user' => $user, 'profesor' => $profesor];
+            extract($data);
             require_once 'views/views_profesor/perfil_edit.php';
         } elseif ($role === 'estudiante') {
             require_once 'models/EstudianteModel.php';
             $estudianteModel = new EstudianteModel();
             $estudiante = $estudianteModel->getEstudianteById($_SESSION['user_id']);
             $data = ['user' => $user, 'estudiante' => $estudiante];
+            extract($data);
             require_once 'views/views_estudiante/perfil_edit.php';
         }
     }
@@ -1082,6 +1084,7 @@ class HomeController
             'first_name' => $_POST['first_name'] ?? '',
             'last_name' => $_POST['last_name'] ?? '',
             'email' => $_POST['email'] ?? '',
+            'phone' => $_POST['phone'] ?? null,
             'photo_url' => $_POST['photo_url'] ?? null,
         ];
 
@@ -1111,8 +1114,17 @@ class HomeController
             $ok2 = $estudianteModel->updateEstudiante($_SESSION['user_id'], $estData);
         }
 
-        $msg = ($ok1 && $ok2) ? 'updated' : 'error';
-        header('Location: /plataforma-clases-online/home/perfil_edit?status=' . $msg);
+        if ($ok1 && $ok2) {
+            // Actualizar datos de sesión para reflejar los cambios
+            $_SESSION['first_name'] = $userData['first_name'];
+            $_SESSION['last_name'] = $userData['last_name'];
+            $_SESSION['user_name'] = $userData['first_name'] . ' ' . $userData['last_name'];
+            
+            // Agregar un timestamp para evitar cache
+            header('Location: /plataforma-clases-online/home/perfil_view?status=updated&t=' . time());
+        } else {
+            header('Location: /plataforma-clases-online/home/perfil_edit?status=error');
+        }
         exit;
     }
 
@@ -2270,5 +2282,316 @@ class HomeController
 
         extract($data);
         require_once 'views/layouts/ver_estudiante.php';
+    }
+
+    public function perfil_view() {
+        // Verificar que el usuario esté logueado
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: /plataforma-clases-online/auth/login');
+            exit;
+        }
+
+        require_once 'models/UserModel.php';
+        require_once 'models/ProfesorModel.php';
+
+        $userModel = new UserModel();
+        $userId = $_SESSION['user_id'];
+        $userRole = $_SESSION['role'];
+
+        // Obtener información del usuario
+        $usuario = $userModel->getUserById($userId);
+        if (!$usuario) {
+            header('Location: /plataforma-clases-online/auth/login');
+            exit;
+        }
+
+        $data = [
+            'usuario' => $usuario
+        ];
+
+        // Si es profesor, obtener también información adicional de profesor
+        if ($userRole === 'profesor') {
+            $profesorModel = new ProfesorModel();
+            $profesor = $profesorModel->getProfesorById($userId);
+            $data['profesor'] = $profesor;
+            
+            extract($data);
+            require_once 'views/views_profesor/perfil_view.php';
+        } else {
+            // Para estudiantes u otros roles
+            extract($data);
+            require_once 'views/views_estudiante/perfil_view.php';
+        }
+    }
+
+    public function upload_profile_photo() {
+        try {
+            // Verificar que el usuario esté logueado
+            if (!isset($_SESSION['user_id'])) {
+                error_log('Error: Usuario no autenticado');
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Usuario no autenticado']);
+                exit;
+            }
+
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                error_log('Error: Método no permitido - ' . $_SERVER['REQUEST_METHOD']);
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+                exit;
+            }
+
+            error_log('Iniciando subida de foto para usuario: ' . $_SESSION['user_id']);
+
+            // Verificar si se envió un archivo
+            if (!isset($_FILES['profile_photo']) || $_FILES['profile_photo']['error'] !== UPLOAD_ERR_OK) {
+                $error = isset($_FILES['profile_photo']['error']) ? $_FILES['profile_photo']['error'] : 'No se recibió archivo';
+                error_log('Error en archivo: ' . $error);
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'No se recibió ningún archivo válido. Error: ' . $error]);
+                exit;
+            }
+
+            $file = $_FILES['profile_photo'];
+            $userId = $_SESSION['user_id'];
+
+            error_log('Archivo recibido: ' . $file['name'] . ', tamaño: ' . $file['size'] . ', tipo: ' . $file['type']);
+
+            // Validar tipo de archivo
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            $fileType = $file['type'];
+            
+            if (!in_array($fileType, $allowedTypes)) {
+                error_log('Tipo de archivo no permitido: ' . $fileType);
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Tipo de archivo no permitido. Solo se permiten JPG, PNG, GIF y WebP']);
+                exit;
+            }
+
+            // Validar tamaño del archivo (máximo 5MB)
+            $maxSize = 5 * 1024 * 1024; // 5MB
+            if ($file['size'] > $maxSize) {
+                error_log('Archivo demasiado grande: ' . $file['size'] . ' bytes');
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'El archivo es demasiado grande. Máximo 5MB']);
+                exit;
+            }
+
+            // Determinar extensión
+            $extension = '';
+            switch ($fileType) {
+                case 'image/jpeg':
+                    $extension = '.jpg';
+                    break;
+                case 'image/png':
+                    $extension = '.png';
+                    break;
+                case 'image/gif':
+                    $extension = '.gif';
+                    break;
+                case 'image/webp':
+                    $extension = '.webp';
+                    break;
+            }
+
+            // Crear directorio si no existe
+            $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/plataforma-clases-online/public/uploads/profile_photos/';
+            if (!is_dir($uploadDir)) {
+                error_log('Creando directorio: ' . $uploadDir);
+                if (!mkdir($uploadDir, 0755, true)) {
+                    error_log('Error al crear directorio: ' . $uploadDir);
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'Error al crear directorio de uploads']);
+                    exit;
+                }
+            }
+
+            // Eliminar foto anterior si existe
+            $this->deleteExistingProfilePhoto($userId, $uploadDir);
+
+            // Nombre del archivo: user_ID.extension
+            $fileName = 'user_' . $userId . $extension;
+            $filePath = $uploadDir . $fileName;
+
+            error_log('Moviendo archivo a: ' . $filePath);
+
+            // Mover archivo
+            if (move_uploaded_file($file['tmp_name'], $filePath)) {
+                error_log('Archivo movido exitosamente a: ' . $filePath);
+                
+                // Redimensionar imagen si es necesario (solo si GD está disponible)
+                if (extension_loaded('gd')) {
+                    error_log('GD disponible, redimensionando imagen...');
+                    $this->resizeProfilePhoto($filePath, $fileType);
+                } else {
+                    error_log('GD no disponible, saltando redimensionado');
+                }
+                
+                $photoUrl = '/plataforma-clases-online/public/uploads/profile_photos/' . $fileName;
+                error_log('Foto subida exitosamente: ' . $photoUrl);
+                
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Foto de perfil actualizada correctamente',
+                    'photo_url' => $photoUrl
+                ]);
+            } else {
+                error_log('Error al mover archivo de ' . $file['tmp_name'] . ' a ' . $filePath);
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Error al guardar el archivo']);
+            }
+        } catch (Exception $e) {
+            error_log('Excepción en upload_profile_photo: ' . $e->getMessage());
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+
+    private function deleteExistingProfilePhoto($userId, $uploadDir) {
+        $extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+        foreach ($extensions as $ext) {
+            $filePath = $uploadDir . 'user_' . $userId . $ext;
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+        }
+    }
+
+    private function resizeProfilePhoto($filePath, $fileType, $maxSize = 300) {
+        // Verificar si la extensión GD está disponible
+        if (!extension_loaded('gd')) {
+            error_log('GD extension no disponible - saltando redimensionado');
+            return;
+        }
+
+        // Verificar si el archivo existe
+        if (!file_exists($filePath)) {
+            error_log('Archivo no encontrado para redimensionar: ' . $filePath);
+            return;
+        }
+
+        // Obtener dimensiones originales
+        $imageInfo = getimagesize($filePath);
+        if ($imageInfo === false) {
+            error_log('No se pudieron obtener las dimensiones de la imagen: ' . $filePath);
+            return;
+        }
+
+        list($width, $height) = $imageInfo;
+        
+        // Si la imagen ya es pequeña, no redimensionar
+        if ($width <= $maxSize && $height <= $maxSize) {
+            return;
+        }
+
+        // Calcular nuevas dimensiones manteniendo aspecto
+        if ($width > $height) {
+            $newWidth = $maxSize;
+            $newHeight = ($height / $width) * $maxSize;
+        } else {
+            $newHeight = $maxSize;
+            $newWidth = ($width / $height) * $maxSize;
+        }
+
+        // Crear imagen desde archivo
+        $source = null;
+        try {
+            switch ($fileType) {
+                case 'image/jpeg':
+                    $source = imagecreatefromjpeg($filePath);
+                    break;
+                case 'image/png':
+                    $source = imagecreatefrompng($filePath);
+                    break;
+                case 'image/gif':
+                    $source = imagecreatefromgif($filePath);
+                    break;
+                case 'image/webp':
+                    if (function_exists('imagecreatefromwebp')) {
+                        $source = imagecreatefromwebp($filePath);
+                    } else {
+                        error_log('WebP no soportado en esta instalación de PHP');
+                        return;
+                    }
+                    break;
+                default:
+                    error_log('Tipo de archivo no soportado para redimensionado: ' . $fileType);
+                    return;
+            }
+
+            if ($source === false || $source === null) {
+                error_log('Error al crear imagen desde archivo: ' . $filePath);
+                return;
+            }
+        } catch (Exception $e) {
+            error_log('Error al procesar imagen: ' . $e->getMessage());
+            return;
+        }
+
+        // Crear nueva imagen redimensionada
+        $destination = imagecreatetruecolor($newWidth, $newHeight);
+        
+        // Preservar transparencia para PNG y GIF
+        if ($fileType == 'image/png' || $fileType == 'image/gif') {
+            imagealphablending($destination, false);
+            imagesavealpha($destination, true);
+            $transparent = imagecolorallocatealpha($destination, 255, 255, 255, 127);
+            imagefilledrectangle($destination, 0, 0, $newWidth, $newHeight, $transparent);
+        }
+
+        // Redimensionar
+        imagecopyresampled($destination, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+        // Guardar imagen redimensionada
+        $saved = false;
+        try {
+            switch ($fileType) {
+                case 'image/jpeg':
+                    $saved = imagejpeg($destination, $filePath, 85);
+                    break;
+                case 'image/png':
+                    $saved = imagepng($destination, $filePath, 6);
+                    break;
+                case 'image/gif':
+                    $saved = imagegif($destination, $filePath);
+                    break;
+                case 'image/webp':
+                    if (function_exists('imagewebp')) {
+                        $saved = imagewebp($destination, $filePath, 85);
+                    }
+                    break;
+            }
+
+            if (!$saved) {
+                error_log('Error al guardar imagen redimensionada: ' . $filePath);
+            }
+        } catch (Exception $e) {
+            error_log('Error al guardar imagen redimensionada: ' . $e->getMessage());
+        }
+
+        // Liberar memoria
+        if ($source !== null && $source !== false) {
+            imagedestroy($source);
+        }
+        if (isset($destination) && $destination !== null && $destination !== false) {
+            imagedestroy($destination);
+        }
+    }
+
+    // Función helper para obtener la URL de la foto de perfil
+    public static function getProfilePhotoUrl($userId) {
+        $extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+        $baseDir = $_SERVER['DOCUMENT_ROOT'] . '/plataforma-clases-online/public/uploads/profile_photos/';
+        $baseUrl = '/plataforma-clases-online/public/uploads/profile_photos/';
+        
+        foreach ($extensions as $ext) {
+            $filePath = $baseDir . 'user_' . $userId . $ext;
+            if (file_exists($filePath)) {
+                return $baseUrl . 'user_' . $userId . $ext . '?v=' . filemtime($filePath);
+            }
+        }
+        return null;
     }
 }
