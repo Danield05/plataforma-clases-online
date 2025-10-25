@@ -1054,12 +1054,14 @@ class HomeController
             $profesorModel = new ProfesorModel();
             $profesor = $profesorModel->getProfesorById($_SESSION['user_id']);
             $data = ['user' => $user, 'profesor' => $profesor];
+            extract($data);
             require_once 'views/views_profesor/perfil_edit.php';
         } elseif ($role === 'estudiante') {
             require_once 'models/EstudianteModel.php';
             $estudianteModel = new EstudianteModel();
             $estudiante = $estudianteModel->getEstudianteById($_SESSION['user_id']);
             $data = ['user' => $user, 'estudiante' => $estudiante];
+            extract($data);
             require_once 'views/views_estudiante/perfil_edit.php';
         }
     }
@@ -1082,7 +1084,7 @@ class HomeController
             'first_name' => $_POST['first_name'] ?? '',
             'last_name' => $_POST['last_name'] ?? '',
             'email' => $_POST['email'] ?? '',
-            'phone' => $_POST['phone_number'] ?? null,
+            'phone' => $_POST['phone'] ?? null,
             'photo_url' => $_POST['photo_url'] ?? null,
         ];
 
@@ -2283,18 +2285,20 @@ class HomeController
     }
 
     public function perfil_view() {
-        // Verificar que el usuario esté logueado y sea estudiante
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'estudiante') {
+        // Verificar que el usuario esté logueado
+        if (!isset($_SESSION['user_id'])) {
             header('Location: /plataforma-clases-online/auth/login');
             exit;
         }
 
         require_once 'models/UserModel.php';
+        require_once 'models/ProfesorModel.php';
 
         $userModel = new UserModel();
         $userId = $_SESSION['user_id'];
+        $userRole = $_SESSION['role'];
 
-        // Obtener información del usuario (sin tocar la base de datos)
+        // Obtener información del usuario
         $usuario = $userModel->getUserById($userId);
         if (!$usuario) {
             header('Location: /plataforma-clases-online/auth/login');
@@ -2305,8 +2309,19 @@ class HomeController
             'usuario' => $usuario
         ];
 
-        extract($data);
-        require_once 'views/views_estudiante/perfil_view.php';
+        // Si es profesor, obtener también información adicional de profesor
+        if ($userRole === 'profesor') {
+            $profesorModel = new ProfesorModel();
+            $profesor = $profesorModel->getProfesorById($userId);
+            $data['profesor'] = $profesor;
+            
+            extract($data);
+            require_once 'views/views_profesor/perfil_view.php';
+        } else {
+            // Para estudiantes u otros roles
+            extract($data);
+            require_once 'views/views_estudiante/perfil_view.php';
+        }
     }
 
     public function upload_profile_photo() {
