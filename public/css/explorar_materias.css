@@ -1,0 +1,119 @@
+.materia-card {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+.materia-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.materia-card .card-body {
+    padding: 30px;
+    color: #333;
+}
+
+.materia-card .card-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #2c3e50;
+}
+
+.materia-card .card-text {
+    margin-bottom: 10px;
+    opacity: 0.8;
+}
+
+.materia-card .card-footer {
+    background: rgba(255,255,255,0.3);
+    border-top: 1px solid rgba(0,0,0,0.1);
+    padding: 20px 30px;
+}
+
+.materia-card .btn {
+    background: rgba(255,255,255,0.8);
+    border: 2px solid rgba(255,255,255,0.9);
+    border-radius: 25px;
+    padding: 10px 25px;
+    color: #333;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.materia-card .btn:hover {
+    background: rgba(255,255,255,0.9);
+    transform: scale(1.05);
+}
+
+.materia-search-container {
+    background: linear-gradient(135deg, #fff8e1 0%, #ffcc80 100%);
+    padding: 30px;
+    border-radius: 20px;
+    margin-bottom: 40px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.materia-search-input {
+    border-radius: 25px;
+    padding: 15px 20px;
+    border: 2px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.9);
+    font-size: 1.1rem;
+}
+
+.materia-search-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(255, 204, 128, 0.25);
+    border-color: #ffcc80;
+    background: white;
+}
+
+.materia-search-btn {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 15px 30px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    color: white;
+}
+
+.materia-search-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(255, 152, 0, 0.4);
+}
+
+.materia-clear-btn {
+    background: linear-gradient(135deg, #81c784 0%, #66bb6a 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 15px 30px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    color: white;
+}
+
+.materia-clear-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(129, 199, 132, 0.4);
+}
+
+.materia-back-btn {
+    background: linear-gradient(135deg, #64b5f6 0%, #2196f3 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 12px 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    color: white;
+}
+
+.materia-back-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(100, 181, 246, 0.4);
+}

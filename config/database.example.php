@@ -1,11 +1,9 @@
 <?php
 // Configuración de la base de datos
-// COPIAR ESTE ARCHIVO COMO database.php Y CONFIGURAR CON TUS CREDENCIALES REALES
-
-$host = 'localhost';                    // Servidor de BD (localhost para desarrollo local)
-$dbname = 'plataforma_clases';          // Nombre de la base de datos
-$username = 'root';                     // Usuario de MySQL (root por defecto en XAMPP)
-$password = '1234';                     // Contraseña de MySQL (1234 por defecto en XAMPP)
+$host = 'localhost';
+$dbname = ''; // Cambia al nombre de tu base de datos
+$username = 'root'; // Usuario por defecto en XAMPP
+$password = ''; // Contraseña por defecto en XAMPP
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
