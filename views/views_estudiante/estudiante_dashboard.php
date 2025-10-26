@@ -473,7 +473,7 @@
                                     <div class="action-icon">⭐</div>
                                     <h4>Mejor Valorados</h4>
                                     <p>Profesores con mejores calificaciones</p>
-                                    <a href="/plataforma-clases-online/home/explorar_profesores" class="btn btn-outline-warning btn-sm">Ver Top</a>
+                                    <a href="/plataforma-clases-online/home/reviews" class="btn btn-outline-warning btn-sm">Ver Reviews</a>
                                 </div>
                             </div>
                             <div class="col-md-4">
