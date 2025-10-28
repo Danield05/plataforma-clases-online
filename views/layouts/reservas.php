@@ -6,82 +6,7 @@
     <title>📅 Reservas - Plataforma de Clases Online</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/plataforma-clases-online/public/css/style.css?v=<?php echo time(); ?>">
-    <style>
-        .reservas-header {
-            background: linear-gradient(135deg, #007bff, #0056b3);
-            color: white;
-            border-radius: 10px 10px 0 0;
-            padding: 20px;
-            margin-bottom: 0;
-        }
-        .reservas-table {
-            background: white;
-            border-radius: 0 0 10px 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .estado-pendiente {
-            background: linear-gradient(135deg, #ffc107, #fd7e14);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-        }
-        .estado-confirmada {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-        }
-        .estado-cancelada {
-            background: linear-gradient(135deg, #dc3545, #c82333);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-        }
-        .estado-completada {
-            background: linear-gradient(135deg, #6f42c1, #8e44ad);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-        }
-        .btn-cancelar {
-            background: linear-gradient(135deg, #dc3545, #c82333);
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-        }
-        .btn-completar {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-        }
-        .btn-reagendar {
-            background: linear-gradient(135deg, #17a2b8, #007bff);
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-        }
-        .table th {
-            background: #f8f9fa;
-            border: none;
-            font-weight: 600;
-            color: #495057;
-        }
-        .table td {
-            border: none;
-            vertical-align: middle;
-        }
-    </style>
+    <link rel="stylesheet" href="/plataforma-clases-online/public/css/reservas.css?v=<?php echo time(); ?>">
 </head>
 <body>
     <?php
@@ -228,23 +153,34 @@
                                                 </td>
                                                 <?php elseif ($_SESSION['role'] === 'profesor'): ?>
                                                 <td>
-                                                    <div class="d-flex gap-1 flex-wrap">
-                                                        <!-- Botones siempre visibles para testing -->
-                                                        <form method="post" action="/plataforma-clases-online/home/completar_reserva" style="display: inline;" onsubmit="return confirm('¿Estás seguro de que quieres marcar esta clase como completada?');">
-                                                            <input type="hidden" name="reservation_id" value="<?php echo htmlspecialchars($reserva['reservation_id']); ?>">
-                                                            <button type="submit" class="btn btn-completar btn-sm">✅ Completar</button>
-                                                        </form>
+                                                    <?php if (strtolower($reserva['reservation_status']) === 'completada'): ?>
+                                                        <!-- Clase completada - mostrar icono de detalle -->
+                                                        <div class="text-center">
+                                                            <span class="badge bg-success" style="font-size: 0.9rem; padding: 8px 12px;">
+                                                                ✅ Clase completada
+                                                            </span>
+                                                        </div>
+                                                    <?php else: ?>
+                                                        <!-- Clase no completada - mostrar botones de acción -->
+                                                        <div class="d-flex gap-1 flex-wrap">
+                                                            <?php if (strtolower($reserva['reservation_status']) === 'confirmada'): ?>
+                                                                <form method="post" action="/plataforma-clases-online/home/completar_reserva" style="display: inline;" onsubmit="return confirm('¿Estás seguro de que quieres marcar esta clase como completada?');">
+                                                                    <input type="hidden" name="reservation_id" value="<?php echo htmlspecialchars($reserva['reservation_id']); ?>">
+                                                                    <button type="submit" class="btn btn-completar btn-sm">✅ Completar</button>
+                                                                </form>
+                                                            <?php endif; ?>
 
-                                                        <form method="post" action="/plataforma-clases-online/home/cancelar_reserva" style="display: inline;" onsubmit="return confirm('¿Estás seguro de que quieres cancelar esta clase? Esto permitirá reagendarla si es necesario.');">
-                                                            <input type="hidden" name="reservation_id" value="<?php echo htmlspecialchars($reserva['reservation_id']); ?>">
-                                                            <button type="submit" class="btn btn-cancelar btn-sm">❌ Cancelar</button>
-                                                        </form>
+                                                            <?php if (strtolower($reserva['reservation_status']) === 'pendiente' || strtolower($reserva['reservation_status']) === 'confirmada'): ?>
+                                                                <form method="post" action="/plataforma-clases-online/home/cancelar_reserva" style="display: inline;" onsubmit="return confirm('¿Estás seguro de que quieres cancelar esta clase? Esto permitirá reagendarla si es necesario.');">
+                                                                    <input type="hidden" name="reservation_id" value="<?php echo htmlspecialchars($reserva['reservation_id']); ?>">
+                                                                    <button type="submit" class="btn btn-cancelar btn-sm">❌ Cancelar</button>
+                                                                </form>
 
-                                                        <!-- Botón Reagendar -->
-                                                        <button type="button" class="btn btn-reagendar btn-sm" onclick="openRescheduleModal('<?php echo htmlspecialchars($reserva['reservation_id']); ?>', '<?php echo htmlspecialchars(($reserva['estudiante_name'] ?? 'Estudiante') . ' ' . ($reserva['estudiante_last_name'] ?? '')); ?>', '<?php echo date('Y-m-d', strtotime($reserva['class_date'])); ?>')">📅 Reagendar</button>
-
-                                
-                                                    </div>
+                                                                <!-- Botón Reagendar -->
+                                                                <button type="button" class="btn btn-reagendar btn-sm" onclick="openRescheduleModal('<?php echo htmlspecialchars($reserva['reservation_id']); ?>', '<?php echo htmlspecialchars(($reserva['estudiante_name'] ?? 'Estudiante') . ' ' . ($reserva['estudiante_last_name'] ?? '')); ?>', '<?php echo date('Y-m-d', strtotime($reserva['class_date'])); ?>')">📅 Reagendar</button>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    <?php endif; ?>
                                                 </td>
                                                 <?php endif; ?>
                                             </tr>
@@ -294,19 +230,25 @@
                             <input type="text" class="form-control" id="estudianteInfo" readonly>
                         </div>
                         <div class="mb-3">
+                            <label for="diasTrabajo" class="form-label">📅 Mi horario de trabajo</label>
+                            <div id="diasTrabajo" class="alert alert-light">
+                                <small>Cargando horario de trabajo...</small>
+                            </div>
+                        </div>
+                        <div class="mb-3">
                             <label for="newDate" class="form-label">Nueva Fecha *</label>
                             <input type="date" class="form-control" id="newDate" name="new_date" required min="<?php echo date('Y-m-d'); ?>">
                         </div>
                         <div class="mb-3">
-                            <label for="newAvailability" class="form-label">Horario (opcional)</label>
+                            <label for="newAvailability" class="form-label">Horario Disponible</label>
                             <select class="form-control" id="newAvailability" name="new_availability_id">
-                                <option value="">Seleccionar horario...</option>
+                                <option value="">Primero selecciona una fecha...</option>
                                 <!-- Los horarios disponibles se cargarán dinámicamente -->
                             </select>
                         </div>
                         <input type="hidden" id="reservationId" name="reservation_id">
                         <div class="alert alert-info">
-                            <small>💡 Si no seleccionas un horario específico, se mantendrá el horario original de la clase.</small>
+                            <small>💡 Selecciona una fecha para ver los horarios disponibles. Si no hay horarios disponibles, significa que ese día no trabajo o ya tengo clases programadas.</small>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -318,41 +260,9 @@
         </div>
     </div>
 
-    <script>
-        function openRescheduleModal(reservationId, estudianteName, currentDate) {
-            document.getElementById('reservationId').value = reservationId;
-            document.getElementById('estudianteInfo').value = estudianteName;
-            document.getElementById('newDate').value = '';
-
-            // Limpiar opciones de horario
-            const availabilitySelect = document.getElementById('newAvailability');
-            availabilitySelect.innerHTML = '<option value="">Seleccionar horario...</option>';
-
-            const modal = new bootstrap.Modal(document.getElementById('rescheduleModal'));
-            modal.show();
-        }
-
-        // Cargar horarios disponibles cuando se selecciona una fecha
-        document.getElementById('newDate').addEventListener('change', function() {
-            const selectedDate = this.value;
-            const availabilitySelect = document.getElementById('newAvailability');
-
-            if (selectedDate) {
-                // Aquí podrías hacer una llamada AJAX para obtener los horarios disponibles
-                // Por ahora, dejaremos el select vacío para que el usuario pueda elegir manualmente
-                availabilitySelect.innerHTML = '<option value="">Seleccionar horario...</option>';
-            }
-        });
-
-        // Debug: Agregar información de sesión en consola
-        console.log('Debug sesión:', {
-            user_id: '<?php echo $_SESSION['user_id'] ?? 'no definido'; ?>',
-            role: '<?php echo $_SESSION['role'] ?? 'no definido'; ?>',
-            session_exists: <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>
-        });
-    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/plataforma-clases-online/public/js/script.js"></script>
+    <script src="/plataforma-clases-online/public/js/reservas.js"></script>
 </body>
 </html>

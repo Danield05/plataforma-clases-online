@@ -146,42 +146,92 @@ Asegurarse de que `mod_rewrite` esté habilitado y configurar el DocumentRoot ap
 ```
 plataforma-clases-online/
 ├── 📁 config/                 # Configuración de BD y seguridad
-│   ├── database.php           # Credenciales de BD (no versionado)
-│   ├── database.example.php   # Plantilla de configuración
+│   ├── config.php             # Credenciales de BD (no versionado)
 │   └── .htaccess              # Protección de archivos sensibles
 ├── 📁 controllers/            # Controladores MVC
 │   ├── AuthController.php     # Autenticación y sesiones
 │   ├── HomeController.php     # Dashboard y navegación
-│   └── RegisterController.php # Registro de usuarios
+│   ├── RegisterController.php # Registro de usuarios
+│   └── ReportesController.php # Sistema de reportes avanzado ⭐
 ├── 📁 models/                 # Modelos de datos
-│   ├── UserModel.php          # Gestión de usuarios
-│   ├── ReservaModel.php       # Sistema de reservas ⭐
+│   ├── AdministradorModel.php # Gestión de administradores
+│   ├── DiaSemanaModel.php     # Gestión de días de la semana
 │   ├── DisponibilidadModel.php # Gestión de horarios
-│   └── ...                    # Otros modelos específicos
+│   ├── EstadoDisponibilidadModel.php # Estados de disponibilidad
+│   ├── EstadoPagoModel.php    # Estados de pagos
+│   ├── EstadoReservaModel.php # Estados de reservas
+│   ├── EstadoUsuarioModel.php # Estados de usuarios
+│   ├── EstudianteModel.php    # Gestión de estudiantes
+│   ├── MateriaModel.php       # Gestión de materias
+│   ├── PagoModel.php          # Gestión de pagos
+│   ├── ProfesorModel.php      # Gestión de profesores
+│   ├── ReservaModel.php       # Sistema de reservas ⭐
+│   ├── ReviewModel.php        # Gestión de reseñas
+│   ├── RoleModel.php          # Gestión de roles
+│   └── UserModel.php          # Gestión de usuarios
 ├── 📁 views/                  # Vistas y plantillas
-│   ├── views_profesor/        # Dashboard profesor con calendario
-│   ├── views_estudiante/      # Dashboard estudiante con reservas
+│   ├── info_pagos_prueba.php  # Información de pagos de prueba
+│   ├── layouts/               # Layouts principales
+│   │   ├── about.php          # Página acerca de
+│   │   ├── crear_clase.php    # Crear clase
+│   │   ├── disponibilidad.php # Configuración de horarios
+│   │   ├── estudiantes.php    # Gestión de estudiantes
+│   │   ├── home.php           # Página principal
+│   │   ├── login.php          # Página de login
+│   │   ├── mensajes.php       # Sistema de mensajes
+│   │   ├── nav.php            # Navegación principal
+│   │   ├── pagos.php          # Gestión de pagos
+│   │   ├── profesores.php     # Gestión de profesores
+│   │   ├── register.php       # Página de registro
+│   │   ├── reportes.php       # Sistema de reportes avanzado ⭐
+│   │   ├── reservas.php       # Gestión de reservas
+│   │   ├── reviews.php        # Gestión de reseñas
+│   │   ├── ver_estudiante.php # Ver estudiante
+│   │   └── ver_pago.php       # Ver pago
 │   ├── reportes/              # Sistema de reportes avanzado ⭐
-│   │   ├── reporte_profesor.php    # Reporte detallado de profesor
 │   │   ├── reporte_estudiante.php  # Reporte de estudiante
 │   │   ├── reporte_general.php     # Reporte administrativo general
-│   │   ├── reporte_pagos.php       # Reporte de pagos
 │   │   ├── reporte_ingresos.php    # Reporte de ingresos por período
+│   │   ├── reporte_pagos.php       # Reporte de pagos
+│   │   ├── reporte_profesor.php    # Reporte detallado de profesor
 │   │   └── reporte_reservas.php    # Reporte de reservas
-│   ├── explorar_profesores.php # Búsqueda y reserva de clases ⭐
-│   ├── disponibilidad.php     # Configuración de horarios
-│   └── nav.php               # Navegación principal
+│   ├── views_estudiante/      # Dashboard estudiante con reservas
+│   │   ├── confirmar_reserva_old.php # Confirmar reserva (antigua)
+│   │   ├── confirmar_reserva.php    # Confirmar reserva
+│   │   ├── estudiante_dashboard.php # Dashboard del estudiante
+│   │   ├── explorar_materias.php    # Explorar materias
+│   │   ├── explorar_precio_hora.php # Explorar precio por hora
+│   │   ├── explorar_profesores.php  # Explorar profesores
+│   │   ├── pago_exitoso.php         # Pago exitoso
+│   │   ├── perfil_edit.php          # Editar perfil
+│   │   ├── profesores_por_materia.php # Profesores por materia
+│   │   ├── profesores_por_precio.php # Profesores por precio
+│   │   ├── reserva_confirmada.php   # Reserva confirmada
+│   │   └── reservar_clase.php       # Reservar clase
+│   └── views_profesor/        # Dashboard profesor con calendario
+│       ├── perfil_edit.php    # Editar perfil profesor
+│       └── profesor_dashboard.php # Dashboard del profesor
 ├── 📁 public/                # Archivos estáticos
 │   ├── css/                   # Hojas de estilo
+│   │   ├── explorar_materias.css    # Estilos para explorar materias
+│   │   ├── explorar_profesores.css  # Estilos para explorar profesores
+│   │   ├── login.css          # Estilos para login
+│   │   ├── profesores_por_materia.css # Estilos para profesores por materia
+│   │   ├── style.css          # Estilos generales
+│   │   └── variables-generales.css # Variables CSS generales
 │   └── js/                    # Scripts JavaScript
-├── 📄 plataforma_clases.sql   # Script de base de datos
-├── 📄 setup.php              # Instalación automática
-├── 📄 migrations.php         # Migraciones de BD ⭐
-├── 📄 requirements.txt       # Requerimientos del sistema
+│       ├── explorar_materias.js     # JS para explorar materias
+│       ├── explorar_precio_hora.js  # JS para explorar precio por hora
+│       ├── explorar_profesores.js   # JS para explorar profesores
+│       ├── profesores_por_materia.js # JS para profesores por materia
+│       └── script.js          # Script general
+├── 📄 .gitignore             # Archivos ignorados por Git
 ├── 📄 .htaccess              # Reglas de reescritura URL
-├── 📄 .gitignore            # Archivos ignorados por Git
 ├── 📄 index.php             # Punto de entrada de la aplicación
-└── 📄 README.md             # Este archivo
+├── 📄 README_DATABASE.md    # Documentación de base de datos
+├── 📄 README.md             # Este archivo
+├── 📄 requirements.txt      # Requerimientos del sistema
+└── 📄 setup.php             # Instalación automática
 ```
 
 ## 🔐 Sistema de Roles y Permisos

@@ -267,6 +267,64 @@
             </div>
         </div>
 
+        <!-- Pagos Pendientes (Solo si hay pagos pendientes) -->
+        <?php 
+        $pagosPendientes = array_filter($pagos, function($pago) {
+            return strtolower($pago['payment_status'] ?? 'pendiente') === 'pendiente';
+        });
+        if (!empty($pagosPendientes)): 
+        ?>
+        <div class="alert alert-warning mb-4" style="border-left: 4px solid #ffc107;">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h5 class="alert-heading mb-2">⚠️ Tienes <?php echo count($pagosPendientes); ?> pago(s) pendiente(s)</h5>
+                    <p class="mb-0">Completa tus pagos para confirmar tus clases reservadas.</p>
+                </div>
+                <div class="col-lg-4 text-end">
+                    <a href="/plataforma-clases-online/home/pagos" class="btn btn-warning btn-sm me-2">
+                        💳 Ver Pagos Pendientes
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse" data-bs-target="#pagosPendientesDetalle">
+                        📋 Ver Detalles
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Detalles de pagos pendientes (colapsable) -->
+            <div class="collapse mt-3" id="pagosPendientesDetalle">
+                <div class="card card-body">
+                    <h6>Pagos Pendientes:</h6>
+                    <div class="row g-2">
+                        <?php foreach ($pagosPendientes as $pago): ?>
+                        <div class="col-md-6">
+                            <div class="card border-warning h-100">
+                                <div class="card-body p-3">
+                                    <h6 class="card-title text-warning mb-2">
+                                        💰 $<?php echo number_format($pago['amount'], 2); ?>
+                                    </h6>
+                                    <p class="card-text small mb-2">
+                                        <strong>Método:</strong> <?php echo htmlspecialchars($pago['payment_method'] ?? 'PayPal'); ?><br>
+                                        <strong>Fecha:</strong> <?php echo date('d/m/Y', strtotime($pago['payment_date'])); ?>
+                                    </p>
+                                    <?php if (!empty($pago['description'])): ?>
+                                    <p class="card-text small text-muted mb-2">
+                                        <?php echo htmlspecialchars($pago['description']); ?>
+                                    </p>
+                                    <?php endif; ?>
+                                    <a href="/plataforma-clases-online/home/pagar_pendiente?payment_id=<?php echo $pago['payment_id']; ?>" 
+                                       class="btn btn-warning btn-sm w-100">
+                                        💳 Pagar Ahora
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <!-- Secciones del Dashboard -->
         <div class="row g-4">
             <!-- Calendario de Reservas -->
@@ -319,6 +377,7 @@
                             <div class="empty-icon">📚</div>
                             <p>No tienes clases reservadas aún</p>
                             <a href="/plataforma-clases-online/home/explorar_profesores" class="btn btn-primary btn-sm">Explorar Profesores</a>
+                            <a href="/plataforma-clases-online/home/info_pagos_prueba" class="btn btn-info btn-sm ms-2">🧪 Métodos de Pago de Prueba</a>
                         </div>
                         <?php else: ?>
                         <!-- Mostrar mensaje de éxito o error si existe -->
@@ -753,6 +812,9 @@
                                 ${reserva.notes ? `<div class="reservation-notes">📝 ${reserva.notes}</div>` : ''}
                                 ${reserva.academic_level ? `<div class="reservation-level">🎓 ${reserva.academic_level}</div>` : ''}
                                 ${reserva.hourly_rate ? `<div class="reservation-rate">💰 $${reserva.hourly_rate}/hora</div>` : ''}
+                                <div class="reservation-link">
+                                    ${reserva.meeting_link ? `🔗 Enlace de las reuniones: <a href="${reserva.meeting_link}" target="_blank" class="btn btn-primary btn-sm">Ir a la Reunión</a>` : '🔗 Enlace no disponible'}
+                                </div>
                                 <div class="reservation-actions">
                                     ${(reserva.reservation_status === 'pendiente' || reserva.reservation_status === 'confirmada') ?
                                         `<button class="btn btn-outline-danger btn-sm" onclick="cancelarClase('${reserva.reservation_id}')">Cancelar Clase</button>`

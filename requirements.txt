@@ -32,7 +32,7 @@ Crear un archivo `phpinfo.php` en la raíz del proyecto:
 <?php phpinfo(); ?>
 ```
 
-Acceder a `http://localhost/plataforma-clases-online/phpinfo.php` y verificar:
+Acceder a `http://localhost:[PUERTO]/plataforma-clases-online/phpinfo.php` y verificar:
 - Versión de PHP ≥ 7.4
 - Extensiones PDO y MySQL habilitadas
 - Sessions habilitadas
@@ -45,13 +45,13 @@ Eliminar el archivo después de verificar.
 2. Iniciar Apache y MySQL desde el panel de control
 3. Clonar el proyecto en `C:\xampp\htdocs\plataforma-clases-online`
 4. Crear base de datos y configurar credenciales
-5. Acceder a `http://localhost/plataforma-clases-online`
+5. Acceder a `http://localhost:[PUERTO]/plataforma-clases-online`
 
 ## Solución de Problemas
 
 ### Error de conexión a BD
 - Verificar que MySQL esté ejecutándose
-- Comprobar credenciales en `config/database.php`
+- Comprobar credenciales en `config/config.php`
 - Asegurar que la BD `plataforma_clases` existe
 
 ### Error 500 Internal Server Error

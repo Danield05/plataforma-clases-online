@@ -75,8 +75,8 @@ class UserModel {
     }
 
     public function updateUser($id, $data) {
-        $fields = ['first_name', 'last_name', 'email', 'profile_image'];
-        $values = [$data['first_name'], $data['last_name'], $data['email'], $data['profile_image'] ?? null];
+        $fields = ['first_name', 'last_name', 'email', 'phone', 'profile_image'];
+        $values = [$data['first_name'], $data['last_name'], $data['email'], $data['phone'] ?? null, $data['profile_image'] ?? null];
 
         if (!empty($data['password'])) {
             $fields[] = 'password';

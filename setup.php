@@ -167,9 +167,9 @@ try {
 
         // Insertar pagos de prueba (solo PayPal)
         $pdo->exec("INSERT IGNORE INTO Pagos (payment_id, user_id, amount, payment_status_id, payment_date, transaction_id, payment_method, description) VALUES
-            (1, 5, 15.00, 2, DATE_SUB(CURDATE(), INTERVAL 1 DAY), 'TXN_001', 'paypal', 'Pago por clase de Matemáticas'),
-            (2, 5, 18.00, 2, DATE_SUB(CURDATE(), INTERVAL 2 DAY), 'TXN_002', 'paypal', 'Pago por clase de Física'),
-            (3, 6, 20.00, 1, CURDATE(), 'TXN_003', 'paypal', 'Pago pendiente por clase de Programación')");
+            (1, 5, 15.00, 1, DATE_SUB(CURDATE(), INTERVAL 1 DAY), 'TXN_001', 'PayPal', 'Pago pendiente por clase de Matemáticas - Reserva: 1'),
+            (2, 5, 18.00, 2, DATE_SUB(CURDATE(), INTERVAL 2 DAY), 'TXN_002', 'PayPal', 'Pago completado por clase de Física - Reserva: 2'),
+            (3, 6, 20.00, 1, CURDATE(), 'TXN_003', 'PayPal', 'Pago pendiente por clase de Programación - Reserva: 3')");
 
         // Insertar reviews de prueba
         $pdo->exec("INSERT IGNORE INTO Reviews (review_id, reservation_id, reviewer_user_id, reviewed_user_id, rating, comment) VALUES
@@ -185,10 +185,10 @@ try {
             (1, 'full_access')");
 
         // Profesores
-        $pdo->exec("INSERT IGNORE INTO Profesor (user_id, personal_description, academic_level, hourly_rate) VALUES
-            (2, 'Profesora de Matemáticas y Física', 'Licenciatura en Matemáticas', 15.00),
-            (3, 'Profesor de Programación', 'Ingeniería en Sistemas', 20.00),
-            (4, 'Profesora de Inglés', 'Certificación TEFL', 12.00)");
+        $pdo->exec("INSERT IGNORE INTO Profesor (user_id, personal_description, academic_level, hourly_rate, meeting_link) VALUES
+            (2, 'Profesora de Matemáticas y Física', 'Licenciatura en Matemáticas', 15.00, 'https://meet.google.com/myf-uwzy-hdz'),
+            (3, 'Profesor de Programación', 'Ingeniería en Sistemas', 20.00, 'https://meet.google.com/myf-uwzy-hdz'),
+            (4, 'Profesora de Inglés', 'Certificación TEFL', 12.00, 'https://meet.google.com/myf-uwzy-hdz')");
 
         // Estudiantes
         $pdo->exec("INSERT IGNORE INTO Estudiante (user_id, personal_description) VALUES
@@ -270,15 +270,18 @@ if (!empty($permission_errors)) {
 
 echo "\n🎉 Instalación completada!\n";
 echo "========================\n";
-echo "Tu plataforma está lista. Accede a: http://localhost/plataforma-clases-online\n\n";
+echo "Tu plataforma está lista para ser utilizada.\n\n";
+echo "URLs de acceso (ajusta el puerto según tu configuración de XAMPP):\n";
+echo "- Página principal: http://localhost:[PUERTO]/plataforma-clases-online\n";
+echo "- Registrar nuevos usuarios: http://localhost:[PUERTO]/plataforma-clases-online/register\n";
+echo "- Iniciar sesión: http://localhost:[PUERTO]/plataforma-clases-online/auth/login\n\n";
 
 echo "Usuarios de prueba:\n";
 echo "- Admin: admin@plataforma.com / admin123\n";
 echo "- Profesores: maria.profesor@plataforma.com, carlos.profesor@plataforma.com, ana.profesor@plataforma.com / prof123\n";
 echo "- Estudiantes: juan.estudiante@plataforma.com, maria.estudiante@plataforma.com, pedro.estudiante@plataforma.com / estu123\n\n";
 
-echo "Para registrar nuevos usuarios: http://localhost:8080/plataforma-clases-online/register\n";
-echo "Para iniciar sesión: http://localhost/plataforma-clases-online/auth/login\n\n";
+
 
 echo "¡Disfruta tu plataforma de clases online! 📚\n";
 ?>
