@@ -12,7 +12,7 @@ class HomeController
         );
         return $string;
     }
-
+  
     public function index()
     {
         // Verificar si el usuario está logueado
@@ -1031,12 +1031,77 @@ class HomeController
     public function reviews()
     {
         AuthController::checkAuth();
-        AuthController::checkRole(['administrador']);
+        AuthController::checkRole(['administrador', 'estudiante']);
 
         require_once 'models/ReviewModel.php';
+        require_once 'models/ReservaModel.php';
+        require_once 'models/ProfesorModel.php';
+        
         $reviewModel = new ReviewModel();
-        $reviews = $reviewModel->getReviews();
-        require_once 'views/layouts/reviews.php';
+        $reservaModel = new ReservaModel();
+        $profesorModel = new ProfesorModel();
+
+        if ($_SESSION['role'] === 'estudiante') {
+            // Obtener todas las reservas del estudiante
+            $reservas = $reservaModel->getReservasByEstudiante($_SESSION['user_id']);
+            
+            // Obtener las reviews existentes del estudiante
+            $reviews = $reviewModel->getReviewsByEstudiante($_SESSION['user_id']);
+            
+            $data = [
+                'reservas' => $reservas,
+                'reviews' => $reviews
+            ];
+            
+            extract($data);
+            require_once 'views/views_estudiante/create_reviews.php';
+        } else {
+            // Para administradores, mostrar todas las reviews
+            $reviews = $reviewModel->getReviews();
+            require_once 'views/layouts/reviews.php';
+        }
+    }
+
+    public function store_review()
+    {
+        AuthController::checkAuth();
+        AuthController::checkRole(['estudiante']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /plataforma-clases-online/home/reviews');
+            exit;
+        }
+
+        require_once 'models/ReviewModel.php';
+        require_once 'models/ReservaModel.php';
+        $reviewModel = new ReviewModel();
+        $reservaModel = new ReservaModel();
+
+        // Verificar que la reserva existe y pertenece al estudiante
+        $reservaId = $_POST['reservation_id'] ?? null;
+        $reserva = $reservaModel->getReservaById($reservaId);
+
+        if (!$reserva || $reserva['student_user_id'] != $_SESSION['user_id']) {
+            header('Location: /plataforma-clases-online/home/reviews?error=invalid_reservation');
+            exit;
+        }
+
+        $data = [
+            'reservation_id' => $reservaId,
+            'reviewer_user_id' => $_SESSION['user_id'], // estudiante
+            'reviewed_user_id' => $reserva['user_id'], // profesor
+            'rating' => $_POST['rating'] ?? null,
+            'comment' => $_POST['comment'] ?? null
+        ];
+
+        $created = $reviewModel->createReview($data);
+        
+        if ($created) {
+            header('Location: /plataforma-clases-online/home/reviews?status=created');
+        } else {
+            header('Location: /plataforma-clases-online/home/reviews?status=error');
+        }
+        exit;
     }
 
     public function perfil_edit()
