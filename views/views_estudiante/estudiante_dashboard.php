@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -212,6 +213,7 @@
         }
     </style>
 </head>
+
 <body>
     <?php 
     // Definir la página actual para el header
@@ -471,7 +473,7 @@
                                     <div class="action-icon">⭐</div>
                                     <h4>Mejor Valorados</h4>
                                     <p>Profesores con mejores calificaciones</p>
-                                    <a href="/plataforma-clases-online/home/explorar_profesores" class="btn btn-outline-warning btn-sm">Ver Top</a>
+                                    <a href="/plataforma-clases-online/home/reviews" class="btn btn-outline-warning btn-sm">Ver Reviews</a>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -914,4 +916,5 @@
         });
     </script>
 </body>
+
 </html>

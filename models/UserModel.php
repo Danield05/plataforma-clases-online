@@ -47,10 +47,10 @@ class UserModel {
                 case 2: // Profesor
                     require_once 'models/ProfesorModel.php';
                     $profesorModel = new ProfesorModel();
-                    // Generar professor_id único (diferente al user_id)
-                    $professorId = $userId + 1000; // Offset para evitar conflictos
+                    // Generar profesor_id único (diferente al user_id)
+                    $profesorId = $userId + 1000; // Offset para evitar conflictos
                     $profesorModel->createProfesor($userId, [
-                        'professor_id' => $professorId,
+                        'profesor_id' => $profesorId,
                         'personal_description' => $data['personal_description'] ?? null,
                         'academic_level' => $data['academic_level'] ?? null,
                         'hourly_rate' => $data['hourly_rate'] ?? null
@@ -75,8 +75,8 @@ class UserModel {
     }
 
     public function updateUser($id, $data) {
-        $fields = ['first_name', 'last_name', 'email', 'profile_image'];
-        $values = [$data['first_name'], $data['last_name'], $data['email'], $data['profile_image'] ?? null];
+        $fields = ['first_name', 'last_name', 'email', 'phone', 'profile_image'];
+        $values = [$data['first_name'], $data['last_name'], $data['email'], $data['phone'] ?? null, $data['profile_image'] ?? null];
 
         if (!empty($data['password'])) {
             $fields[] = 'password';
