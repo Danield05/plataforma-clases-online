@@ -53,24 +53,28 @@
 
                 <div class="form-group-modern">
                     <label for="first_name">Nombre</label>
-                    <input type="text" id="first_name" name="first_name" required placeholder="Ingresa tu nombre" suggested="Nombre">
+                    <input type="text" id="first_name" name="first_name" required placeholder="Ingresa tu nombre">
                 </div>
 
                 <div class="form-group-modern">
                     <label for="last_name">Apellido</label>
-                    <input type="text" id="last_name" name="last_name" required placeholder="Ingresa tu apellido" suggested="Apellido">
+                    <input type="text" id="last_name" name="last_name" required placeholder="Ingresa tu apellido">
                 </div>
 
                 <div class="form-group-modern">
                     <label for="email">Correo Electrónico</label>
-                    <input type="email" id="email" name="email" required placeholder="Ingresa tu correo electrónico" suggested="email">
+                    <input type="email" id="email" name="email" required placeholder="Ingresa tu correo electrónico">
                 </div>
 
                 <div class="form-group-modern">
                     <label for="password">Contraseña</label>
-                    <input type="password" id="password" name="password" required placeholder="Ingresa tu contraseña" autocomplete="current-password">
+                    <input type="password" id="password" name="password" required placeholder="Ingresa tu contraseña">
                 </div>
 
+                <div class="form-group-modern">
+                    <label for="confirm_password">Confirmar Contraseña</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required placeholder="Confirma tu contraseña">
+                </div>
                 <!-- Campos específicos para profesor -->
                 <div id="profesor-fields" style="display: none;">
                     <div class="form-group-modern">
