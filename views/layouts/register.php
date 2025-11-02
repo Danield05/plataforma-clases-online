@@ -133,36 +133,7 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function toggleFields() {
-            const role = document.getElementById('id_role').value;
-            const profesorFields = document.getElementById('profesor-fields');
-            const descriptionField = document.getElementById('description-field');
-
-            if (role === '2') { // Profesor
-                profesorFields.style.display = 'block';
-                descriptionField.style.display = 'block';
-            } else if (role === '3') { // Estudiante
-                profesorFields.style.display = 'none';
-                descriptionField.style.display = 'block';
-            } else {
-                profesorFields.style.display = 'none';
-                descriptionField.style.display = 'none';
-            }
-        }
-    </script>
-    <script>
-        // Auto-ocultar la notificación de error después de 5 segundos
-        document.addEventListener('DOMContentLoaded', function () {
-            const errorAlert = document.getElementById('errorAlert');
-            if (errorAlert) {
-                setTimeout(function () {
-                    const bsAlert = new bootstrap.Alert(errorAlert);
-                    bsAlert.close();
-                }, 5000); // 5 segundos
-            }
-        });
-    </script>
+    <script src="/plataforma-clases-online/public/js/register.js?v=<?php echo time(); ?>"></script>
 </body>
 
 </html>

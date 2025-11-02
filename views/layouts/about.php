@@ -6,39 +6,7 @@
     <title>ℹ️ Acerca de - Plataforma de Clases Online</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/plataforma-clases-online/public/css/style.css?v=<?php echo time(); ?>">
-    <style>
-        /* Animación de flotación para el birrete */
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0px);
-            }
-            50% {
-                transform: translateY(-20px);
-            }
-        }
-        
-        .about-icon {
-            font-size: 6rem;
-            animation: float 3s ease-in-out infinite;
-            display: inline-block;
-        }
-        
-        .about-hero {
-            padding: 3rem 0;
-        }
-        
-        .about-title {
-            font-size: 2.5rem;
-            color: #371783;
-            margin-bottom: 1.5rem;
-        }
-        
-        .about-description {
-            font-size: 1.2rem;
-            color: #666;
-            line-height: 1.8;
-        }
-    </style>
+    <link rel="stylesheet" href="/plataforma-clases-online/public/css/about.css?v=<?php echo time(); ?>">
 </head>
 <body>
     <?php 
@@ -201,5 +169,6 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/plataforma-clases-online/public/js/script.js"></script>
+    <script src="/plataforma-clases-online/public/js/about.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

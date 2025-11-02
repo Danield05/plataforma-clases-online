@@ -1,3 +1,17 @@
+let currentReservationId = null;
+
+function showCompleteModal(reservationId) {
+    currentReservationId = reservationId;
+    const modal = new bootstrap.Modal(document.getElementById('completeReservationModal'));
+    modal.show();
+}
+
+document.getElementById('confirmComplete').addEventListener('click', function() {
+    if (currentReservationId) {
+        document.querySelector(`form#completeForm input[value="${currentReservationId}"]`).closest('form').submit();
+    }
+});
+
 function openRescheduleModal(reservationId, estudianteName, currentDate) {
     document.getElementById('reservationId').value = reservationId;
     document.getElementById('estudianteInfo').value = estudianteName;

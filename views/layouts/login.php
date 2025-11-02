@@ -12,6 +12,7 @@ require_once __DIR__ . '/../../config/config.php';
     <title>🔐 Login - Plataforma de Clases Online</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/plataforma-clases-online/public/css/style.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="/plataforma-clases-online/public/css/login.css?v=<?php echo time(); ?>">
 </head>
 <body class="login-page">
     <!-- Estrellas espaciales -->
@@ -93,17 +94,6 @@ require_once __DIR__ . '/../../config/config.php';
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Auto-ocultar la notificación de error después de 5 segundos
-        document.addEventListener('DOMContentLoaded', function() {
-            const errorAlert = document.getElementById('errorAlert');
-            if (errorAlert) {
-                setTimeout(function() {
-                    const bsAlert = new bootstrap.Alert(errorAlert);
-                    bsAlert.close();
-                }, 5000); // 5 segundos
-            }
-        });
-    </script>
+    <script src="/plataforma-clases-online/public/js/login.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

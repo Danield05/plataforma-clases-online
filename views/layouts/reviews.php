@@ -10,30 +10,7 @@ $currentPage = 'reviews';
     <title>⭐ Reviews - Plataforma de Clases Online</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/plataforma-clases-online/public/css/style.css?v=1760937939">
-    <style>
-        .reviews-header {
-            background: linear-gradient(135deg, #ffd700, #ffb347);
-            color: white;
-            border-radius: 10px 10px 0 0;
-            padding: 20px;
-            margin-bottom: 0;
-        }
-        .reviews-table {
-            background: white;
-            border-radius: 0 0 10px 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .table th {
-            background: #f8f9fa;
-            border: none;
-            font-weight: 600;
-            color: #495057;
-        }
-        .table td {
-            border: none;
-            vertical-align: middle;
-        }
-    </style>
+    <link rel="stylesheet" href="/plataforma-clases-online/public/css/reviews.css?v=<?php echo time(); ?>">
 </head>
 <body>
     <header class="modern-header">
@@ -118,5 +95,6 @@ $currentPage = 'reviews';
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/plataforma-clases-online/public/js/script.js"></script>
+    <script src="/plataforma-clases-online/public/js/reviews.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

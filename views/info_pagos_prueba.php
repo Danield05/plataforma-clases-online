@@ -6,6 +6,7 @@
     <title>🧪 Métodos de Pago de Prueba - Plataforma de Clases Online</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/plataforma-clases-online/public/css/style.css">
+    <link rel="stylesheet" href="/plataforma-clases-online/public/css/info_pagos_prueba.css?v=<?php echo time(); ?>">
     <style>
         .test-info-card {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);

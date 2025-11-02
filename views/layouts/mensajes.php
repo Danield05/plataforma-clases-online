@@ -6,6 +6,7 @@
     <title>Mensajes - Plataforma de Clases Online</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/plataforma-clases-online/public/css/style.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="/plataforma-clases-online/public/css/mensajes.css?v=<?php echo time(); ?>">
 </head>
 <body>
     <?php
@@ -35,12 +36,12 @@
                             <?php if (!empty($conversaciones)): ?>
                                 <?php foreach($conversaciones as $conv): ?>
                                     <a href="#" class="list-group-item list-group-item-action d-flex align-items-center">
-                                        <div class="flex-shrink-0 me-3">
+                                        <div class="shrink-0 me-3">
                                             <div class="avatar-circle">
                                                 <?php echo strtoupper(substr($conv['nombre'], 0, 1)); ?>
                                             </div>
                                         </div>
-                                        <div class="flex-grow-1">
+                                        <div class="grow">
                                             <div class="fw-bold"><?php echo htmlspecialchars($conv['nombre']); ?></div>
                                             <small class="text-muted"><?php echo htmlspecialchars(substr($conv['ultimo_mensaje'], 0, 30)); ?>...</small>
                                         </div>
@@ -67,7 +68,7 @@
             <div class="col-lg-8">
                 <div class="dashboard-card">
                     <div class="card-header d-flex align-items-center">
-                        <div class="flex-shrink-0 me-3">
+                        <div class="shrink-0 me-3">
                             <div class="avatar-circle">A</div>
                         </div>
                         <div>
@@ -235,20 +236,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/plataforma-clases-online/public/js/script.js"></script>
-    <script>
-        // Auto-scroll al final del chat
-        const chatMessages = document.getElementById('chatMessages');
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-
-        // Enviar mensaje con Enter
-        document.getElementById('messageInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                // Aquí iría la lógica para enviar el mensaje
-                console.log('Mensaje enviado:', this.value);
-                this.value = '';
-            }
-        });
-    </script>
+    <script src="/plataforma-clases-online/public/js/mensajes.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

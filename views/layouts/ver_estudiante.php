@@ -6,54 +6,7 @@
     <title>Perfil del Estudiante - Plataforma de Clases Online</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/plataforma-clases-online/public/css/style.css?v=<?php echo time(); ?>">
-    <style>
-        .avatar-large {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #371783 0%, #8B5A96 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.8rem;
-            font-weight: bold;
-            margin: 0 auto;
-            box-shadow: 0 4px 12px rgba(55, 23, 131, 0.3);
-        }
-
-        .card {
-            border: none;
-            border-radius: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        }
-
-        .table th {
-            font-weight: 600;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .btn {
-            border-radius: 8px;
-            font-weight: 500;
-        }
-
-        .badge {
-            font-size: 0.75rem;
-            padding: 0.5em 0.75em;
-        }
-
-        .fs-1 {
-            font-size: 2.5rem !important;
-        }
-    </style>
+    <link rel="stylesheet" href="/plataforma-clases-online/public/css/ver_estudiante.css?v=<?php echo time(); ?>">
 </head>
 <body>
     <?php 

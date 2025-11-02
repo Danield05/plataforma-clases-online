@@ -1,4 +1,3 @@
-// JavaScript específico para la página de explorar profesores
 document.addEventListener('DOMContentLoaded', function() {
     // Función para manejar el envío del formulario de búsqueda
     const searchForm = document.querySelector('form[method="GET"]');

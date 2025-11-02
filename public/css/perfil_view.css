@@ -1,0 +1,211 @@
+/* Asegurar que el footer sea visible */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+}
+
+.modern-footer {
+    margin-top: auto;
+    background: linear-gradient(135deg, #371783 0%, #8B5A96 100%);
+    color: white;
+    padding: 2rem 1rem;
+    width: 100%;
+    position: relative;
+    z-index: 10;
+}
+
+.profile-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.profile-header {
+    background: linear-gradient(135deg, #371783 0%, #8B5A96 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.profile-avatar-container {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 1rem;
+    cursor: pointer;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.profile-avatar-container:hover .profile-photo-overlay {
+    opacity: 1;
+}
+
+.profile-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border: 4px solid white;
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 4px solid white;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.profile-photo-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 50%;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.profile-photo-overlay i {
+    font-size: 1.5rem;
+    margin-bottom: 0.3rem;
+}
+
+.profile-name {
+    font-size: 1.6rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.profile-role {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.profile-body {
+    padding: 2rem;
+}
+
+.info-section {
+    margin-bottom: 1.5rem;
+}
+
+.info-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #371783;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 500;
+    color: #666;
+}
+
+.info-value {
+    font-weight: 600;
+    color: #333;
+}
+
+.btn-edit-profile {
+    background: linear-gradient(135deg, #371783 0%, #8B5A96 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-edit-profile:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(55, 23, 131, 0.3);
+    color: white;
+}
+
+.rate-badge {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+/* Avatar con colores generados por ID */
+.avatar-1 { background: linear-gradient(135deg, #371783 0%, #8B5A96 100%); }
+.avatar-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+.avatar-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.avatar-4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+.avatar-5 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+.avatar-6 { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+.avatar-7 { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
+.avatar-8 { background: linear-gradient(135deg, #ff8a80 0%, #ffb74d 100%); }
+
+/* Mejorar la accesibilidad y UX */
+.profile-avatar-container:focus {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+.profile-avatar-container:active {
+    transform: scale(0.98);
+}
+
+/* Animación suave para cambios */
+.profile-photo, .profile-avatar {
+    transition: all 0.3s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .profile-avatar-container, .profile-photo, .profile-avatar {
+        width: 80px;
+        height: 80px;
+    }
+
+    .profile-avatar {
+        font-size: 2rem;
+    }
+}
