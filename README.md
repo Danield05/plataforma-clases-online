@@ -452,18 +452,6 @@ mysql -u root -p plataforma_clases -e "DESCRIBE users; DESCRIBE reservations;"
 - [x] **Gestión de Perfiles con Fotos** ⭐
 - [x] **Sistema de Estados de Reserva y Pago** ⭐
 
-### 🚀 Próximas Mejoras (Fase 2 - Opcionales)
-- [ ] Notificaciones por email automáticas
-- [ ] Sistema de pagos integrado (PayPal, Stripe)
-- [ ] Chat en tiempo real entre profesor-estudiante
-- [ ] API REST para aplicaciones móviles
-- [ ] Dashboard con gráficos interactivos (Chart.js avanzado)
-- [ ] Backup automático de base de datos
-- [ ] Logs de auditoría para acciones administrativas
-- [ ] Sistema de cupones y descuentos
-- [ ] Integración con calendario externo (Google Calendar)
-- [ ] Sistema de recordatorios automáticos
-- [ ] App móvil nativa
 
 ## 📞 Soporte
 
