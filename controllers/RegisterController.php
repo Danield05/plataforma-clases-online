@@ -1,5 +1,9 @@
 <?php
 
+// Configurar logging
+ini_set('log_errors', 1);
+ini_set('error_log', 'C:\xampp\php\logs\php_error_log');
+
 class RegisterController {
     public function index() {
         // Mostrar formulario de registro
@@ -13,28 +17,21 @@ class RegisterController {
             $lastName = $_POST['last_name'] ?? '';
             $email = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
-            $confirmPassword = $_POST['confirm_password'] ?? '';
-            $academicLevel = $_POST['academic_level'] ?? '';
-            $hourlyRate = $_POST['hourly_rate'] ?? '';
-            
 
             // Validaciones básicas
             if (empty($firstName) || empty($lastName) || empty($email) || empty($password)) {
                 $error = 'Todos los campos son obligatorios';
-            } elseif ($password !== $confirmPassword) {
-                $error = 'Las contraseñas no coinciden';
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $error = 'Email inválido';
             } elseif (!in_array($role, ['1', '2', '3'])) {
-                $error = 'Rol inválido';
+                $error = 'Por favor selecciona un tipo de usuario válido';
             } else {
                 // Crear usuario
                 require_once 'models/UserModel.php';
                 $userModel = new UserModel();
 
                 // Verificar si email ya existe
-                $existingUser = $userModel->authenticate($email, 'dummy');
-                if ($existingUser !== false) {
+                if ($userModel->emailExists($email)) {
                     $error = 'El email ya está registrado';
                 } else {
                     $data = [
@@ -43,16 +40,22 @@ class RegisterController {
                         'first_name' => $firstName,
                         'last_name' => $lastName,
                         'email' => $email,
+                        'phone' => $_POST['phone'] ?? null,
                         'password' => $password,
                         'personal_description' => $_POST['personal_description'] ?? null,
                         'academic_level' => $_POST['academic_level'] ?? null,
-                        'hourly_rate' => $_POST['hourly_rate'] ?? null
+                        'hourly_rate' => $_POST['hourly_rate'] ?? null,
+                        'meeting_link' => $_POST['meeting_link'] ?? null
                     ];
 
                     if ($userModel->createUser($data)) {
-                        $success = 'Usuario registrado exitosamente';
+                        // Registro exitoso - redirigir al login con mensaje
+                        session_start();
+                        $_SESSION['register_success'] = '¡Registro exitoso! Tu cuenta ha sido creada correctamente. Ya puedes iniciar sesión.';
+                        header('Location: /plataforma-clases-online/auth/login');
+                        exit;
                     } else {
-                        $error = 'Error al registrar usuario';
+                        $error = 'Error al registrar usuario. Por favor intenta de nuevo.';
                     }
                 }
             }
