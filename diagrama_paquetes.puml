@@ -1,0 +1,40 @@
+@startuml Diagrama de Paquetes - Plataforma de Clases Online
+
+package "Presentación" as Presentation #LightBlue {
+    [Vistas PHP/HTML]
+    [CSS/JS Assets]
+    [Templates]
+}
+
+package "Lógica de Negocio" as BusinessLogic #LightGreen {
+    [Controladores]
+    [Modelos de Dominio]
+    [Servicios de Aplicación]
+}
+
+package "Acceso a Datos" as DataAccess #LightYellow {
+    [Modelos de Datos]
+    [Queries SQL]
+    [ORM/DAO]
+}
+
+package "Infraestructura" as Infrastructure #LightCoral {
+    [Configuración]
+    [Helpers]
+    [Utilidades]
+}
+
+package "Base de Datos" as Database #LightGray {
+    [plataforma_clases.sql]
+    [Tablas MySQL]
+    [Stored Procedures]
+}
+
+' Dependencias entre paquetes
+Presentation --> BusinessLogic : solicita datos
+BusinessLogic --> DataAccess : accede a datos
+BusinessLogic --> Infrastructure : utiliza utilidades
+DataAccess --> Database : conecta y consulta
+Infrastructure --> Database : configuración BD
+
+@enduml

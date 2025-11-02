@@ -1,0 +1,100 @@
+@startuml Diagrama de Componentes - Plataforma de Clases Online
+skinparam linetype ortho
+skinparam nodesep 150
+skinparam ranksep 150
+skinparam padding 40
+
+actor "Usuario Web" as User
+
+package "Interfaz de Usuario" as UI #LightBlue {
+    [Login/Register UI] as LoginUI
+    [Dashboard Estudiante] as StudentDashboard
+    [Dashboard Profesor] as TeacherDashboard
+    [Dashboard Admin] as AdminDashboard
+    [Explorar Profesores] as ExploreTeachers
+    [Reservar Clases] as BookClasses
+    [Gestión de Pagos] as PaymentManager
+    [Sistema de Reviews] as ReviewSystem
+}
+
+package "Lógica de Aplicación" as Controllers #LightGreen {
+    [AuthController] as AuthCtrl
+    [HomeController] as HomeCtrl
+    [RegisterController] as RegisterCtrl
+    [ReportesController] as ReportsCtrl
+}
+
+package "Capa de Servicios" as Models #LightYellow {
+    [UserModel] as UserModel
+    [ProfesorModel] as TeacherModel
+    [EstudianteModel] as StudentModel
+    [ReservaModel] as BookingModel
+    [PagoModel] as PaymentModel
+    [ReviewModel] as ReviewModel
+    [MateriaModel] as SubjectModel
+    [DisponibilidadModel] as AvailabilityModel
+}
+
+package "Servicios Externos" as External #LightCoral {
+    [PayPal API] as PayPal
+    [SMTP Service] as SMTP
+    [File Storage] as FileStorage
+}
+
+package "Base de Datos" as Database #LightGray {
+    [MySQL Database] as DB
+    [plataforma_clases.sql] as Schema
+}
+
+' Flujo ordenado con líneas rectas
+User -right-> LoginUI : 1. accede
+LoginUI -right-> AuthCtrl : 2. autentica
+StudentDashboard -down-> HomeCtrl : 3. navega
+TeacherDashboard -down-> HomeCtrl : 4. navega
+AdminDashboard -down-> HomeCtrl : 5. navega
+ExploreTeachers -down-> HomeCtrl : 6. busca
+BookClasses -down-> HomeCtrl : 7. reserva
+PaymentManager -down-> HomeCtrl : 8. paga
+ReviewSystem -down-> HomeCtrl : 9. reseña
+
+' Controladores a modelos
+AuthCtrl -right-> UserModel : 10. valida
+RegisterCtrl -right-> UserModel : 11. registra
+HomeCtrl -down-> TeacherModel : 12. gestiona profesores
+HomeCtrl -down-> StudentModel : 13. gestiona estudiantes
+HomeCtrl -down-> BookingModel : 14. gestiona reservas
+HomeCtrl -down-> PaymentModel : 15. gestiona pagos
+HomeCtrl -down-> ReviewModel : 16. gestiona reseñas
+HomeCtrl -down-> SubjectModel : 17. gestiona materias
+HomeCtrl -down-> AvailabilityModel : 18. gestiona disponibilidad
+ReportsCtrl -down-> BookingModel : 19. reporta reservas
+ReportsCtrl -down-> PaymentModel : 20. reporta pagos
+ReportsCtrl -down-> ReviewModel : 21. reporta reseñas
+
+' Servicios externos
+PaymentModel -right-> PayPal : 22. procesa pagos
+ReportsCtrl -right-> SMTP : 23. envía emails
+HomeCtrl -right-> FileStorage : 24. guarda archivos
+
+' Base de datos
+UserModel -down-> DB : 25. CRUD usuarios
+TeacherModel -down-> DB : 26. CRUD profesores
+StudentModel -down-> DB : 27. CRUD estudiantes
+BookingModel -down-> DB : 28. CRUD reservas
+PaymentModel -down-> DB : 29. CRUD pagos
+ReviewModel -down-> DB : 30. CRUD reseñas
+SubjectModel -down-> DB : 31. CRUD materias
+AvailabilityModel -down-> DB : 32. CRUD disponibilidad
+
+' Interfaces
+interface "IAuthentication" as IAuth
+interface "IBooking" as IBooking
+interface "IPayment" as IPayment
+interface "IReporting" as IReporting
+
+AuthCtrl ..> IAuth : implementa
+HomeCtrl ..> IBooking : implementa
+HomeCtrl ..> IPayment : implementa
+ReportsCtrl ..> IReporting : implementa
+
+@enduml

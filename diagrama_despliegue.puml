@@ -1,0 +1,52 @@
+@startuml Diagrama de Despliegue - Plataforma de Clases Online
+
+node "Servidor Web Apache" as Apache {
+    frame "Aplicación PHP" as App {
+        [Controladores]
+        [Modelos]
+        [Vistas]
+        [Configuración]
+    }
+
+    database "MySQL Server" as MySQL {
+        [plataforma_clases.sql]
+        [Tablas de BD]
+    }
+}
+
+node "Navegador Web" as Browser {
+    [HTML/CSS/JS]
+    [PayPal SDK]
+}
+
+node "Servidor de Correo" as MailServer {
+    [SMTP Server]
+}
+
+node "Sistema de Archivos" as FileSystem {
+    [Uploads/]
+    [Profile Photos]
+}
+
+' Conexiones
+Browser --> Apache : HTTP/HTTPS
+App --> MySQL : PDO/MySQLi
+App --> MailServer : SMTP
+App --> FileSystem : File I/O
+
+note right of Apache
+    XAMPP Stack:
+    - Apache 2.4
+    - PHP 8.x
+    - MySQL 8.x
+end note
+
+note right of Browser
+    Tecnologías:
+    - HTML5
+    - CSS3
+    - JavaScript
+    - PayPal Integration
+end note
+
+@enduml
