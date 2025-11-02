@@ -1,6 +1,61 @@
 @import "variables-generales.css";
 @import "login.css";
 
+/*Estilo para login y register*/
+.login {
+  min-height: 90vh;
+}
+
+.bg-image {
+  background-image: url('https://img.freepik.com/fotos-premium/lugar-vacio-mesa-blanca_700248-25288.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+.login-heading {
+  font-weight: 300;
+}
+
+.btn-login {
+  font-size: 0.9rem;
+  letter-spacing: 0.05rem;
+  padding: 0.75rem 1rem;
+
+}
+.btn-login {
+    background: linear-gradient(135deg, #371783 0%, #8B5A96 100%);
+    transition: all 0.3s ease  ;
+    color: var(--color-white);
+    box-shadow: 0 4px 20px rgba(55, 23, 131, 0.3);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+.form-select {
+    margin-bottom: 1rem;
+}
+.register-container {
+    align-items: center;
+  margin-top: 50px;
+  margin-bottom: 50px;
+}
+.card-img-left {
+  width: 45%;
+  /* Link to your background image using in the property below! */
+  background: url('https://img.freepik.com/foto-gratis/teclado-gafas-cerca-notas-taza-cafe-escritorio_23-2148128455.jpg');
+  background-size: cover;
+}
+
+.btn-register {
+  
+   background: linear-gradient(135deg, #371783 0%, #8B5A96 100%);
+    transition: all 0.3s ease  ;
+    color: var(--color-white);
+    box-shadow: 0 4px 20px rgba(55, 23, 131, 0.3);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
 
 /* Estilos básicos para el proyecto MVC */
 body {

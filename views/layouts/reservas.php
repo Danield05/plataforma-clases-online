@@ -164,9 +164,9 @@
                                                         <!-- Clase no completada - mostrar botones de acción -->
                                                         <div class="d-flex gap-1 flex-wrap">
                                                             <?php if (strtolower($reserva['reservation_status']) === 'confirmada'): ?>
-                                                                <form method="post" action="/plataforma-clases-online/home/completar_reserva" style="display: inline;" onsubmit="return confirm('¿Estás seguro de que quieres marcar esta clase como completada?');">
+                                                                <form method="post" action="/plataforma-clases-online/home/completar_reserva" id="completeForm" style="display: inline;">
                                                                     <input type="hidden" name="reservation_id" value="<?php echo htmlspecialchars($reserva['reservation_id']); ?>">
-                                                                    <button type="submit" class="btn btn-completar btn-sm">✅ Completar</button>
+                                                                    <button type="button" class="btn btn-completar btn-sm" onclick="showCompleteModal(<?php echo htmlspecialchars($reserva['reservation_id']); ?>)">✅ Completar</button>
                                                                 </form>
                                                             <?php endif; ?>
 
@@ -264,5 +264,38 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/plataforma-clases-online/public/js/script.js"></script>
     <script src="/plataforma-clases-online/public/js/reservas.js"></script>
+    <!-- Modal para confirmar completar reserva -->
+    <div class="modal fade" id="completeReservationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">¿Estás seguro?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que quieres marcar esta clase como completada?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-completar" id="confirmComplete">Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let currentReservationId = null;
+
+        function showCompleteModal(reservationId) {
+            currentReservationId = reservationId;
+            const modal = new bootstrap.Modal(document.getElementById('completeReservationModal'));
+            modal.show();
+        }
+
+        document.getElementById('confirmComplete').addEventListener('click', function() {
+            if (currentReservationId) {
+                document.querySelector(`form#completeForm input[value="${currentReservationId}"]`).closest('form').submit();
+            }
+        });
+    </script>
 </body>
 </html>
