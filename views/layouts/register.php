@@ -99,7 +99,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn-register">Registrarse</button>
+            <button type="submit" class="btn-register">Registrarse</button>
 
                 <div class="form-footer">
                     <p>© <?php echo date('Y'); ?> Plataforma Clases Online. Todos los derechos reservados.</p>

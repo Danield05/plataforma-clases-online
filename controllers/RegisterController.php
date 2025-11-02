@@ -14,6 +14,9 @@ class RegisterController {
             $email = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
             $confirmPassword = $_POST['confirm_password'] ?? '';
+            $academicLevel = $_POST['academic_level'] ?? '';
+            $hourlyRate = $_POST['hourly_rate'] ?? '';
+            
 
             // Validaciones básicas
             if (empty($firstName) || empty($lastName) || empty($email) || empty($password)) {
