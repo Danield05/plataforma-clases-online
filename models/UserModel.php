@@ -21,13 +21,14 @@ class UserModel {
 
     public function createUser($data) {
         // Insertar en Usuarios
-        $stmt = $this->db->prepare("INSERT INTO Usuarios (role_id, user_status_id, first_name, last_name, email, password, profile_image) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $this->db->prepare("INSERT INTO Usuarios (role_id, user_status_id, first_name, last_name, email, phone, password, profile_image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         $result = $stmt->execute([
             $data['role_id'],
             $data['user_status_id'],
             $data['first_name'],
             $data['last_name'],
             $data['email'],
+            $data['phone'] ?? null,
             password_hash($data['password'], PASSWORD_DEFAULT),
             $data['profile_image'] ?? null
         ]);
@@ -49,20 +50,21 @@ class UserModel {
                     $profesorModel = new ProfesorModel();
                     // Generar profesor_id único (diferente al user_id)
                     $profesorId = $userId + 1000; // Offset para evitar conflictos
-                    $profesorModel->createProfesor($userId, [
+                    $resultado = $profesorModel->createProfesor($userId, [
                         'profesor_id' => $profesorId,
                         'personal_description' => $data['personal_description'] ?? null,
                         'academic_level' => $data['academic_level'] ?? null,
-                        'hourly_rate' => $data['hourly_rate'] ?? null
+                        'hourly_rate' => $data['hourly_rate'] ?? null,
+                        'meeting_link' => $data['meeting_link'] ?? null
                     ]);
                     break;
                 case 3: // Estudiante
                     require_once 'models/EstudianteModel.php';
                     $estudianteModel = new EstudianteModel();
-                    // Generar student_id único (diferente al user_id)
-                    $studentId = $userId + 2000; // Offset para evitar conflictos
-                    $estudianteModel->createEstudiante($userId, [
-                        'student_id' => $studentId,
+                    // Generar estudiante_id único (diferente al user_id)
+                    $estudianteId = $userId + 2000; // Offset para evitar conflictos
+                    $resultado = $estudianteModel->createEstudiante($userId, [
+                        'estudiante_id' => $estudianteId,
                         'personal_description' => $data['personal_description'] ?? null
                     ]);
                     break;
@@ -102,6 +104,12 @@ class UserModel {
             return $user;
         }
         return false;
+    }
+
+    public function emailExists($email) {
+        $stmt = $this->db->prepare("SELECT email FROM Usuarios WHERE email = ?");
+        $stmt->execute([$email]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) !== false;
     }
 }
 ?>

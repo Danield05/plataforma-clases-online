@@ -18,20 +18,19 @@
         <div class="star"></div>
         <div class="star"></div>
     </div>
+
     <?php if (isset($error)): ?>
         <div class="alert alert-danger alert-dismissible fade show notification-alert" role="alert" id="errorAlert">
             <strong>¡Error!</strong> <?php echo $error; ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    <?php endif; ?>
-    <?php if (isset($success)): ?>
-        <div class="alert alert-success alert-dismissible fade show notification-alert" role="alert" id="successAlert">
+        </div>
     <?php endif; ?>
 
     <div class="register-container">
         <!-- Panel izquierdo con el formulario -->
         <div class="register-panel">
             <!-- Formulario de registro moderno -->
-            <form action="http://localhost/plataforma-clases-online/register" method="POST" id="registerForm"
+            <form action="/plataforma-clases-online/register" method="POST" id="registerForm"
                 class="modern-register-form">
                 <div class="form-header">
                     <div class="logo-container">
@@ -45,7 +44,6 @@
                     <label for="id_role">Tipo de Usuario:</label>
                     <select id="id_role" name="role" class="form-control" required onchange="toggleFields()">
                         <option value="">Seleccionar...</option>
-                        <option value="1">Administrador</option>
                         <option value="2">Profesor</option>
                         <option value="3">Estudiante</option>
                     </select>
@@ -53,39 +51,49 @@
 
                 <div class="form-group-modern">
                     <label for="first_name">Nombre</label>
-                    <input type="text" id="first_name" name="first_name" required placeholder="Ingresa tu nombre" suggested="Nombre">
+                    <input type="text" id="first_name" name="first_name" required placeholder="Ingresa tu nombre">
                 </div>
 
                 <div class="form-group-modern">
                     <label for="last_name">Apellido</label>
-                    <input type="text" id="last_name" name="last_name" required placeholder="Ingresa tu apellido" suggested="Apellido">
+                    <input type="text" id="last_name" name="last_name" required placeholder="Ingresa tu apellido">
                 </div>
 
                 <div class="form-group-modern">
                     <label for="email">Correo Electrónico</label>
-                    <input type="email" id="email" name="email" required placeholder="Ingresa tu correo electrónico" suggested="email">
+                    <input type="email" id="email" name="email" required placeholder="Ingresa tu correo electrónico">
+                </div>
+
+                <div class="form-group-modern">
+                    <label for="phone">Teléfono</label>
+                    <input type="tel" id="phone" name="phone" placeholder="Ingresa tu número de teléfono" suggested="phone">
                 </div>
 
                 <div class="form-group-modern">
                     <label for="password">Contraseña</label>
-                    <input type="password" id="password" name="password" required placeholder="Ingresa tu contraseña" autocomplete="current-password">
+                    <input type="password" id="password" name="password" required placeholder="Ingresa tu contraseña">
                 </div>
 
+                <div class="form-group-modern">
+                    <label for="confirm_password">Confirmar Contraseña</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required placeholder="Confirma tu contraseña">
+                </div>
                 <!-- Campos específicos para profesor -->
                 <div id="profesor-fields" style="display: none;">
                     <div class="form-group-modern">
                         <label for="academic_level">Nivel Académico:</label>
                         <input type="text" id="academic_level" name="academic_level"
-                            placeholder="Ingresa tu Nivel Académico">
-
-
+                            placeholder="Ej: Licenciatura, Maestría, Doctorado">
                     </div>
                     <div class="form-group-modern">
-                        <label for="hourly_rate">Tarifa por Hora:</label>
-                        <input type="number" id="hourly_rate" name="hourly_rate"
-                            placeholder="Ingresa tu Tarifa por Hora">
-
-
+                        <label for="hourly_rate">Tarifa por Hora ($):</label>
+                        <input type="number" id="hourly_rate" name="hourly_rate" step="0.01" min="0"
+                            placeholder="Ej: 25.00">
+                    </div>
+                    <div class="form-group-modern">
+                        <label for="meeting_link">Enlace de Reunión (Opcional):</label>
+                        <input type="url" id="meeting_link" name="meeting_link"
+                            placeholder="https://meet.google.com/... o https://zoom.us/...">
                     </div>
                 </div>
 
@@ -99,7 +107,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn-register">Registrarse</button>
+            <button type="submit" class="btn-register">Registrarse</button>
 
                 <div class="form-footer">
                     <p>© <?php echo date('Y'); ?> Plataforma Clases Online. Todos los derechos reservados.</p>
@@ -150,6 +158,43 @@
                 descriptionField.style.display = 'none';
             }
         }
+
+        // Debug para el formulario
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('registerForm');
+            form.addEventListener('submit', function(e) {
+                console.log('Formulario enviado!');
+                
+                // Obtener todos los datos del formulario
+                const formData = new FormData(form);
+                console.log('Datos del formulario:');
+                for (let [key, value] of formData.entries()) {
+                    console.log(key + ': ' + value);
+                }
+                
+                // Verificar campos requeridos
+                const role = document.getElementById('id_role').value;
+                const firstName = document.getElementById('first_name').value;
+                const lastName = document.getElementById('last_name').value;
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                if (!role || !firstName || !lastName || !email || !password) {
+                    console.error('Campos faltantes:', {
+                        role: role,
+                        firstName: firstName,
+                        lastName: lastName,
+                        email: email,
+                        password: password ? 'filled' : 'empty'
+                    });
+                    alert('Por favor completa todos los campos requeridos');
+                    e.preventDefault();
+                    return false;
+                }
+                
+                console.log('Todos los campos están completos, enviando...');
+            });
+        });
     </script>
     <script>
         // Auto-ocultar la notificación de error después de 5 segundos
@@ -161,6 +206,28 @@
                     bsAlert.close();
                 }, 5000); // 5 segundos
             }
+            
+            const successAlert = document.getElementById('successAlert');
+            if (successAlert) {
+                setTimeout(function () {
+                    const bsAlert = new bootstrap.Alert(successAlert);
+                    bsAlert.close();
+                }, 5000); // 5 segundos
+            }
+            
+            // Debug del formulario
+            const form = document.getElementById('registerForm');
+            form.addEventListener('submit', function(e) {
+                console.log('Formulario enviado');
+                console.log('Action:', form.action);
+                console.log('Method:', form.method);
+                
+                const formData = new FormData(form);
+                console.log('Datos del formulario:');
+                for (let [key, value] of formData.entries()) {
+                    console.log(key, value);
+                }
+            });
         });
     </script>
 </body>

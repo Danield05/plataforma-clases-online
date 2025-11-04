@@ -1,6 +1,10 @@
 <?php
 session_start();
 
+// Configurar logging
+ini_set('log_errors', 1);
+ini_set('error_log', 'C:\xampp\php\logs\php_error_log');
+
 // Punto de entrada del proyecto MVC en PHP
 
 // Incluir configuración de base de datos
@@ -12,12 +16,6 @@ $url = isset($_GET['url']) ? $_GET['url'] : 'home';
 // Remover el prefijo del proyecto si existe
 $url = preg_replace('/^plataforma-clases-online\//', '', $url);
 
-// Manejar rutas de auth
-if (isset($url[0]) && $url[0] === 'auth') {
-    $controller = 'AuthController';
-    $action = isset($url[1]) ? $url[1] : 'login';
-}
-
 $url = rtrim($url, '/');
 $url = explode('/', $url);
 
@@ -27,11 +25,23 @@ $controller = 'HomeController';
 // Acción por defecto
 $action = 'index';
 
-if (isset($url[0]) && !empty($url[0])) {
+// Manejar rutas de auth
+if (isset($url[0]) && $url[0] === 'auth') {
+    $controller = 'AuthController';
+    $action = isset($url[1]) ? $url[1] : 'login';
+}
+
+// Manejar ruta de registro
+if (isset($url[0]) && $url[0] === 'register') {
+    $controller = 'RegisterController';
+    $action = isset($url[1]) ? $url[1] : ($_SERVER['REQUEST_METHOD'] === 'POST' ? 'register' : 'index');
+}
+
+if (isset($url[0]) && !empty($url[0]) && $url[0] !== 'auth' && $url[0] !== 'register') {
     $controller = ucfirst($url[0]) . 'Controller';
 }
 
-if (isset($url[1]) && !empty($url[1])) {
+if (isset($url[1]) && !empty($url[1]) && $url[0] !== 'auth' && $url[0] !== 'register') {
     $action = $url[1];
 }
 
@@ -112,6 +122,7 @@ if (isset($url[0]) && $url[0] === 'reporte') {
 
 // Incluir y ejecutar el controlador
 $controllerFile = 'controllers/' . $controller . '.php';
+
 if (file_exists($controllerFile)) {
     require_once $controllerFile;
     $controllerInstance = new $controller();

@@ -23,6 +23,20 @@ require_once __DIR__ . '/../../config/config.php';
         <div class="star"></div>
     </div>
     
+    <?php 
+    // Mostrar mensaje de éxito del registro
+    session_start();
+    if (isset($_SESSION['register_success'])): 
+    ?>
+        <div class="alert alert-success alert-dismissible fade show notification-alert" role="alert" id="successAlert">
+            <strong>¡Éxito!</strong> <?php echo $_SESSION['register_success']; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php 
+        unset($_SESSION['register_success']); // Limpiar el mensaje después de mostrarlo
+    endif; 
+    ?>
+    
     <?php if (isset($error)): ?>
          <div class="alert alert-danger alert-dismissible fade show notification-alert" role="alert" id="errorAlert">
                  <strong>¡Error!</strong> <?php echo $error; ?>
@@ -94,14 +108,23 @@ require_once __DIR__ . '/../../config/config.php';
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Auto-ocultar la notificación de error después de 5 segundos
+        // Auto-ocultar las notificaciones después de 5 segundos
         document.addEventListener('DOMContentLoaded', function() {
             const errorAlert = document.getElementById('errorAlert');
+            const successAlert = document.getElementById('successAlert');
+            
             if (errorAlert) {
                 setTimeout(function() {
                     const bsAlert = new bootstrap.Alert(errorAlert);
                     bsAlert.close();
                 }, 5000); // 5 segundos
+            }
+            
+            if (successAlert) {
+                setTimeout(function() {
+                    const bsAlert = new bootstrap.Alert(successAlert);
+                    bsAlert.close();
+                }, 6000); // 6 segundos para el mensaje de éxito
             }
         });
     </script>
